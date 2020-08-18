@@ -1,0 +1,3 @@
+name: amethyst
+include: src
+depend: standard-library agdarsec

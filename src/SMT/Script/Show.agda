@@ -1,7 +1,7 @@
 open import Data.List using (List)
 open import Data.String using (String)
 
-module SMT.Term.Show
+module SMT.Script.Show
   {s i l}
   (Sort : Set s)
   (Bool : Sort)
@@ -23,19 +23,21 @@ open import Data.String as String using (_++_)
 open import Data.Unit as Unit using (⊤)
 open import Function using (const; id; _∘_)
 import Function.Identity.Categorical as Identity
-open import Level using (Lift; lift; lower)
-open import SMT.Term Sort Bool Literal Identifier
+open import Level using (Level; Lift; lift; lower)
+open import SMT.Script Sort Bool Literal Identifier
 
 private
   variable
-    σ : Sort
-    Σ : Ctxt
-    Γ : Ctxt
-    T : Sort → Set
+    σ σ′ : Sort
+    Γ Γ′ : Ctxt
+    Ξ Ξ′ : ResultCtxt
+    Σ Σ′ : List Sort
+    ℓ : Level
+    T : Sort → Set ℓ
 
 -- |Environments, i.e., lists where the types of the elements
 --  are determined by a type-level list.
-data Env (T : Sort → Set) : (Γ : Ctxt) → Set where
+data Env {ℓ} (T : Sort → Set ℓ) : (Γ : Ctxt) → Set ℓ where
   []  : Env T []
   _∷_ : T σ → Env T Γ → Env T (σ ∷ Γ)
 
@@ -103,11 +105,11 @@ getName (i , _prf) = do
 -- |Create an S-expression from a list of strings.
 --
 -- @
---   mkSExpr ("*" ∷ "4" ∷ "5") ≡ "(* 4 5)"
+--   mkSTerm ("*" ∷ "4" ∷ "5") ≡ "(* 4 5)"
 -- @
 --
-mkSExpr : List String → String
-mkSExpr = String.parens ∘ String.unwords
+mkSTerm : List String → String
+mkSTerm = String.parens ∘ String.unwords
 
 mutual
 
@@ -126,19 +128,21 @@ mutual
   showTerm′ (app x xs) = do
     let x′ = showIdentifier x
     xs′ ← showArgs′ xs
-    return (lift (mkSExpr (x′ ∷ lower xs′)))
+    return (lift (mkSTerm (x′ ∷ lower xs′)))
   showTerm′ (forAll {σ} x) = do
     n′ ← pushFreshName σ
     let σ′ = showSort σ
     x′ ← showTerm′ x
     popName
-    return (lift (mkSExpr ("forall" ∷ mkSExpr (lower n′ ∷ σ′ ∷ []) ∷ lower x′ ∷ [])))
+    let nσs′ = mkSTerm (mkSTerm (lower n′ ∷ σ′ ∷ []) ∷ [])
+    return (lift (mkSTerm ("forall" ∷ nσs′ ∷ lower x′ ∷ [])))
   showTerm′ (exists {σ} x) = do
     n′ ← pushFreshName σ
     let σ′ = showSort σ
     x′ ← showTerm′ x
     popName
-    return (lift (mkSExpr ("exists" ∷ mkSExpr (lower n′ ∷ σ′ ∷ []) ∷ lower x′ ∷ [])))
+    let nσs′ = mkSTerm (mkSTerm (lower n′ ∷ σ′ ∷ []) ∷ [])
+    return (lift (mkSTerm ("exists" ∷ nσs′ ∷ lower x′ ∷ [])))
 
   -- |Show a series of terms as S-expression.
   --
@@ -153,6 +157,31 @@ mutual
     xs′ ← showArgs′ xs
     return (lift (lower x′ ∷ lower xs′))
 
+-- |Show a command as an S-expression. The code below passes a name state in
+--  a state monad. For the pure version, see `showCommand` below.
+showCommand′ : Command Γ′ Ξ′ Γ Ξ → IStateT Names id Γ′ Γ (Lift s String)
+showCommand′ (declare-const σ) = do
+  n′ ← pushFreshName σ
+  let σ′ = showSort σ
+  return (lift (mkSTerm ("declare-const" ∷ lower n′ ∷ σ′ ∷ [])))
+showCommand′ (assert x) = do
+  x′ ← showTerm′ x
+  return (lift (mkSTerm ("assert" ∷ lower x′ ∷ [])))
+showCommand′ check-sat =
+  return (lift (mkSTerm ("check-sat" ∷ [])))
+showCommand′ get-model =
+  return (lift (mkSTerm ("get-model" ∷ [])))
+
+-- |Show a script as an S-expression. The code below passes a name state in
+--  a state monad. For the pure version, see `showScript` below.
+showScript′ : Script Γ Γ′ Ξ → IStateT Names id Γ Γ′ (Lift s (List String))
+showScript′ [] =
+  return (lift [])
+showScript′ (cmd ∷ cmds) = do
+  cmd′ ← showCommand′ cmd
+  cmds′ ← showScript′ cmds
+  return (lift (lower cmd′ ∷ lower cmds′))
+
 -- |A name state for the empty context, which supplies the names x0, x1, x2, ...
 x′es : Names []
 nameEnv    x′es = []
@@ -161,3 +190,11 @@ nameSupply x′es = Stream.map (λ n → "x" ++ showℕ n) (Stream.iterate ℕ.s
 -- |Show a term as an S-expression.
 showTerm : Names Γ → Term Γ σ → String
 showTerm names x = lower (proj₁ (showTerm′ x names))
+
+-- |Show a command as an S-expression.
+showCommand : Names Γ → Command Γ Ξ Γ′ Ξ′ → String
+showCommand names cmd = lower (proj₁ (showCommand′ cmd names))
+
+-- |Show a script as an S-expression.
+showScript : Names Γ → Script Γ Γ′ Ξ → String
+showScript names cmd = String.unlines (lower (proj₁ (showScript′ cmd names)))
