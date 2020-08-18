@@ -1,28 +1,19 @@
 {-# OPTIONS --allow-exec #-}
 
-open import Data.List using (List)
-open import Data.String using (String)
+open import SMT.Theory
 
-module SMT.Backend.Z3
-  {s i l}
-  (Sort : Set s)
-  (Bool : Sort)
-  (Literal : Sort → Set l)
-  (Identifier : List Sort → Sort → Set i)
-  (showSort : Sort → String)
-  (showLiteral : ∀ {σ} → Literal σ → String)
-  (showIdentifier : ∀ {Σ : List Sort} {σ} → Identifier Σ σ → String)
-  where
+module SMT.Backend.Z3 {s i l} (showableTheory : ShowableTheory s i l) where
 
+open ShowableTheory showableTheory
+open import SMT.Script theory
+open import SMT.Script.Show showableTheory
 open import Data.List
 open import Reflection.External
-open import SMT.Script Sort Bool Literal Identifier
-open import SMT.Script.Show Sort Bool Literal Identifier showSort showLiteral showIdentifier
 
 private
   variable
     Γ : Ctxt
-    Ξ : ResultCtxt
+    Ξ : OutputCtxt
 
 z3Cmd : Script [] Γ Ξ → CmdSpec
 CmdSpec.name  (z3Cmd _)    = "z3"

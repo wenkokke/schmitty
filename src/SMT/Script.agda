@@ -1,39 +1,36 @@
-open import Data.List using (List)
+open import SMT.Theory
 
-module SMT.Script
-  {s i l}
-  (Sort : Set s)
-  (Bool : Sort)
-  (Literal : Sort → Set l)
-  (Identifier : List Sort → Sort → Set i)
-  where
+module SMT.Script {s i l} (theory : Theory s i l) where
 
 open import Data.Fin as Fin using (Fin; suc; zero)
-open import Data.List as List using (_∷_; []; _++_)
+open import Data.List as List using (List; _∷_; []; _++_)
 open import Data.Product using (∃-syntax; _,_)
 open import Level using (Lift; lift; lower; _⊔_)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open Theory theory
 
 -- |Typing contexts.
 Ctxt : Set s
 Ctxt = List Sort
 
 -- |Possible results.
-data ResultSort : Set s where
-  SAT   : ResultSort
-  MODEL : Ctxt → ResultSort
+data OutputType : Set s where
+  SAT   : OutputType
+  MODEL : Ctxt → OutputType
 
 -- |Result contexts.
-ResultCtxt : Set s
-ResultCtxt = List ResultSort
+OutputCtxt : Set s
+OutputCtxt = List OutputType
 
 private
   variable
     σ σ′    : Sort
-    ξ ξ′    : ResultSort
+    ξ ξ′    : OutputType
     Γ Γ′ Γ″ : Ctxt
-    Ξ Ξ′    : ResultCtxt
-    Σ Σ′    : Ctxt
+    Δ Δ′    : Ctxt
+    Ξ Ξ′    : OutputCtxt
+    Σ Σ′    : Signature Sort
 
 -- |Well-typed variables.
 _∋_ : (Γ : Ctxt) (σ : Sort) → Set s
@@ -47,13 +44,13 @@ mutual
   data Term (Γ : Ctxt) : (σ : Sort) → Set (s ⊔ i ⊔ l) where
     var    : ∀ {σ} (x : Γ ∋ σ) → Term Γ σ
     lit    : ∀ {σ} (l : Literal σ) → Term Γ σ
-    app    : ∀ {σ} {Σ : List Sort} (x : Identifier Σ σ) (xs : Args Γ Σ) → Term Γ σ
-    forAll : ∀ {σ} (x : Term (σ ∷ Γ) Bool) → Term Γ Bool
-    exists : ∀ {σ} (x : Term (σ ∷ Γ) Bool) → Term Γ Bool
+    app    : ∀ {σ} {Σ : Signature σ} (x : Identifier Σ) (xs : Args Γ (ArgTypes Σ)) → Term Γ σ
+    forAll : ∀ {σ} (x : Term (σ ∷ Γ) BOOL) → Term Γ BOOL
+    exists : ∀ {σ} (x : Term (σ ∷ Γ) BOOL) → Term Γ BOOL
 
-  data Args (Γ : Ctxt) : (Σ : Ctxt) → Set (s ⊔ i ⊔ l) where
+  data Args (Γ : Ctxt) : (Δ : Ctxt) → Set (s ⊔ i ⊔ l) where
     []  : Args Γ []
-    _∷_ : Term Γ σ → Args Γ Σ → Args Γ (σ ∷ Σ)
+    _∷_ : Term Γ σ → Args Γ Δ → Args Γ (σ ∷ Δ)
 
 -- |SMT-LIB commands.
 --
@@ -65,14 +62,14 @@ mutual
 --        Commands have two more type-level arguments, `Ξ` and `Ξ′`, which
 --        represent the list of outputs given by the SMT solver in order.
 --
-data Command (Γ : Ctxt) : (Ξ : ResultCtxt) (Γ′ : Ctxt) (Ξ′ : ResultCtxt) → Set (s ⊔ i ⊔ l) where
+data Command (Γ : Ctxt) : (Ξ : OutputCtxt) (Γ′ : Ctxt) (Ξ′ : OutputCtxt) → Set (s ⊔ i ⊔ l) where
   declare-const : (σ : Sort) → Command Γ Ξ (σ ∷ Γ) Ξ
-  assert        : Term Γ Bool → Command Γ Ξ Γ Ξ
+  assert        : Term Γ BOOL → Command Γ Ξ Γ Ξ
   check-sat     : Command Γ Ξ Γ (SAT ∷ Ξ)
   get-model     : Command Γ (SAT ∷ Ξ) Γ (MODEL Γ ∷ SAT ∷ Ξ)
 
 -- |SMT-LIB scripts.
-data Script (Γ : Ctxt) : (Γ″ : Ctxt) (Ξ : ResultCtxt) → Set (s ⊔ i ⊔ l) where
+data Script (Γ : Ctxt) : (Γ″ : Ctxt) (Ξ : OutputCtxt) → Set (s ⊔ i ⊔ l) where
   []  : Script Γ Γ []
   _∷_ : Command Γ Ξ Γ′ Ξ′ → Script Γ′ Γ″ Ξ → Script Γ Γ″ Ξ′
 
@@ -81,11 +78,11 @@ data Sat : Set where
   sat unsat unknown : Sat
 
 -- |SMT-LIB script result.
-Result : ResultSort → Set (s ⊔ i ⊔ l)
+Result : OutputType → Set (s ⊔ i ⊔ l)
 Result SAT       = Lift _ Sat
 Result (MODEL Γ) = Args [] Γ
 
 -- |List of SMT-LIB results.
-data Results : (Ξ : ResultCtxt) → Set (s ⊔ i ⊔ l) where
+data Results : (Ξ : OutputCtxt) → Set (s ⊔ i ⊔ l) where
   []  : Results []
   _∷_ : Result ξ → Results Ξ → Results (ξ ∷ Ξ)

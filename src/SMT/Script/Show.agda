@@ -1,36 +1,28 @@
-open import Data.List using (List)
-open import Data.String using (String)
+open import SMT.Theory
 
-module SMT.Script.Show
-  {s i l}
-  (Sort : Set s)
-  (Bool : Sort)
-  (Literal : Sort → Set l)
-  (Identifier : List Sort → Sort → Set i)
-  (showSort : Sort → String)
-  (showLiteral : ∀ {σ} → Literal σ → String)
-  (showIdentifier : ∀ {Σ : List Sort} {σ} → Identifier Σ σ → String)
-  where
+module SMT.Script.Show {s i l} (showableTheory : ShowableTheory s i l) where
+
+open ShowableTheory showableTheory
+open import SMT.Script theory
 
 open import Category.Monad.State using (RawIMonadState; StateTIMonadState; IStateT)
 open import Codata.Musical.Stream as Stream using (Stream)
 open import Data.Fin as Fin using (Fin; suc; zero)
-open import Data.List as List using (_∷_; [])
+open import Data.List as List using (List; _∷_; [])
 open import Data.Nat as Nat using (ℕ)
 open import Data.Nat.Show renaming (show to showℕ)
 open import Data.Product as Product using (proj₁; _,_)
-open import Data.String as String using (_++_)
+open import Data.String as String using (String; _++_)
 open import Data.Unit as Unit using (⊤)
 open import Function using (const; id; _∘_)
 import Function.Identity.Categorical as Identity
 open import Level using (Level; Lift; lift; lower)
-open import SMT.Script Sort Bool Literal Identifier
 
 private
   variable
     σ σ′ : Sort
     Γ Γ′ : Ctxt
-    Ξ Ξ′ : ResultCtxt
+    Ξ Ξ′ : OutputCtxt
     Σ Σ′ : List Sort
     ℓ : Level
     T : Sort → Set ℓ

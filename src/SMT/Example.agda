@@ -10,34 +10,45 @@ open import Data.Product using (_,_)
 open import Data.Unit using (⊤; tt)
 open import Reflection.External
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import SMT.Theory
 
-module _ where
+Sort : Set
+Sort = ⊤
 
-  Sort : Set
-  Sort = ⊤
+pattern BOOL = tt
 
-  pattern BOOL = tt
+data Literal : Sort → Set where
+  true  : Literal BOOL
+  false : Literal BOOL
 
-  data Literal : Sort → Set where
-    true  : Literal BOOL
-    false : Literal BOOL
+data Identifier : {σ : Sort} → Signature σ → Set where
+  implies : Identifier ((BOOL ∷ BOOL ∷ []) ↦ BOOL)
 
-  data Identifier : List Sort → Sort → Set where
-    implies : Identifier (BOOL ∷ BOOL ∷ []) BOOL
+theory : Theory _ _ _
+Theory.Sort       theory = Sort
+Theory.BOOL       theory = BOOL
+Theory.Literal    theory = Literal
+Theory.Identifier theory = Identifier
 
-  showSort : Sort → String
-  showSort BOOL = "Bool"
+showSort : Sort → String
+showSort BOOL = "Bool"
 
-  showLiteral : ∀ {σ} (l : Literal σ) → String
-  showLiteral true  = "true"
-  showLiteral false = "false"
+showLiteral : {σ : Sort} (l : Literal σ) → String
+showLiteral true  = "true"
+showLiteral false = "false"
 
-  showIdentifier : ∀ {Σ} {σ} (x : Identifier Σ σ) → String
-  showIdentifier implies = "=>"
+showIdentifier : {σ : Sort} {Σ : Signature σ} (x : Identifier Σ) → String
+showIdentifier implies = "=>"
 
-open import SMT.Script      Sort BOOL Literal Identifier
-open import SMT.Script.Show Sort BOOL Literal Identifier showSort showLiteral showIdentifier
-open import SMT.Backend.Z3  Sort BOOL Literal Identifier showSort showLiteral showIdentifier
+showableTheory : ShowableTheory _ _ _
+ShowableTheory.theory         showableTheory = theory
+ShowableTheory.showSort       showableTheory = showSort
+ShowableTheory.showLiteral    showableTheory = showLiteral
+ShowableTheory.showIdentifier showableTheory = showIdentifier
+
+open import SMT.Script theory
+open import SMT.Script.Show showableTheory
+open import SMT.Backend.Z3 showableTheory
 
 => : ∀ {Γ} → Term Γ BOOL → Term Γ BOOL → Term Γ BOOL
 => x y = app implies (x ∷ y ∷ [])
