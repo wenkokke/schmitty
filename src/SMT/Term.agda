@@ -8,10 +8,11 @@ module SMT.Term
   (Identifier : List Sort → Sort → Set i)
   where
 
-open import Data.List as List using (_∷_; [])
-open import Data.Product using (∃; ∃-syntax)
-open import Level using (Level; _⊔_)
-open import Relation.Binary.PropositionalEquality using (_≡_)
+open import Data.Fin as Fin using (Fin; suc; zero)
+open import Data.List as List using (_∷_; []; _++_)
+open import Data.Product using (∃-syntax; _,_)
+open import Level using (_⊔_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
 private
   variable
@@ -22,8 +23,7 @@ Ctxt = List Sort
 
 private
   variable
-    Σ : Ctxt
-    Γ : Ctxt
+    Γ Δ Σ : Ctxt
 
 _∋_ : (Γ : Ctxt) (σ : Sort) → Set s
 Γ ∋ σ = ∃[ i ] (List.lookup Γ i ≡ σ)
