@@ -2,11 +2,13 @@
 
 open import SMT.Theory
 
-module SMT.Backend.Z3 {s i l} (showableTheory : ShowableTheory s i l) where
+module SMT.Backend.Z3 {s i l} {theory : Theory s i l} (printable : Printable theory) where
 
-open ShowableTheory showableTheory
+open Theory theory
+open Printable printable
+
 open import SMT.Script theory
-open import SMT.Script.Show showableTheory
+open import SMT.Script.Show printable
 open import Data.List
 open import Reflection.External
 

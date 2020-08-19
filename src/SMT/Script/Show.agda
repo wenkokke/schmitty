@@ -1,8 +1,9 @@
 open import SMT.Theory
 
-module SMT.Script.Show {s i l} (showableTheory : ShowableTheory s i l) where
+module SMT.Script.Show {s i l} {theory : Theory s i l} (printable : Printable theory) where
 
-open ShowableTheory showableTheory
+open Theory theory
+open Printable printable
 open import SMT.Script theory
 
 open import Category.Monad.State using (RawIMonadState; StateTIMonadState; IStateT)
@@ -29,7 +30,7 @@ private
 
 -- |Environments, i.e., lists where the types of the elements
 --  are determined by a type-level list.
-data Env {ℓ} (T : Sort → Set ℓ) : (Γ : Ctxt) → Set ℓ where
+data Env (T : Sort → Set ℓ) : (Γ : Ctxt) → Set ℓ where
   []  : Env T []
   _∷_ : T σ → Env T Γ → Env T (σ ∷ Γ)
 

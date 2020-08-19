@@ -40,15 +40,14 @@ showLiteral false = "false"
 showIdentifier : {σ : Sort} {Σ : Signature σ} (x : Identifier Σ) → String
 showIdentifier implies = "=>"
 
-showableTheory : ShowableTheory _ _ _
-ShowableTheory.theory         showableTheory = theory
-ShowableTheory.showSort       showableTheory = showSort
-ShowableTheory.showLiteral    showableTheory = showLiteral
-ShowableTheory.showIdentifier showableTheory = showIdentifier
+printable : Printable theory
+Printable.showSort       printable = showSort
+Printable.showLiteral    printable = showLiteral
+Printable.showIdentifier printable = showIdentifier
 
 open import SMT.Script theory
-open import SMT.Script.Show showableTheory
-open import SMT.Backend.Z3 showableTheory
+open import SMT.Script.Show printable
+open import SMT.Backend.Z3 printable
 
 => : ∀ {Γ} → Term Γ BOOL → Term Γ BOOL → Term Γ BOOL
 => x y = app implies (x ∷ y ∷ [])

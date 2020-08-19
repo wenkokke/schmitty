@@ -20,12 +20,8 @@ record Theory (s i l : Level) : Set (suc (s ⊔ i ⊔ l)) where
     Literal    : Sort → Set l
     Identifier : {σ : Sort} → Signature σ → Set i
 
-record ShowableTheory (s i l : Level) : Set (suc (s ⊔ i ⊔ l)) where
-  field
-    theory         : Theory s i l
-
-  open Theory theory public
-
+record Printable {s i l : Level} (theory : Theory s i l) : Set (suc (s ⊔ i ⊔ l)) where
+  open Theory theory
   field
     showSort       : Sort → String
     showLiteral    : {σ : Sort} → Literal σ → String
