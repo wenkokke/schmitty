@@ -37,7 +37,6 @@ script₁ = declare-const BOOL
 test₁ : runCmd (z3Cmd script₁) ≡ "unsat\n"
 test₁ = refl
 
-
 -- |Pierce's law.
 term₂ : Term [] BOOL
 term₂ = forAll (forAll ((app₂ implies (app₂ implies (app₂ implies p q) p) p)))

@@ -1,1 +1,1 @@
-# amethyst
+# Schmitty the Solver
