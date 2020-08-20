@@ -4,4 +4,4 @@
 make test
 
 # Update listings
-make listings && git add docs
+make listings && git add index.agda docs
