@@ -27,6 +27,8 @@ The examples are a good place to start reading!
 # Roadmap
 
 - [ ] Merge [`Reflection.External`][Reflection.External] into [agda-stdlib][agda-stdlib].
+- [ ] Implement lattice of logics.
+- [ ] Extend theories with a logic checker.
 - [ ] Parse solver *output* and convert to Agda types.
 - [ ] Reflect Agda types to SMT lisp terms.
 - [ ] Provide solver macro which provides “evidence” using postulates.
