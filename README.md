@@ -34,6 +34,10 @@ The examples are a good place to start reading!
 - [ ] Provide solver macro which provides “evidence” using postulates.
 - [ ] Integrate Core theory with @kazkansouh’s SAT solver.
 
+---
+
+Note: You’ll need [#4849][pr4849] to run Schmitty (see [#4848][issue4848] for more details).
+
 [SMT.Theory]: https://wenkokke.github.io/schmitty/SMT.Theory.html
 [SMT.Theories.Core]: https://wenkokke.github.io/schmitty/SMT.Theories.Core.html
 [SMT.Theories.Core.Extensions]: https://wenkokke.github.io/schmitty/SMT.Theories.Core.Extensions.html
@@ -46,3 +50,5 @@ The examples are a good place to start reading!
 [SMT.Backend.Z3]: https://wenkokke.github.io/schmitty/SMT.Backend.Z3.html
 [Reflection.External]: https://wenkokke.github.io/schmitty/Reflection.External.html
 [agda-stdlib]: https://github.com/agda/agda-stdlib
+[pr4849]: https://github.com/agda/agda/pull/4849
+[issue4848]: https://github.com/agda/agda/issues/4848
