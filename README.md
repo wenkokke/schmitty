@@ -36,7 +36,7 @@ The examples are a good place to start reading!
 
 ---
 
-Note: You’ll need [#4849][pr4849] to run Schmitty (see [#4848][issue4848] for more details).
+Note: You’ll need *at least* [Agda version 2.6.2-20eb4f3][agda-version] to run Schmitty.
 
 [SMT.Theory]: https://wenkokke.github.io/schmitty/SMT.Theory.html
 [SMT.Theories.Core]: https://wenkokke.github.io/schmitty/SMT.Theories.Core.html
@@ -50,5 +50,4 @@ Note: You’ll need [#4849][pr4849] to run Schmitty (see [#4848][issue4848] for 
 [SMT.Backend.Z3]: https://wenkokke.github.io/schmitty/SMT.Backend.Z3.html
 [Reflection.External]: https://wenkokke.github.io/schmitty/Reflection.External.html
 [agda-stdlib]: https://github.com/agda/agda-stdlib
-[pr4849]: https://github.com/agda/agda/pull/4849
-[issue4848]: https://github.com/agda/agda/issues/4848
+[agda-version]: https://github.com/agda/agda/commit/20eb4f3ebb6eb73385f2651cf9b5c4bdac9a2f10
