@@ -1,4 +1,5 @@
 AGDA_FILES := $(shell find . -type f -and -path './src/*' -and -name '*.agda')
+AGDAI_FILES := $(subst .agda,.agdai,$(AGDA_FILES))
 HTML_FILES := $(addsuffix .html,$(subst ./src/,./docs/,$(basename $(AGDA_FILES))))
 AGDA_MODULES := $(subst /,.,$(subst ./src/,,$(basename $(AGDA_FILES))))
 
