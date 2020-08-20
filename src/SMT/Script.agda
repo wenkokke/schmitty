@@ -52,6 +52,10 @@ mutual
     []  : Args Γ []
     _∷_ : Term Γ σ → Args Γ Δ → Args Γ (σ ∷ Δ)
 
+pattern app₁ f x     = app f (x ∷ [])
+pattern app₂ f x y   = app f (x ∷ y ∷ [])
+pattern app₃ f x y z = app f (x ∷ y ∷ z ∷ [])
+
 -- |SMT-LIB commands.
 --
 --  NOTE: It is most natural to think of scripts as a list of commands,

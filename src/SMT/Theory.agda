@@ -1,8 +1,9 @@
 module SMT.Theory where
 
 open import Level
-open import Data.List using (List)
+open import Data.List as List using (List; _∷_; [])
 open import Data.String using (String)
+
 
 record Signature {s} {Sort : Set s} (σ : Sort) : Set s where
   field
@@ -10,8 +11,22 @@ record Signature {s} {Sort : Set s} (σ : Sort) : Set s where
 
 open Signature public
 
-_↦_ : ∀ {s} {Sort : Set s} (Σ : List Sort) (σ : Sort) → Signature σ
-Σ ↦ _ = record { ArgTypes = Σ }
+
+module _ {s} {Sort : Set s} where
+
+  infix 3 _↦_
+
+  _↦_ : (σs : List Sort) (σ : Sort) → Signature σ
+  Σ ↦ _ = record { ArgTypes = Σ }
+
+  Op₁ : (σ : Sort) → Signature σ
+  Op₁ σ = σ ∷ [] ↦ σ
+
+  Op₂ : (σ : Sort) → Signature σ
+  Op₂ σ = σ ∷ σ ∷ [] ↦ σ
+
+  map : ∀ {c} {CoreSort : Set c} {φ : CoreSort} (CORE : CoreSort → Sort) → Signature φ → Signature (CORE φ)
+  map CORE Φ = record { ArgTypes = List.map CORE (ArgTypes Φ) }
 
 record Theory (s i l : Level) : Set (suc (s ⊔ i ⊔ l)) where
   field
