@@ -1,4 +1,4 @@
-{-# OPTIONS --allow-exec #-}
+{-# OPTIONS --without-K --allow-exec #-}
 
 open import SMT.Theory
 

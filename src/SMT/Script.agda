@@ -1,3 +1,5 @@
+{-# OPTIONS --without-K --safe #-}
+
 open import SMT.Theory
 
 module SMT.Script {s i l} (theory : Theory s i l) where

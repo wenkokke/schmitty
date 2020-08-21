@@ -1,3 +1,5 @@
+{-# OPTIONS --without-K --safe #-}
+
 module SMT.Theories.Reals where
 
 open import Data.Bool.Base as Bool using (Bool; false; true)

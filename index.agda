@@ -12,5 +12,7 @@ import SMT.Backend.Z3
 import SMT.Theory
 import SMT.Script.Show
 import SMT.Logics
+import SMT.Logics.Properties
+import SMT.Logics.Properties.Unsafe
 import Reflection.External
 

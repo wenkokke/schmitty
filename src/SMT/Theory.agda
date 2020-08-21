@@ -1,3 +1,5 @@
+{-# OPTIONS --without-K --safe #-}
+
 module SMT.Theory where
 
 open import Level

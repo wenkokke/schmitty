@@ -1,3 +1,5 @@
+{-# OPTIONS --without-K #-}
+
 open import SMT.Theory
 
 module SMT.Script.Show {s i l} {theory : Theory s i l} (printable : Printable theory) where
@@ -17,7 +19,7 @@ open import Data.String as String using (String; _++_)
 open import Data.Unit as Unit using (⊤)
 open import Function using (const; id; _∘_)
 import Function.Identity.Categorical as Identity
-open import Level using (Level; Lift; lift; lower)
+open import Level using (Level; _⊔_; Lift; lift; lower)
 
 private
   variable
@@ -30,7 +32,7 @@ private
 
 -- |Environments, i.e., lists where the types of the elements
 --  are determined by a type-level list.
-data Env (T : Sort → Set ℓ) : (Γ : Ctxt) → Set ℓ where
+data Env (T : Sort → Set ℓ) : (Γ : Ctxt) → Set (s ⊔ ℓ) where
   []  : Env T []
   _∷_ : T σ → Env T Γ → Env T (σ ∷ Γ)
 
