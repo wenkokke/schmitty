@@ -6,6 +6,8 @@ open import Data.Fin as Fin using (Fin)
 open import Data.List as List using (List; _∷_; [])
 open import Data.Product using (∃; ∃-syntax; _,_)
 open import Level using (Lift; lift; lower; _⊔_)
+open import Relation.Nullary using (Dec; yes; no)
+open import Relation.Nullary.Decidable using (True)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import SMT.Logics
 
@@ -100,6 +102,17 @@ data Sat : Set where
   sat     : Sat
   unsat   : Sat
   unknown : Sat
+
+_≟-Sat_ : (s₁ s₂ : Sat) → Dec (s₁ ≡ s₂)
+sat     ≟-Sat sat     = yes refl
+sat     ≟-Sat unsat   = no (λ ())
+sat     ≟-Sat unknown = no (λ ())
+unsat   ≟-Sat sat     = no (λ ())
+unsat   ≟-Sat unsat   = yes refl
+unsat   ≟-Sat unknown = no (λ ())
+unknown ≟-Sat sat     = no (λ ())
+unknown ≟-Sat unsat   = no (λ ())
+unknown ≟-Sat unknown = yes refl
 
 -- |SMT-LIB models.
 data Model : (Γ : Ctxt) → Set where
@@ -348,11 +361,18 @@ module Interaction
   showScript names cmd = String.unlines (proj₁ (showScriptS cmd names))
 
   parseSat : ∀[ Parser Sat ]
-  parseSat = withSpaces (pSat <|> pUnsat <|> pUnknown)
+  parseSat = pSat <|> pUnsat <|> pUnknown
     where
       pSat     = sat     <$ text "sat"
       pUnsat   = unsat   <$ text "unsat"
       pUnknown = unknown <$ text "unknown"
+
+  _ : parseSat parses "sat" as (_≟-Sat sat)
+  _ = _
+  
+  _ : parseSat parses "sat" as (_≟-Sat sat)
+  _ = _
+
 
   parseResult : (ξ : OutputType) → ∀[ Parser (Result ξ) ]
   parseResult SAT       = parseSat

@@ -14,13 +14,14 @@ open import Data.Nat as Nat using (ℕ)
 import Data.Nat.Properties as Nat
 open import Data.Product as Prod using (_×_; _,_)
 open import Data.String as String using (String)
-open import Data.Sum as Sum using (_⊎_)
+open import Data.Sum as Sum using (_⊎_; inj₁; inj₂)
 open import Data.Subset -- instances
-open import Data.Unit as Unit using (⊤)
+open import Data.Unit as Unit using (⊤; tt)
 open import Data.Vec as Vec using (Vec)
 open import Function using (id; const; _∘_; _$_; case_of_)
 open import Induction.Nat.Strong using (□_) public
-open import Relation.Nullary.Decidable using (⌊_⌋)
+open import Relation.Nullary using (Dec; yes; no)
+open import Relation.Nullary.Decidable using (True; ⌊_⌋)
 open import Relation.Unary using (IUniversal; _⇒_) public -- imports ∀[_] syntax
 open import Relation.Binary.PropositionalEquality.Decidable --instances
 
@@ -29,6 +30,13 @@ open import Data.Subset public
 import Text.Parser.Monad as PM
 import Text.Parser.Types as PI
 import Text.Parser.Position as PP
+
+
+data ErrorMsg : Set where
+  no-parse        : ErrorMsg
+  ambiguous-parse : ErrorMsg
+
+data Error : ErrorMsg → Set where
 
 
 private
@@ -57,17 +65,26 @@ private
   runResult : Result A → List A
   runResult = PM.result (const []) (const []) ((_∷ []) ∘ Prod.proj₁)
 
+private
+  fromSingleton : List A → ErrorMsg ⊎ A
+  fromSingleton []          = inj₁ no-parse
+  fromSingleton (v ∷ [])    = inj₂ v
+  fromSingleton (_ ∷ _ ∷ _) = inj₁ ambiguous-parse
+
 
 -- |The parser type, specialised to strings.
 Parser : (A : Set) (n : ℕ) → Set
 Parser = PI.Parser PM.Agdarsec′.chars
 
 -- |Run a parser, and return a list of results.
-runParser : ∀[ Parser A ] → String → List A
+runParser : ∀[ Parser A ] → String → ErrorMsg ⊎ A
 runParser {A} p str
 
+  -- Return the single parse, or an error:
+  = fromSingleton
+
   -- Discard all "successful" parses which didn't consume all input:
-  = Maybe.maybe id [] ∘ mapM runSuccess
+  $ Maybe.maybe id [] ∘ mapM runSuccess
 
   -- Discard all errors, and return only the "successful" parses:
   $ runResult
@@ -83,10 +100,10 @@ runParser {A} p str
     mapM = ListCat.TraversableM.mapM MaybeCat.monad
 
 
--- |Helper function for writing unit tests.
-_accepts_ : ∀[ Parser A ] → String → Set
-p accepts str = case runParser p str of Bool.T ∘ List.null
 
+---------------------------------------------------------------
+-- Export the basic parser combinators with simplified types --
+---------------------------------------------------------------
 
 import Text.Parser.Combinators as PC
 import Text.Parser.Combinators.Char as PCC
@@ -198,3 +215,41 @@ decimalℕ = PCN.decimalℕ
 -- |Parser which...
 decimalℤ : ∀[ Parser ℤ ]
 decimalℤ = PCN.decimalℤ
+
+
+---------------------
+-- Testing parsers --
+---------------------
+
+private
+  testHelper : (p : ∀[ Parser A ]) (str : String) (f : ErrorMsg → Set) (t : A → Set) → Set
+  testHelper p str f t = case runParser p str of Sum.[ f , t ]′
+
+-- |Tests if the parser accepts a string.
+--
+--  The resulting value is passed to a continuation for further inspection,
+--  for instance, to allow the user to compare it to the expected value.
+_parses_as_ : (p : ∀[ Parser A ]) (str : String) {P : A → Set} (k : (x : A) → Dec (P x)) → Set
+p parses str as k = testHelper p str Error (True ∘ k)
+
+-- |Example use of `_parses_as_`.
+_ : decimalℕ parses "10" as (Nat._≟ 10)
+_ = _
+
+-- |Tests if the parser accepts a string.
+_accepts_ : (p : ∀[ Parser A ]) (str : String) → Set
+p accepts str = testHelper p str (const ⊥) (const ⊤)
+
+-- |Example use of `_accepts_`.
+_ : decimalℤ accepts "-10"
+_ = _
+
+-- |Tests if the parser rejects a string.
+_rejects_ : (p : ∀[ Parser A ]) (str : String) → Set
+p rejects str = testHelper p str (const ⊤) (const ⊥)
+
+-- |Example use of `_rejects_`.
+_ : decimalℕ rejects "-10"
+_ = _
+
+
