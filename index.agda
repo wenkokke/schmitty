@@ -7,12 +7,12 @@ import SMT.Theories.Reals
 import SMT.Theories.Core
 import SMT.Theories.Ints
 import SMT.Theories.Ints.Example
-import SMT.Backend.Z3.Parser
 import SMT.Backend.Z3
 import SMT.Theory
 import SMT.Logics
 import SMT.Logics.Properties
 import SMT.Logics.Properties.Unsafe
 import Text.Parser.String
+import Text.Parser
 import Reflection.External
 

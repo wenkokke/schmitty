@@ -14,10 +14,21 @@ open import Data.Nat.Base using (ℕ; suc; zero; NonZero)
 open import Data.List.Base using (List; _∷_; [])
 open import Data.Product using (_,_)
 open import Data.String.Base using (String; _++_)
+open import Data.Sum using (_⊎_; inj₁; inj₂; [_,_])
 open import Data.Unit.Base using (⊤; tt)
-open import Function using (case_of_; _$_)
+open import Function using (case_of_; _$_; _∘_)
 open import Reflection hiding (name)
-  -- using (TC; return; _>>=_; unify; Term; con; lit; nat; string; unknown; vArg; hArg)
+
+-- Type aliases for the various strings.
+
+CmdName = String
+StdIn   = String
+StdErr  = String
+StdOut  = String
+
+-- |Helper function for throwing an error from reflection.
+userError : String → TC ⊤
+userError err = typeError (strErr err ∷ [])
 
 -- |Representation for exit codes, assuming 0 is consistently used to indicate
 --  success across platforms.
@@ -29,17 +40,17 @@ data ExitCode : Set where
 record CmdSpec : Set where
   constructor cmdSpec
   field
-    name  : String      -- ^ Executable name (see ~/.agda/executables)
+    name  : CmdName     -- ^ Executable name (see ~/.agda/executables)
     args  : List String -- ^ Command-line arguments for executable
-    input : String      -- ^ Contents of standard input
+    input : StdIn       -- ^ Contents of standard input
 
 -- |Result of running a command.
 record Result : Set where
   constructor result
   field
     exitCode : ExitCode -- ^ Exit code returned by the process
-    output   : String   -- ^ Contents of standard output
-    error    : String   -- ^ Contents of standard error
+    output   : StdOut   -- ^ Contents of standard output
+    error    : StdErr   -- ^ Contents of standard error
 
 -- |Convert a natural number to an exit code.
 toExitCode : ℕ → ExitCode
@@ -56,42 +67,42 @@ quoteExitCode (exitFailure n) =
 -- |Quote a result as an Agda term.
 quoteResult : Result → Term
 quoteResult (result exitCode output error) =
-  con (quote result) ( vArg (quoteExitCode exitCode)
+  con (quote result) $ vArg (quoteExitCode exitCode)
                      ∷ vArg (lit (string output))
                      ∷ vArg (lit (string error))
-                     ∷ [])
-
--- |Run command from specification in TC monad.
-runCmdTC : CmdSpec → TC Result
-runCmdTC c = do
-  (exitCode , (stdOut , stdErr))
-    ← Builtin.execTC (CmdSpec.name c) (CmdSpec.args c) (CmdSpec.input c)
-  return $ result (toExitCode exitCode) stdOut stdErr
+                     ∷ []
 
 -- |Run command from specification and return the full result.
 --
 --  NOTE: If the command fails, this macro still succeeds, and returns the
 --        full result, including exit code and the contents of stderr.
 --
+unsafeRunCmdTC : CmdSpec → TC Result
+unsafeRunCmdTC c = do
+  (exitCode , (stdOut , stdErr))
+    ← Builtin.execTC (CmdSpec.name c) (CmdSpec.args c) (CmdSpec.input c)
+  return $ result (toExitCode exitCode) stdOut stdErr
+
 macro
   unsafeRunCmd : CmdSpec → Term → TC ⊤
-  unsafeRunCmd c hole = do
-    r ← runCmdTC c
-    unify hole $ quoteResult r
+  unsafeRunCmd c hole = unsafeRunCmdTC c >>= unify hole ∘ quoteResult
 
 -- |Run command from specification. If the command succeeds, it returns the
 --  contents of stdout. Otherwise, it throws a type error with the contents
 --  of stderr.
+runCmdTC : CmdSpec → TC (StdErr ⊎ StdOut)
+runCmdTC c = do
+  r ← unsafeRunCmdTC c
+  let debugPrefix = ("user." ++ CmdSpec.name c)
+  case Result.exitCode r of λ
+    { exitSuccess → do
+      debugPrint (debugPrefix ++ ".stderr") 10 (strErr (Result.error r) ∷ [])
+      return $ inj₂ (Result.output r)
+    ; (exitFailure n) → do
+      debugPrint (debugPrefix ++ ".stdout") 10 (strErr (Result.output r) ∷ [])
+      return $ inj₁ (Result.error r)
+    }
+
 macro
   runCmd : CmdSpec → Term → TC ⊤
-  runCmd c hole = do
-    r ← runCmdTC c
-    let debugPrefix = ("user." ++ CmdSpec.name c)
-    case Result.exitCode r of λ
-      { exitSuccess → do
-        debugPrint (debugPrefix ++ ".stderr") 10 (strErr (Result.error r) ∷ [])
-        unify hole $ lit (string (Result.output r))
-      ; (exitFailure n) → do
-        debugPrint (debugPrefix ++ ".stdout") 10 (strErr (Result.output r) ∷ [])
-        typeError (strErr (Result.error r) ∷ [])
-      }
+  runCmd c hole = runCmdTC c >>= [ userError , unify hole ∘ lit ∘ string ]

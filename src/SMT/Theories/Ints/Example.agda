@@ -38,7 +38,7 @@ script₁ = declare-const INT
           x = var (suc zero , refl)
           y = var (    zero , refl)
 
-test₁ : runCmd (z3Cmd script₁) ≡ "unsat\n"
+test₁ : runZ3 script₁ ≡ unsat ∷ []
 test₁ = refl
 
 

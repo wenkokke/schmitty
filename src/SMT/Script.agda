@@ -5,7 +5,6 @@ module SMT.Script (theory : Theory) where
 open import Data.Fin as Fin using (Fin)
 open import Data.List as List using (List; _∷_; [])
 open import Data.Product using (∃; ∃-syntax; _,_)
-open import Level using (Lift; lift; lower; _⊔_)
 open import Relation.Nullary using (Dec; yes; no)
 open import Relation.Nullary.Decidable using (True)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
@@ -180,9 +179,10 @@ module Interaction
   open import Data.String as String using (String; _++_; toList; fromList⁺)
   open import Data.Unit as Unit using (⊤)
   open import Data.Vec as Vec using (Vec)
-  open import Function using (const; id; _∘_)
+  open import Function using (const; id; _∘_; _$_)
   import Function.Identity.Categorical as Identity
   open import Text.Parser.String
+  open import Reflection using (con; hArg; vArg)
 
   open Printable printable
 
@@ -360,8 +360,9 @@ module Interaction
   showScript : Names Γ → Script Γ Γ′ Ξ → String
   showScript names cmd = String.unlines (proj₁ (showScriptS cmd names))
 
+  -- |Parse a satisfiability result.
   parseSat : ∀[ Parser Sat ]
-  parseSat = pSat <|> pUnsat <|> pUnknown
+  parseSat = withSpaces (pSat <|> pUnsat <|> pUnknown)
     where
       pSat     = sat     <$ text "sat"
       pUnsat   = unsat   <$ text "unsat"
@@ -369,11 +370,17 @@ module Interaction
 
   _ : parseSat parses "sat" as (_≟-Sat sat)
   _ = _
-  
-  _ : parseSat parses "sat" as (_≟-Sat sat)
+
+  _ : parseSat parses "unsat" as (_≟-Sat unsat)
   _ = _
 
+  _ : parseSat parses "unknown" as (_≟-Sat unknown)
+  _ = _
 
+  _ : parseSat rejects "dogfood"
+  _ = _
+
+  -- |Parse a result.
   parseResult : (ξ : OutputType) → ∀[ Parser (Result ξ) ]
   parseResult SAT       = parseSat
   parseResult (MODEL Γ) = notYetImplemented
@@ -385,3 +392,22 @@ module Interaction
   parseResults ξ [] = (_∷ []) <$> parseResult ξ
   parseResults ξ (ξ′ ∷ Ξ) = _∷_ <$> parseResult ξ <*> box (parseResults ξ′ Ξ)
 
+  quoteSat : Sat → Reflection.Term
+  quoteSat sat     = con (quote sat) []
+  quoteSat unsat   = con (quote unsat) []
+  quoteSat unknown = con (quote unknown) []
+
+  quoteResult : Result ξ → Reflection.Term
+  quoteResult {SAT}     r = quoteSat r
+  quoteResult {MODEL Γ} r = notYetImplemented r
+    where
+      postulate
+        notYetImplemented : Result (MODEL Γ) → Reflection.Term
+
+  quoteResults : Results Ξ → Reflection.Term
+  quoteResults [] =
+    con (quote Results.[]) []
+  quoteResults (r ∷ rs) =
+    con (quote Results._∷_) $ vArg (quoteResult r)
+                            ∷ vArg (quoteResults rs)
+                            ∷ []

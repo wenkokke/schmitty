@@ -33,7 +33,7 @@ script₁ = declare-const BOOL
         where
           p = var (zero , refl)
 
-test₁ : runCmd (z3Cmd script₁) ≡ "unsat\n"
+test₁ : runZ3 script₁ ≡ unsat ∷ []
 test₁ = refl
 
 -- |Pierce's law.
@@ -48,5 +48,5 @@ script₂ = assert term₂
         ∷ check-sat
         ∷ []
 
-test₂ : runCmd (z3Cmd script₂) ≡ "sat\n"
+test₂ : runZ3 script₂ ≡ sat ∷ []
 test₂ = refl
