@@ -1,8 +1,8 @@
-{-# OPTIONS --without-K --allow-exec #-}
+{-# OPTIONS --allow-exec #-}
 
 open import SMT.Theory
 
-module SMT.Backend.Z3 {s i l} {theory : Theory s i l} (printable : Printable theory) where
+module SMT.Backend.Z3 {theory : Theory} (printable : Printable theory) where
 
 open Theory theory
 open Printable printable

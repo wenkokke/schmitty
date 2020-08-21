@@ -21,7 +21,7 @@ data CoreIdentifier : {σ : CoreSort} (Σ : Signature σ) → Set where
   or      : CoreIdentifier (Op₂ BOOL)
   xor     : CoreIdentifier (Op₂ BOOL)
 
-coreTheory : Theory _ _ _
+coreTheory : Theory
 Theory.Sort       coreTheory = CoreSort
 Theory.BOOL       coreTheory = BOOL
 Theory.Literal    coreTheory = CoreLiteral

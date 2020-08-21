@@ -91,7 +91,7 @@ private
 
 -- Instances
 
-theory : Theory _ _ _
+theory : Theory
 Theory.Sort       theory = Sort
 Theory.BOOL       theory = BOOL
 Theory.Literal    theory = Literal

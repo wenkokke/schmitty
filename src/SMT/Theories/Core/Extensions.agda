@@ -17,7 +17,7 @@ open Core public
         )
 
 module Sorts
-  {s} (Sort : Set s)
+  (Sort : Set)
   (CORE : CoreSort → Sort)
   where
 
@@ -31,9 +31,9 @@ module Sorts
   ITE σ = record { ArgTypes = BOOL ∷ σ ∷ σ ∷ [] }
 
 module Literals
-  {s} (Sort : Set s)
+  (Sort : Set)
   (CORE : CoreSort → Sort)
-  {l} (Literal : Sort → Set l)
+  (Literal : Sort → Set)
   (coreLiteral : ∀ {φ} → CoreLiteral φ → Literal (CORE φ))
   where
 
@@ -43,9 +43,9 @@ module Literals
   bool b = coreLiteral (Core.bool b)
 
 module Identifiers
-  {s} (Sort : Set s)
+  (Sort : Set)
   (CORE : CoreSort → Sort)
-  {i} (Identifier : ∀ {σ} (Σ : Signature σ) → Set i)
+  (Identifier : ∀ {σ} (Σ : Signature σ) → Set)
   (coreIdentifier : {φ : CoreSort} {Φ : Signature φ} → CoreIdentifier Φ → Identifier (map CORE Φ))
   where
 
