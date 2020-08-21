@@ -13,6 +13,6 @@ import SMT.Theory
 import SMT.Logics
 import SMT.Logics.Properties
 import SMT.Logics.Properties.Unsafe
-import Text.Parser
+import Text.Parser.String
 import Reflection.External
 

@@ -182,7 +182,7 @@ module Interaction
   open import Data.Vec as Vec using (Vec)
   open import Function using (const; id; _∘_)
   import Function.Identity.Categorical as Identity
-  open import Text.Parser
+  open import Text.Parser.String
 
   open Printable printable
 

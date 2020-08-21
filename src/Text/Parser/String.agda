@@ -1,4 +1,4 @@
-module Text.Parser where
+module Text.Parser.String where
 
 open import Data.Bool as Bool using (Bool; T; not; if_then_else_)
 open import Data.Char as Char using (Char)
