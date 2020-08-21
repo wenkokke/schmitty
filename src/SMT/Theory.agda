@@ -43,3 +43,4 @@ record Printable {s i l : Level} (theory : Theory s i l) : Set (suc (s ⊔ i ⊔
     showSort       : Sort → String
     showLiteral    : {σ : Sort} → Literal σ → String
     showIdentifier : {σ : Sort} {Σ : Signature σ} → Identifier Σ → String
+

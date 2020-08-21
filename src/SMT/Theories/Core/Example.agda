@@ -8,10 +8,9 @@ open import Data.Product using (_×_; _,_)
 open import Reflection.External
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
-open import SMT.Theories.Core
-open import SMT.Script coreTheory
-open import SMT.Script.Show corePrintable
-open import SMT.Backend.Z3 corePrintable
+open import SMT.Theories.Core as Core
+open import SMT.Script Core.coreTheory
+open import SMT.Backend.Z3 Core.corePrintable
 
 -- |Taken from <http://smtlib.cs.uiowa.edu/examples.shtml>
 --

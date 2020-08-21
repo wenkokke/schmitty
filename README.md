@@ -5,12 +5,12 @@ Schmitty is an Agda library which uses the new `execTC` primitive to integrate A
 The library contains a well-typed embedding of *a subset of* SMT-LIB lisp:
 
 - [`SMT.Script`][SMT.Script]
-- [`SMT.Script.Show`][SMT.Script.Show]
 - [`SMT.Theory`][SMT.Theory]
 - [`SMT.Theories.Core`][SMT.Theories.Core]
 - [`SMT.Theories.Core.Extensions`][SMT.Theories.Core.Extensions]
 - [`SMT.Theories.Ints`][SMT.Theories.Ints]
 - [`SMT.Theories.Reals`][SMT.Theories.Reals]
+- [`SMT.Logics`][SMT.Logics]
 
 Macros to run SMT scripts on various backends:
 
@@ -27,8 +27,6 @@ The examples are a good place to start reading!
 # Roadmap
 
 - [ ] Merge [`Reflection.External`][Reflection.External] into [agda-stdlib][agda-stdlib].
-- [ ] Implement lattice of logics.
-- [ ] Extend theories with a logic checker.
 - [ ] Parse solver *output* and convert to Agda types.
 - [ ] Reflect Agda types to SMT lisp terms.
 - [ ] Provide solver macro which provides “evidence” using postulates.
@@ -46,7 +44,7 @@ Note: You’ll need *at least* [Agda version 2.6.2-20eb4f3][agda-version] to run
 [SMT.Theories.Ints.Example]: https://wenkokke.github.io/schmitty/SMT.Theories.Ints.Example.html
 [SMT.Theories.Reals]: https://wenkokke.github.io/schmitty/SMT.Theories.Reals.html
 [SMT.Script]: https://wenkokke.github.io/schmitty/SMT.Script.html
-[SMT.Script.Show]: https://wenkokke.github.io/schmitty/SMT.Script.Show.html
+[SMT.Logics]: https://wenkokke.github.io/schmitty/SMT.Logics.html
 [SMT.Backend.Z3]: https://wenkokke.github.io/schmitty/SMT.Backend.Z3.html
 [Reflection.External]: https://wenkokke.github.io/schmitty/Reflection.External.html
 [agda-stdlib]: https://github.com/agda/agda-stdlib

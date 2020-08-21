@@ -10,7 +10,6 @@ open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
 open import SMT.Theories.Ints as Ints
 open import SMT.Script Ints.theory
-open import SMT.Script.Show Ints.printable
 open import SMT.Backend.Z3 Ints.printable
 
 -- |Taken from <http://smtlib.cs.uiowa.edu/examples.shtml>

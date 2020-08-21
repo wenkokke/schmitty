@@ -10,7 +10,6 @@ import SMT.Theories.Ints.Example
 import SMT.Backend.Z3.Parser
 import SMT.Backend.Z3
 import SMT.Theory
-import SMT.Script.Show
 import SMT.Logics
 import SMT.Logics.Properties
 import SMT.Logics.Properties.Unsafe

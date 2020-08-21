@@ -8,7 +8,7 @@ open Theory theory
 open Printable printable
 
 open import SMT.Script theory
-open import SMT.Script.Show printable
+open Interaction printable
 open import Data.List
 open import Reflection.External
 
