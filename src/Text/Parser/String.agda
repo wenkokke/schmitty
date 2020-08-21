@@ -116,6 +116,29 @@ private
     Agdarsec′M0 = PM.Agdarsec′.monadZero
     Agdarsec′M+ = PM.Agdarsec′.monadPlus
 
+
+-- |Parser which...
+guardM : (A → Maybe B) → ∀[ Parser A ⇒ Parser B ]
+guardM = PC.guardM
+
+-- |Parser which...
+_>>=_ : ∀[ Parser A ⇒ (const A ⇒ □ Parser B) ⇒ Parser B ]
+_>>=_ = PC._>>=_
+
+infixl 4 _<&>_ _<&_ _&>_
+
+-- |Parser which...
+_<&>_ : ∀[ Parser A ⇒ □ Parser B ⇒ Parser (A × B) ]
+_<&>_ = PC._<&>_
+
+-- |Parser which...
+_<&_ : ∀[ Parser A ⇒ □ Parser B ⇒ Parser A ]
+_<&_ = PC._<&_
+
+-- |Parser which...
+_&>_ : ∀[ Parser A ⇒ □ Parser B ⇒ Parser B ]
+_&>_ = PC._&>_
+
 -- |Parser which...
 box : ∀[ Parser A ⇒ □ Parser A ]
 box = PC.box

@@ -5,6 +5,8 @@ open import Data.List.Base as List using (List; _∷_; [])
 open import Data.String.Base as String using (String)
 open import Function using (id)
 open import Reflection
+open import Relation.Nullary using (Dec; yes; no)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import SMT.Theory
 open import Text.Parser.String
 
@@ -50,6 +52,14 @@ showCoreIdentifier xor     = "xor"
 CoreValue : CoreSort → Set
 CoreValue BOOL = Bool
 
+_≟-CoreSort_ : (φ φ′ : CoreSort) → Dec (φ ≡ φ′)
+BOOL ≟-CoreSort BOOL = yes refl
+
+readCoreSort : ∀[ Parser CoreSort ]
+readCoreSort = pBOOL
+  where
+    pBOOL = withSpaces (BOOL <$ text "Bool")
+
 readBool : ∀[ Parser Bool ]
 readBool = withSpaces (pTrue <|> pFalse)
   where
@@ -81,6 +91,8 @@ Printable.showLiteral    corePrintable = showCoreLiteral
 Printable.showIdentifier corePrintable = showCoreIdentifier
 
 coreParsable : Parsable coreTheory
+Parsable._≟-Sort_   coreParsable = _≟-CoreSort_
+Parsable.readSort   coreParsable = readCoreSort
 Parsable.Value      coreParsable = CoreValue
 Parsable.readValue  coreParsable = readCoreValue
 Parsable.quoteValue coreParsable = quoteCoreValue

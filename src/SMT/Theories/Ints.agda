@@ -6,9 +6,13 @@ open import Data.Nat.Base as Nat using (ℕ)
 open import Data.Nat.Show renaming (show to showℕ)
 open import Data.List as List using (List; _∷_; [])
 open import Data.String as String using (String)
+open import Function.Equivalence using (equivalence)
 open import Reflection using (Term; con; lit; nat; vArg)
+open import Relation.Nullary using (Dec; yes; no)
+import Relation.Nullary.Decidable as Dec
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
 open import SMT.Theory
-open import SMT.Theories.Core using (CoreValue; readCoreValue; quoteCoreValue)
+open import SMT.Theories.Core hiding (BOOL)
 open import SMT.Theories.Core.Extensions
 open import Text.Parser.String
 
@@ -29,9 +33,12 @@ private
   variable
     σ : Sort
     Σ : Signature σ
-    φ : CoreSort
+    φ φ′ : CoreSort
     Φ : Signature φ
 
+
+CORE-injective : CORE φ ≡ CORE φ′ → φ ≡ φ′
+CORE-injective refl = refl
 
 -- Literals
 
@@ -99,6 +106,17 @@ private
 -- Parsers --
 -------------
 
+_≟-Sort_ : (σ σ′ : Sort) → Dec (σ ≡ σ′)
+CORE φ ≟-Sort CORE φ′ = Dec.map (equivalence (cong CORE) CORE-injective) (φ ≟-CoreSort φ′)
+CORE φ ≟-Sort INT     = no (λ ())
+INT    ≟-Sort CORE φ  = no (λ ())
+INT    ≟-Sort INT     = yes refl
+
+readSort : ∀[ Parser Sort ]
+readSort = (CORE <$> readCoreSort) <|> pINT
+  where
+    pINT = withSpaces (INT <$ text "Int")
+
 Value : Sort → Set
 Value (CORE φ) = CoreValue φ
 Value INT      = ℤ
@@ -132,6 +150,8 @@ Printable.showLiteral    printable = showLiteral
 Printable.showIdentifier printable = showIdentifier
 
 parsable : Parsable theory
+Parsable._≟-Sort_   parsable = _≟-Sort_
+Parsable.readSort   parsable = readSort
 Parsable.Value      parsable = Value
 Parsable.readValue  parsable = readValue
 Parsable.quoteValue parsable = quoteValue

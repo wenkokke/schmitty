@@ -175,6 +175,7 @@ module Interaction
   open import Category.Monad.State as StateCat using (RawIMonadState; IStateT)
   open import Codata.Musical.Stream as Stream using (Stream)
   open import Data.Char as Char using (Char)
+  open import Data.Maybe as Maybe using (Maybe; just; nothing)
   open import Data.Nat as Nat using (ℕ)
   open import Data.Nat.Show renaming (show to showℕ)
   open import Data.Product as Product using (_×_; _,_; -,_; proj₁; proj₂)
@@ -183,7 +184,7 @@ module Interaction
   open import Data.Vec as Vec using (Vec)
   open import Function using (const; id; _∘_; _$_)
   import Function.Identity.Categorical as Identity
-  open import Text.Parser.String
+  open import Text.Parser.String as P hiding (_>>=_)
   open import Reflection using (con; hArg; vArg)
 
   open Printable printable
@@ -318,11 +319,15 @@ module Interaction
   [] <||> [] = []
   (p₁ ∷ env₁) <||> (p₂ ∷ env₂) = (p₁ <|> p₂) ∷ (env₁ <||> env₂)
 
+  -- |Fold an EnvParser to a variable parser.
+  foldEP : EnvParser Γ → ∀[ Parser (∃[ σ ] (Γ ∋ σ)) ]
+  foldEP []            = fail
+  foldEP (p ∷ env) {x} = (-,_ <$> p {x}) <|> (Prod.map id extendVar <$> foldEP env {x})
+
   mutual
 
     -- |Show a term as an S-expression. The code below passes a name state in
     --  a state monad. For the pure version, see `showTerm` below.
-    --
     showTermS : Term Γ σ → IStateT Names id Γ Γ (String × EnvParser Γ)
     showTermS {Γ} {σ} (var i) = do
       n ← getName i
@@ -394,19 +399,10 @@ module Interaction
   nameSupply x′es = Stream.map (λ n → 'x' ∷ String.toList (showℕ n)) (Stream.iterate ℕ.suc 0)
 
 
-  -- |Show a term as an S-expression.
-  showTerm : Names Γ → Term Γ σ → String
-  showTerm names x = proj₁ (proj₁ (showTermS x names))
-
-
-  -- |Show a command as an S-expression.
-  showCommand : Names Γ → Command Γ Ξ δΓ δΞ → String
-  showCommand names cmd = proj₁ (proj₁ (showCommandS cmd names))
-
-
   -- |Show a script as an S-expression.
-  showScript : Script [] Γ Ξ → String × EnvParser Γ
-  showScript scr = Prod.map String.unlines (_$ []) (proj₁ (showScriptS scr x′es))
+  showScript : Script [] Γ Ξ → String × ∀[ Parser (∃[ σ ] (Γ ∋ σ)) ]
+  showScript scr =
+    Prod.map String.unlines (λ p → withSpaces (foldEP (p []))) (proj₁ (showScriptS scr x′es))
 
 
   -- |Parse a satisfiability result.
@@ -430,6 +426,25 @@ module Interaction
   _ : parseSat rejects "dogfood"
   _ = _
 
+  -- |Parse a variable assignment.
+  parseVarAssign : ∀ {Γ} → ∀[ Parser (∃[ σ ] (Γ ∋ σ)) ] → ∀[ Parser (∃[ σ ] (Γ ∋ σ × Value σ)) ]
+  parseVarAssign {Γ} parseVarName = parens (box (guardM mkAssign parseAssign))
+    where
+      -- Parse a pair of a sort and a value of that sort.
+      parseSortValue : ∀[ Parser (∃[ σ ] (Value σ)) ]
+      parseSortValue = readSort P.>>= λ σ → box (-,_ <$> readValue σ)
+
+      -- Parse a variable assignment, with possibly distinct sorts.
+      parseAssign : ∀[ Parser (∃[ σ ] (Γ ∋ σ) × ∃[ σ ] (Value σ)) ]
+      parseAssign = text "define-fun" &> box (parseVarName <&> box (text "()" &> box parseSortValue))
+
+      -- Check if the expect and actual sorts correspond.
+      mkAssign : ∃[ σ ] (Γ ∋ σ) × ∃[ σ ] (Value σ) → Maybe (∃[ σ ] (Γ ∋ σ × Value σ))
+      mkAssign ((σ₁ , x) , (σ₂ , v)) with σ₁ ≟-Sort σ₂
+      ... | yes refl = just (σ₂ , x , v)
+      ... | no  _    = nothing
+
+  -- TODO: connect the output of showScript, via parseVarAssign, to the parseResults function.
 
   -- |Parse a result.
   parseResult : (ξ : OutputType) → ∀[ Parser (Result ξ) ]

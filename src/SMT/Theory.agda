@@ -4,6 +4,8 @@ open import Level
 open import Data.List as List using (List; _∷_; [])
 open import Data.String using (String)
 open import Reflection using (Term)
+open import Relation.Nullary using (Dec; yes; no)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import Text.Parser.String
 
 
@@ -48,6 +50,8 @@ record Printable (theory : Theory) : Set where
 record Parsable (theory : Theory) : Set₁ where
   open Theory theory
   field
+    _≟-Sort_   : (σ σ′ : Sort) → Dec (σ ≡ σ′)
+    readSort   : ∀[ Parser Sort ]
     Value      : Sort → Set
     readValue  : (σ : Sort) → ∀[ Parser (Value σ) ]
     quoteValue : (σ : Sort) → Value σ → Term
