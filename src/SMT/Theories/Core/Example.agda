@@ -10,7 +10,7 @@ open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
 open import SMT.Theories.Core as Core
 open import SMT.Script Core.coreTheory
-open import SMT.Backend.Z3 Core.corePrintable
+open import SMT.Backend.Z3 Core.corePrintable Core.coreParsable
 
 -- |Taken from <http://smtlib.cs.uiowa.edu/examples.shtml>
 --

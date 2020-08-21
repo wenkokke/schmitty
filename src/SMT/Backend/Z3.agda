@@ -2,13 +2,17 @@
 
 open import SMT.Theory
 
-module SMT.Backend.Z3 {theory : Theory} (printable : Printable theory) where
+module SMT.Backend.Z3
+  {theory : Theory}
+  (printable : Printable theory)
+  (parsable : Parsable theory)
+  where
 
 open Theory theory
 open Printable printable
 
 open import SMT.Script theory as Script using (Script; Results; Ctxt; OutputCtxt; OutputType)
-open Script.Interaction printable using (showScript; x′es; parseResults; quoteResults)
+open Script.Interaction printable parsable using (showScript; x′es; parseResults; quoteResults)
 open import Data.List as List using (List; _∷_; [])
 open import Data.Maybe as Maybe using (Maybe; just; nothing)
 open import Data.String as String using (String; _++_)

@@ -18,7 +18,7 @@ open import Data.Sum as Sum using (_⊎_; inj₁; inj₂)
 open import Data.Subset -- instances
 open import Data.Unit as Unit using (⊤; tt)
 open import Data.Vec as Vec using (Vec)
-open import Function using (id; const; _∘_; _$_; case_of_)
+open import Function using (id; const; _∘_; _∘′_; _$_; case_of_)
 open import Induction.Nat.Strong using (□_) public
 open import Relation.Nullary using (Dec; yes; no)
 open import Relation.Nullary.Decidable using (True; ⌊_⌋)
@@ -149,6 +149,14 @@ _<*>_ : ∀[ Parser (A → B) ⇒ □ Parser A ⇒ Parser B ]
 _<*>_ = PC._<*>_
 
 -- |Parser which...
+alts : ∀[ List ∘′ Parser A ⇒ Parser A ]
+alts = PC.alts
+
+-- |Parser which...
+ands : ∀[ List⁺ ∘′ Parser A ⇒ Parser (List⁺ A) ]
+ands = PC.ands
+
+-- |Parser which...
 char : Char → ∀[ Parser Char ]
 char = PCC.char
 
@@ -171,6 +179,14 @@ isEmpty = List.null ∘ String.toList
 -- |Parser which...
 text : (str : String) {p : T (not (isEmpty str))} → ∀[ Parser (List⁺ Char) ]
 text = PCC.text
+
+-- |Parser which...
+exact : Char → ∀[ Parser Char ]
+exact = PC.exact
+
+-- |Parser which...
+exacts : (str : List⁺ Char) → ∀[ Parser (List⁺ Char) ]
+exacts = PC.exacts
 
 -- |Parser which...
 parens : ∀[ □ Parser A ⇒ Parser A ]

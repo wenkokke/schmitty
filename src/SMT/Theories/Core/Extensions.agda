@@ -1,5 +1,3 @@
-{-# OPTIONS --without-K --safe #-}
-
 open import SMT.Theory
 open import SMT.Theories.Core as Core using (CoreSort; CoreLiteral; CoreIdentifier)
 

@@ -4,6 +4,7 @@ module SMT.Script (theory : Theory) where
 
 open import Data.Fin as Fin using (Fin)
 open import Data.List as List using (List; _∷_; [])
+open import Data.List.NonEmpty as List⁺ using (List⁺; _∷_)
 open import Data.Product using (∃; ∃-syntax; _,_)
 open import Relation.Nullary using (Dec; yes; no)
 open import Relation.Nullary.Decidable using (True)
@@ -167,6 +168,7 @@ data Script (Γ : Ctxt) : (Γ″ : Ctxt) (Ξ : OutputCtxt) → Set where
 
 module Interaction
   (printable : Printable theory)
+  (parsable : Parsable theory)
   where
 
   open import Category.Monad
@@ -185,10 +187,12 @@ module Interaction
   open import Reflection using (con; hArg; vArg)
 
   open Printable printable
+  open Parsable parsable
 
   private
     variable
       T : Sort → Set
+
 
   -- |Environments, i.e., lists where the types of the elements
   --  are determined by a type-level list.
@@ -196,13 +200,16 @@ module Interaction
     []  : Env T []
     _∷_ : T σ → Env T Γ → Env T (σ ∷ Γ)
 
+
   -- |Get the first element in a non-empty environment.
   head : Env T (σ ∷ Γ) → T σ
   head (x ∷ _env) = x
 
+
   -- |Remove the first element from a non-empty environment.
   tail : Env T (σ ∷ Γ) → Env T Γ
   tail (_x ∷ env) = env
+
 
   -- |Get the i'th element from an environment.
   lookup : (env : Env T Γ) (i : Fin _) → T (List.lookup Γ i)
@@ -210,9 +217,15 @@ module Interaction
   lookup ( x ∷ _env) Fin.zero    = x
   lookup (_x ∷  env) (Fin.suc i) = lookup env i
 
+
   -- |Names.
   Name : Set
-  Name = String
+  Name = List⁺ Char
+
+  -- |Show names.
+  showName : Name → String
+  showName = String.fromList ∘ List⁺.toList
+
 
   -- |Name states, i.e., an environment of names, one for every
   --  variable in the context Γ, and a supply  of fresh names.
@@ -266,6 +279,7 @@ module Interaction
     names ← get
     return (lookup (nameEnv names) i)
 
+
   -- |Create an S-expression from a list of strings.
   --
   -- @
@@ -275,6 +289,7 @@ module Interaction
   mkSTerm : List String → String
   mkSTerm = String.parens ∘ String.unwords
 
+
   mutual
 
     -- |Show a term as an S-expression. The code below passes a name state in
@@ -283,7 +298,7 @@ module Interaction
     showTermS : Term Γ σ → IStateT Names id Γ Γ String
     showTermS (var i) = do
       n ← getName i
-      return n
+      return (showName n)
     showTermS (lit l) =
       return (showLiteral l)
     showTermS (app x xs) = do
@@ -295,14 +310,14 @@ module Interaction
       let σ′ = showSort σ
       x′ ← showTermS x
       popName
-      let nσs′ = mkSTerm (mkSTerm (n′ ∷ σ′ ∷ []) ∷ [])
+      let nσs′ = mkSTerm (mkSTerm (showName n′ ∷ σ′ ∷ []) ∷ [])
       return (mkSTerm ("forall" ∷ nσs′ ∷ x′ ∷ []))
     showTermS (exists {σ} x) = do
       n′ ← pushFreshName σ
       let σ′ = showSort σ
       x′ ← showTermS x
       popName
-      let nσs′ = mkSTerm (mkSTerm (n′ ∷ σ′ ∷ []) ∷ [])
+      let nσs′ = mkSTerm (mkSTerm (showName n′ ∷ σ′ ∷ []) ∷ [])
       return (mkSTerm ("exists" ∷ nσs′ ∷ x′ ∷ []))
 
     -- |Show a series of terms as S-expression.
@@ -317,6 +332,7 @@ module Interaction
       xs′ ← showArgsS xs
       return (x′ ∷ xs′)
 
+
   -- |Show a command as an S-expression. The code below passes a name state in
   --  a state monad. For the pure version, see `showCommand` below.
   showCommandS : Command Γ′ Ξ′ Γ Ξ → IStateT Names id Γ′ Γ String
@@ -325,7 +341,7 @@ module Interaction
   showCommandS (declare-const σ) = do
     n′ ← pushFreshName σ
     let σ′ = showSort σ
-    return (mkSTerm ("declare-const" ∷ n′ ∷ σ′ ∷ []))
+    return (mkSTerm ("declare-const" ∷ showName n′ ∷ σ′ ∷ []))
   showCommandS (assert x) = do
     x′ ← showTermS x
     return (mkSTerm ("assert" ∷ x′ ∷ []))
@@ -333,6 +349,7 @@ module Interaction
     return (mkSTerm ("check-sat" ∷ []))
   showCommandS get-model =
     return (mkSTerm ("get-model" ∷ []))
+
 
   -- |Show a script as an S-expression. The code below passes a name state in
   --  a state monad. For the pure version, see `showScript` below.
@@ -343,22 +360,27 @@ module Interaction
     cmds′ ← showScriptS cmds
     return (cmd′ ∷ cmds′)
 
+
   -- |A name state for the empty context, which supplies the names x0, x1, x2, ...
   x′es : Names []
   nameEnv    x′es = []
-  nameSupply x′es = Stream.map (λ n → "x" ++ showℕ n) (Stream.iterate ℕ.suc 0)
+  nameSupply x′es = Stream.map (λ n → 'x' ∷ String.toList (showℕ n)) (Stream.iterate ℕ.suc 0)
+
 
   -- |Show a term as an S-expression.
   showTerm : Names Γ → Term Γ σ → String
   showTerm names x = proj₁ (showTermS x names)
 
+
   -- |Show a command as an S-expression.
   showCommand : Names Γ → Command Γ Ξ Γ′ Ξ′ → String
   showCommand names cmd = proj₁ (showCommandS cmd names)
 
+
   -- |Show a script as an S-expression.
   showScript : Names Γ → Script Γ Γ′ Ξ → String
   showScript names cmd = String.unlines (proj₁ (showScriptS cmd names))
+
 
   -- |Parse a satisfiability result.
   parseSat : ∀[ Parser Sat ]
@@ -367,6 +389,7 @@ module Interaction
       pSat     = sat     <$ text "sat"
       pUnsat   = unsat   <$ text "unsat"
       pUnknown = unknown <$ text "unknown"
+
 
   _ : parseSat parses "sat" as (_≟-Sat sat)
   _ = _
@@ -380,6 +403,7 @@ module Interaction
   _ : parseSat rejects "dogfood"
   _ = _
 
+
   -- |Parse a result.
   parseResult : (ξ : OutputType) → ∀[ Parser (Result ξ) ]
   parseResult SAT       = parseSat
@@ -388,15 +412,19 @@ module Interaction
       postulate
         notYetImplemented : ∀[ Parser (Result (MODEL Γ))]
 
+  -- |Parse a list of results.
   parseResults : (ξ : OutputType) (Ξ : OutputCtxt) → ∀[ Parser (Results (ξ ∷ Ξ)) ]
   parseResults ξ [] = (_∷ []) <$> parseResult ξ
   parseResults ξ (ξ′ ∷ Ξ) = _∷_ <$> parseResult ξ <*> box (parseResults ξ′ Ξ)
 
+
+  -- |Quote a satisfiability result.
   quoteSat : Sat → Reflection.Term
   quoteSat sat     = con (quote sat) []
   quoteSat unsat   = con (quote unsat) []
   quoteSat unknown = con (quote unknown) []
 
+  -- |Quote a result.
   quoteResult : Result ξ → Reflection.Term
   quoteResult {SAT}     r = quoteSat r
   quoteResult {MODEL Γ} r = notYetImplemented r
@@ -404,10 +432,7 @@ module Interaction
       postulate
         notYetImplemented : Result (MODEL Γ) → Reflection.Term
 
+  -- |Quote a list of results.
   quoteResults : Results Ξ → Reflection.Term
-  quoteResults [] =
-    con (quote Results.[]) []
-  quoteResults (r ∷ rs) =
-    con (quote Results._∷_) $ vArg (quoteResult r)
-                            ∷ vArg (quoteResults rs)
-                            ∷ []
+  quoteResults [] = con (quote Results.[]) []
+  quoteResults (r ∷ rs) = con (quote Results._∷_) $ vArg (quoteResult r) ∷ vArg (quoteResults rs) ∷ []

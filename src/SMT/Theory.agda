@@ -1,10 +1,10 @@
-{-# OPTIONS --without-K --safe #-}
-
 module SMT.Theory where
 
 open import Level
 open import Data.List as List using (List; _∷_; [])
 open import Data.String using (String)
+open import Reflection using (Term)
+open import Text.Parser.String
 
 
 record Signature {Sort : Set} (σ : Sort) : Set where
@@ -44,3 +44,10 @@ record Printable (theory : Theory) : Set where
     showSort       : Sort → String
     showLiteral    : {σ : Sort} → Literal σ → String
     showIdentifier : {σ : Sort} {Σ : Signature σ} → Identifier Σ → String
+
+record Parsable (theory : Theory) : Set₁ where
+  open Theory theory
+  field
+    Value      : Sort → Set
+    readValue  : (σ : Sort) → ∀[ Parser (Value σ) ]
+    quoteValue : (σ : Sort) → Value σ → Term

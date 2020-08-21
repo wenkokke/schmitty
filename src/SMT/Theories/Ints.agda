@@ -1,17 +1,19 @@
-{-# OPTIONS --without-K --safe #-}
-
 module SMT.Theories.Ints where
 
 open import Data.Bool.Base as Bool using (Bool; false; true)
+open import Data.Integer.Base as Int using (ℤ; +_; -[1+_])
 open import Data.Nat.Base as Nat using (ℕ)
 open import Data.Nat.Show renaming (show to showℕ)
 open import Data.List as List using (List; _∷_; [])
 open import Data.String as String using (String)
+open import Reflection using (Term; con; lit; nat; vArg)
 open import SMT.Theory
+open import SMT.Theories.Core using (CoreValue; readCoreValue; quoteCoreValue)
 open import SMT.Theories.Core.Extensions
+open import Text.Parser.String
 
 
--- Sorts
+-- Sort
 
 data Sort : Set where
    CORE : (φ : CoreSort) → Sort
@@ -93,7 +95,30 @@ private
     i : Identifier Σ
 
 
--- Instances
+-------------
+-- Parsers --
+-------------
+
+Value : Sort → Set
+Value (CORE φ) = CoreValue φ
+Value INT      = ℤ
+
+readValue : (σ : Sort) → ∀[ Parser (Value σ) ]
+readValue (CORE φ) = readCoreValue φ
+readValue INT      = decimalℤ
+
+quoteInt : ℤ → Term
+quoteInt (+ n)    = con (quote +_) (vArg (lit (nat n)) ∷ [])
+quoteInt -[1+ n ] = con (quote -[1+_]) (vArg (lit (nat n)) ∷ [])
+
+quoteValue : (σ : Sort) → Value σ → Term
+quoteValue (CORE φ) = quoteCoreValue φ
+quoteValue INT      = quoteInt
+
+
+---------------
+-- Instances --
+---------------
 
 theory : Theory
 Theory.Sort       theory = Sort
@@ -105,3 +130,8 @@ printable : Printable theory
 Printable.showSort       printable = showSort
 Printable.showLiteral    printable = showLiteral
 Printable.showIdentifier printable = showIdentifier
+
+parsable : Parsable theory
+Parsable.Value      parsable = Value
+Parsable.readValue  parsable = readValue
+Parsable.quoteValue parsable = quoteValue
