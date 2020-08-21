@@ -52,6 +52,31 @@ pattern app₁ f x     = app f (x ∷ [])
 pattern app₂ f x y   = app f (x ∷ y ∷ [])
 pattern app₃ f x y z = app f (x ∷ y ∷ z ∷ [])
 
+Rename : (Γ Δ : Ctxt) → Set
+Rename Γ Δ = ∀ {σ} → Γ ∋ σ → Δ ∋ σ
+
+extendVar : Γ ∋ σ → (σ′ ∷ Γ) ∋ σ
+extendVar (i , p) = Fin.suc i , p
+
+extendRename : Rename Γ Γ′ → Rename (σ ∷ Γ) (σ ∷ Γ′)
+extendRename r (Fin.zero  , p) = Fin.zero , p
+extendRename r (Fin.suc i , p) = extendVar (r (i , p))
+
+mutual
+  rename : Rename Γ Γ′ → Term Γ σ → Term Γ′ σ
+  rename r (var i)    = var (r i)
+  rename r (lit l)    = lit l
+  rename r (app x xs) = app x (renameArgs r xs)
+  rename r (forAll x) = forAll (rename (extendRename r) x)
+  rename r (exists x) = exists (rename (extendRename r) x)
+
+  renameArgs : Rename Γ Γ′ → Args Γ Δ → Args Γ′ Δ
+  renameArgs r [] = []
+  renameArgs r (x ∷ xs) = rename r x ∷ renameArgs r xs
+
+weaken : Term Γ σ → Term (σ′ ∷ Γ) σ
+weaken = rename extendVar
+
 ---------------------
 -- SMT-LIB Results --
 ---------------------
@@ -132,21 +157,19 @@ module Interaction
   (printable : Printable theory)
   where
 
-  open import Category.Monad.State using (RawIMonadState; StateTIMonadState; IStateT)
+  open import Category.Monad
+  open import Category.Monad.State as StateCat using (RawIMonadState; IStateT)
   open import Codata.Musical.Stream as Stream using (Stream)
   open import Data.Char as Char using (Char)
   open import Data.Nat as Nat using (ℕ)
   open import Data.Nat.Show renaming (show to showℕ)
-  open import Data.Product as Product using (_×_; _,_; proj₁; proj₂)
-  open import Data.String as String using (String; _++_)
+  open import Data.Product as Product using (_×_; _,_; -,_; proj₁; proj₂)
+  open import Data.String as String using (String; _++_; toList; fromList⁺)
   open import Data.Unit as Unit using (⊤)
+  open import Data.Vec as Vec using (Vec)
   open import Function using (const; id; _∘_)
   import Function.Identity.Categorical as Identity
-  open import Relation.Unary
-  import Text.Parser.Types as Parser
-  open import Text.Parser.Combinators using ()
-  open import Text.Parser.Combinators.Char
-  open import Text.Parser.Monad
+  open import Text.Parser
 
   open Printable printable
 
@@ -174,6 +197,10 @@ module Interaction
   lookup ( x ∷ _env) Fin.zero    = x
   lookup (_x ∷  env) (Fin.suc i) = lookup env i
 
+  -- |Names.
+  Name : Set
+  Name = String
+
   -- |Name states, i.e., an environment of names, one for every
   --  variable in the context Γ, and a supply  of fresh names.
   --
@@ -183,18 +210,23 @@ module Interaction
   --
   record Names (Γ : Ctxt) : Set where
     field
-      nameEnv    : Env (const String) Γ
-      nameSupply : Stream String
+      nameEnv    : Env (const Name) Γ
+      nameSupply : Stream Name
 
   open Names -- bring `nameEnv` and `nameSupply` in scope
 
   -- When showing terms, we need to pass around a name state,
   -- for which we'll use an indexed monad, indexed by the context,
   -- so we bring the functions from the indexed monad in scope.
-  open RawIMonadState (StateTIMonadState Names Identity.monad)
+  private
+    monadStateNameState = StateCat.StateTIMonadState Names Identity.monad
+
+  open RawIMonadState monadStateNameState
+    using (return; _>>=_; _>>_; put; get; modify)
+
 
   -- |Add a fresh name to the front of the name environment.
-  pushFreshName : (σ : Sort) → IStateT Names id Γ (σ ∷ Γ) String
+  pushFreshName : (σ : Sort) → IStateT Names id Γ (σ ∷ Γ) Name
   pushFreshName σ = do
     names ← get
     let names′ = pushFreshName′ σ names
@@ -216,7 +248,7 @@ module Interaction
 
 
   -- |Get i'th name from the name environment in the state monad.
-  getName : (i : Γ ∋ σ) → IStateT Names id Γ Γ String
+  getName : (i : Γ ∋ σ) → IStateT Names id Γ Γ Name
   getName (i , _prf) = do
     names ← get
     return (lookup (nameEnv names) i)
@@ -230,21 +262,15 @@ module Interaction
   mkSTerm : List String → String
   mkSTerm = String.parens ∘ String.unwords
 
-  -- |Parser monad.
-  Parser : (A : Set) (n : ℕ) → Set
-  Parser = Parser.Parser (Agdarsec′.vec Char)
-
-  -- pTermS : Term Γ σ → IStateT Names id Γ Γ (String × ∀[ Parser {!!} ]) 
-  -- pTermS = {!!}
-
   mutual
 
     -- |Show a term as an S-expression. The code below passes a name state in
     --  a state monad. For the pure version, see `showTerm` below.
     --
     showTermS : Term Γ σ → IStateT Names id Γ Γ String
-    showTermS (var i) =
-      getName i
+    showTermS (var i) = do
+      n ← getName i
+      return n
     showTermS (lit l) =
       return (showLiteral l)
     showTermS (app x xs) = do
@@ -272,8 +298,11 @@ module Interaction
     --  `mapM showTermS xs` terminates.
     --
     showArgsS : Args Γ Δ → IStateT Names id Γ Γ (List String)
-    showArgsS [] = pure []
-    showArgsS (x ∷ xs) = _∷_ <$> showTermS x ⊛ showArgsS xs
+    showArgsS [] = return []
+    showArgsS (x ∷ xs) = do
+      x′ ← showTermS x
+      xs′ ← showArgsS xs
+      return (x′ ∷ xs′)
 
   -- |Show a command as an S-expression. The code below passes a name state in
   --  a state monad. For the pure version, see `showCommand` below.
@@ -295,8 +324,11 @@ module Interaction
   -- |Show a script as an S-expression. The code below passes a name state in
   --  a state monad. For the pure version, see `showScript` below.
   showScriptS : Script Γ Γ′ Ξ → IStateT Names id Γ Γ′ (List String)
-  showScriptS [] = pure []
-  showScriptS (cmd ∷ cmds) = _∷_ <$> showCommandS cmd ⊛ showScriptS cmds
+  showScriptS [] = return []
+  showScriptS (cmd ∷ cmds) = do
+    cmd′ ← showCommandS cmd
+    cmds′ ← showScriptS cmds
+    return (cmd′ ∷ cmds′)
 
   -- |A name state for the empty context, which supplies the names x0, x1, x2, ...
   x′es : Names []
@@ -314,3 +346,22 @@ module Interaction
   -- |Show a script as an S-expression.
   showScript : Names Γ → Script Γ Γ′ Ξ → String
   showScript names cmd = String.unlines (proj₁ (showScriptS cmd names))
+
+  parseSat : ∀[ Parser Sat ]
+  parseSat = withSpaces (pSat <|> pUnsat <|> pUnknown)
+    where
+      pSat     = sat     <$ text "sat"
+      pUnsat   = unsat   <$ text "unsat"
+      pUnknown = unknown <$ text "unknown"
+
+  parseResult : (ξ : OutputType) → ∀[ Parser (Result ξ) ]
+  parseResult SAT       = parseSat
+  parseResult (MODEL Γ) = notYetImplemented
+    where
+      postulate
+        notYetImplemented : ∀[ Parser (Result (MODEL Γ))]
+
+  parseResults : (ξ : OutputType) (Ξ : OutputCtxt) → ∀[ Parser (Results (ξ ∷ Ξ)) ]
+  parseResults ξ [] = (_∷ []) <$> parseResult ξ
+  parseResults ξ (ξ′ ∷ Ξ) = _∷_ <$> parseResult ξ <*> box (parseResults ξ′ Ξ)
+
