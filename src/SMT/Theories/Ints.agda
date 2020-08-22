@@ -25,10 +25,6 @@ data Sort : Set where
 
 open Sorts Sort CORE
 
-showSort : Sort → String
-showSort (CORE φ) = showCoreSort φ
-showSort INT      = "Int"
-
 private
   variable
     σ : Sort
@@ -36,9 +32,18 @@ private
     φ φ′ : CoreSort
     Φ : Signature φ
 
-
 CORE-injective : CORE φ ≡ CORE φ′ → φ ≡ φ′
 CORE-injective refl = refl
+
+_≟-Sort_ : (σ σ′ : Sort) → Dec (σ ≡ σ′)
+CORE φ ≟-Sort CORE φ′ = Dec.map (equivalence (cong CORE) CORE-injective) (φ ≟-CoreSort φ′)
+CORE φ ≟-Sort INT     = no (λ ())
+INT    ≟-Sort CORE φ  = no (λ ())
+INT    ≟-Sort INT     = yes refl
+
+showSort : Sort → String
+showSort (CORE φ) = showCoreSort φ
+showSort INT      = "Int"
 
 -- Literals
 
@@ -102,28 +107,38 @@ private
     i : Identifier Σ
 
 
+------------
+-- Values --
+------------
+
+Value : Sort → Set
+Value (CORE φ) = CoreValue φ
+Value INT      = ℤ
+
+
 -------------
 -- Parsers --
 -------------
-
-_≟-Sort_ : (σ σ′ : Sort) → Dec (σ ≡ σ′)
-CORE φ ≟-Sort CORE φ′ = Dec.map (equivalence (cong CORE) CORE-injective) (φ ≟-CoreSort φ′)
-CORE φ ≟-Sort INT     = no (λ ())
-INT    ≟-Sort CORE φ  = no (λ ())
-INT    ≟-Sort INT     = yes refl
 
 readSort : ∀[ Parser Sort ]
 readSort = (CORE <$> readCoreSort) <|> pINT
   where
     pINT = withSpaces (INT <$ text "Int")
 
-Value : Sort → Set
-Value (CORE φ) = CoreValue φ
-Value INT      = ℤ
+readInt : ∀[ Parser ℤ ]
+readInt = withSpaces (readPos <|> readNeg)
+  where
+    readPos readNeg : ∀[ Parser ℤ ]
+    readPos = Int.+_ <$> decimalℕ
+    readNeg = Int.-_ <$> parens (box (text "-" &> box spaces &> box readPos))
 
 readValue : (σ : Sort) → ∀[ Parser (Value σ) ]
 readValue (CORE φ) = readCoreValue φ
-readValue INT      = decimalℤ
+readValue INT      = readInt
+
+quoteSort : Sort → Term
+quoteSort (CORE φ) = con (quote CORE) (vArg (quoteCoreSort φ) ∷ [])
+quoteSort INT      = con (quote INT) []
 
 quoteInt : ℤ → Term
 quoteInt (+ n)    = con (quote +_) (vArg (lit (nat n)) ∷ [])
@@ -140,9 +155,13 @@ quoteValue INT      = quoteInt
 
 theory : Theory
 Theory.Sort       theory = Sort
+Theory._≟-Sort_   theory = _≟-Sort_
 Theory.BOOL       theory = BOOL
+Theory.Value      theory = Value
 Theory.Literal    theory = Literal
 Theory.Identifier theory = Identifier
+Theory.quoteSort  theory = quoteSort
+Theory.quoteValue theory = quoteValue
 
 printable : Printable theory
 Printable.showSort       printable = showSort
@@ -150,8 +169,5 @@ Printable.showLiteral    printable = showLiteral
 Printable.showIdentifier printable = showIdentifier
 
 parsable : Parsable theory
-Parsable._≟-Sort_   parsable = _≟-Sort_
 Parsable.readSort   parsable = readSort
-Parsable.Value      parsable = Value
 Parsable.readValue  parsable = readValue
-Parsable.quoteValue parsable = quoteValue

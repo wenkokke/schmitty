@@ -8,10 +8,10 @@ open import Reflection
 
 private
   variable
-    A    : Set
-    x    : A
-    xs   : List A
-    T T′ : A → List A → Set
+    A      : Set
+    x      : A
+    xs xs′ : List A
+    T  T′  : A → List A → Set
 
 data Env (T : A → List A → Set) : List A → Set where
   []  : Env T []
@@ -35,3 +35,13 @@ lookup : (env : Env T xs) (i : Fin (List.length xs)) → uncurry T (lookupRest x
 lookup []          ()
 lookup ( e ∷ _env) zero    = e
 lookup (_e ∷  env) (suc i) = lookup env i
+
+repeat : (f : ∀ x xs → T x xs) (xs : List A) → Env T xs
+repeat _f []       = []
+repeat  f (x ∷ xs) = f x xs ∷ repeat f xs
+
+module _ (inject : ∀ {x xs xs′} → T x xs → T x (xs List.++ xs′)) where
+
+  append : (env : Env T xs) (env′ : Env T xs′) → Env T (xs List.++ xs′)
+  append []        env′ = env′
+  append (x ∷ env) env′ = inject x ∷ (append env env′)

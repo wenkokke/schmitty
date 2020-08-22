@@ -36,9 +36,13 @@ module _ {Sort : Set} where
 record Theory : Set₁ where
   field
     Sort       : Set
+    _≟-Sort_   : (σ σ′ : Sort) → Dec (σ ≡ σ′)
     BOOL       : Sort
+    Value      : Sort → Set
     Literal    : Sort → Set
     Identifier : {σ : Sort} → Signature σ → Set
+    quoteSort  : Sort → Term
+    quoteValue : (σ : Sort) → Value σ → Term
 
 record Printable (theory : Theory) : Set where
   open Theory theory
@@ -50,8 +54,5 @@ record Printable (theory : Theory) : Set where
 record Parsable (theory : Theory) : Set₁ where
   open Theory theory
   field
-    _≟-Sort_   : (σ σ′ : Sort) → Dec (σ ≡ σ′)
     readSort   : ∀[ Parser Sort ]
-    Value      : Sort → Set
     readValue  : (σ : Sort) → ∀[ Parser (Value σ) ]
-    quoteValue : (σ : Sort) → Value σ → Term

@@ -73,6 +73,9 @@ quoteBool : Bool → Term
 quoteBool false = con (quote false) []
 quoteBool true = con (quote true) []
 
+quoteCoreSort : CoreSort → Term
+quoteCoreSort BOOL = con (quote BOOL) []
+
 quoteCoreValue : (φ : CoreSort) → CoreValue φ → Term
 quoteCoreValue BOOL = quoteBool
 
@@ -82,8 +85,12 @@ quoteCoreValue BOOL = quoteBool
 coreTheory : Theory
 Theory.Sort       coreTheory = CoreSort
 Theory.BOOL       coreTheory = BOOL
+Theory._≟-Sort_   coreTheory = _≟-CoreSort_
+Theory.Value      coreTheory = CoreValue
 Theory.Literal    coreTheory = CoreLiteral
 Theory.Identifier coreTheory = CoreIdentifier
+Theory.quoteSort  coreTheory = quoteCoreSort
+Theory.quoteValue coreTheory = quoteCoreValue
 
 corePrintable : Printable coreTheory
 Printable.showSort       corePrintable = showCoreSort
@@ -91,8 +98,5 @@ Printable.showLiteral    corePrintable = showCoreLiteral
 Printable.showIdentifier corePrintable = showCoreIdentifier
 
 coreParsable : Parsable coreTheory
-Parsable._≟-Sort_   coreParsable = _≟-CoreSort_
 Parsable.readSort   coreParsable = readCoreSort
-Parsable.Value      coreParsable = CoreValue
 Parsable.readValue  coreParsable = readCoreValue
-Parsable.quoteValue coreParsable = quoteCoreValue

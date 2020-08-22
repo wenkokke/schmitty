@@ -9,6 +9,8 @@ import SMT.Theories.Ints
 import SMT.Theories.Ints.Example
 import SMT.Backend.Z3
 import SMT.Theory
+import SMT.Script.Names
+import SMT.Script.Base
 import SMT.Logics
 import SMT.Logics.Properties
 import SMT.Logics.Properties.Unsafe

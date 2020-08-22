@@ -183,6 +183,10 @@ ands : ∀[ List⁺ ∘′ Parser A ⇒ Parser (List⁺ A) ]
 ands = PC.ands
 
 -- |Parser which...
+list⁺ : ∀[ Parser A ⇒ Parser (List⁺ A) ]
+list⁺ = PC.list⁺
+
+-- |Parser which...
 char : Char → ∀[ Parser Char ]
 char = PCC.char
 

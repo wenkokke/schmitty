@@ -10,7 +10,8 @@ open import Reflection.External
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
 open import SMT.Theories.Ints as Ints
-open import SMT.Script Ints.theory
+open import SMT.Script.Base Ints.theory
+open import SMT.Script Ints.printable Ints.parsable
 open import SMT.Backend.Z3 Ints.printable Ints.parsable
 
 -- |Taken from <http://smtlib.cs.uiowa.edu/examples.shtml>
