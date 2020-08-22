@@ -22,20 +22,37 @@ Where is the solving? You might’ve seen that I recently extended Agda with th
 _ : z3 blegh ≡ unsat ∷ []
 _ = refl
 ```
-Aww, boo, that one isn’t satisfiable! Did you pick up on that `unsat` there? Schmitty doesn’t just give you back the solver’s output… she is kind enough to actually parse the output for you! In fact, while Schmitty prints the term, she is builds you an output parser, which can parses the solver output, including models!
+Aww, boo, that one isn’t satisfiable! Did you pick up on that `unsat` there? Schmitty doesn’t just give you back the solver’s output… she is kind enough to actually parse the output for you! In fact, while Schmitty prints the term, she is builds you an output parser, which can parses the solver output, including models! Let’s make sure the next one is satisfiable!
+```agda
+yesss : Script [] (INT ∷ INT ∷ []) (SAT ∷ [])
+yesss = declare-const INT
+      ∷ declare-const INT
+      ∷ assert (app₂ eq x y)
+      ∷ get-model
+      ∷ []
+      where
+        x = var (suc zero , refl)
+        y = var (    zero , refl)
+```
+If we call `get-model` instead of `check-sat`, Schmitty will give us back a valid model!
+```agda
+_ : z3 yesss ≡ ((+ 0 ∷ + 0 ∷ []) ∷ [])
+_ = refl
+```
+Okay, I know that wasn’t a particularly hard problem, but I was in a rush. Send me a pull-request if you’ve got better queries for Schmitty!
 
-If you wanna get going with Schmitty, a good place to start are the examples. Right now, Schmitty supports two theories, [Core][SMT.Theories.Core] and [Ints][SMT.Theories.Ints], and one backend, [Z3][SMT.Backend.Z3]. You *can* specify the logic you’re targeting, but Z3 actually tends to perform better when you don’t…
+If you’d like to work with Schmitty, a good place to start are the examples. Right now, Schmitty supports two theories, [Core][SMT.Theories.Core] and [Ints][SMT.Theories.Ints], and one backend, [Z3][SMT.Backend.Z3]. I’ve got a couple of other theories and backends under development, but if you’d like to contribute, your help is more than welcome!
 
 The examples are a good place to start reading! You can find them in [`SMT.Theories.Core.Example`][SMT.Theories.Core.Example] and [`SMT.Theories.Ints.Example`][SMT.Theories.Ints.Example]!
 
 # Roadmap
 
+- [ ] Finish Reals theory for Floats and Rationals.
 - [ ] Add error reporting to the output parser.
-- [ ] Fix bug in model parsing…
 - [ ] Merge [`Reflection.External`][Reflection.External] into [agda-stdlib][agda-stdlib].
 - [ ] Use reflection to reflect Agda expression to SMT-LIB terms.
 - [ ] Use postulates to provide “evidence” when the solver succeeds.
-- [ ] Use @kazkansouh’s SAT solver to provide *actual* evidence for the Core theory.
+- [ ] Use [kazkansouh][kazkansouh]’s SAT solver to provide *actual* evidence for the Core theory.
 
 ---
 
@@ -54,4 +71,4 @@ Note: You’ll need *at least* [Agda version 2.6.2-20eb4f3][agda-version] to run
 [Reflection.External]: https://wenkokke.github.io/schmitty/Reflection.External.html
 [agda-stdlib]: https://github.com/agda/agda-stdlib
 [agda-version]: https://github.com/agda/agda/commit/20eb4f3ebb6eb73385f2651cf9b5c4bdac9a2f10
-
+[kazkansouh]: https://github.com/kazkansouh

@@ -37,7 +37,6 @@ parseErrorMsg input ambiguous-parse = "Ambiguous parse '" ++ input ++ "'"
 parseError : ∀ {a} {A : Set a} (input : String) (errMsg : ParseErrorMsg) → TC A
 parseError input errMsg = typeError (strErr (parseErrorMsg input errMsg) ∷ [])
 
-
 z3TC : Script [] Γ (ξ ∷ Ξ) → TC Reflection.Term
 z3TC {Γ} {ξ} {Ξ} scr = do
 

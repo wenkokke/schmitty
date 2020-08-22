@@ -2,7 +2,7 @@ open import SMT.Theory
 
 module SMT.Script {theory : Theory} (printable : Printable theory) (parsable : Parsable theory) where
 
-open import Data.Fin as Fin using (Fin)
+open import Data.Fin as Fin using (Fin; suc; zero)
 open import Data.List as List using (List; _∷_; []; _++_)
 open import Data.List.NonEmpty as List⁺ using (List⁺; _∷_)
 open import Data.Product as Prod using (∃; ∃-syntax; _,_)
@@ -79,89 +79,83 @@ OutputParsers : OutputCtxt → Set
 OutputParsers Ξ = Env (λ ξ _Ξ → OutputParser ξ) Ξ
 
 -- |Parse a satisfiability result.
-parseSat : ∀[ Parser Sat ]
-parseSat = withSpaces (pSat <|> pUnsat <|> pUnknown)
-  where
-    pSat     = sat     <$ lexeme "sat"
-    pUnsat   = unsat   <$ lexeme "unsat"
-    pUnknown = unknown <$ lexeme "unknown"
+pSat : ∀[ Parser Sat ]
+pSat = sat     <$ lexeme "sat"
+   <|> unsat   <$ lexeme "unsat"
+   <|> unknown <$ lexeme "unknown"
 
-
-_ : parseSat parses "sat"
+_ : pSat parses "sat"
 _ = ! sat
 
-_ : parseSat parses "unsat"
+_ : pSat parses "unsat"
 _ = ! unsat
 
-_ : parseSat parses "unknown"
+_ : pSat parses "unknown"
 _ = ! unknown
 
-_ : parseSat rejects "dogfood"
+_ : pSat rejects "dogfood"
 _ = _
 
 
--- Connect the output of showScript, via parseVarAssign, to parse models.
-parseModel : VarParsers Γ → ∀[ Parser (Model Γ) ]
-parseModel {Γ} vps =
-  parseSat P.>>= λ where
-    sat     → box $ guardM checkModel ((unsafeBuildModel ∘ List⁺.toList) <$> unsafeParseModel)
-    unsat   → box $ fail -- should probably either return the Sat value or report an error
-    unknown → box $ fail -- see above
+-- |Construct a definitions parser from a variable parser.
+--
+-- @
+--   (define-fun x0 () Int (- 1))
+-- @
+--
+mkDefnParser : ∀[ Parser (Var Γ) ] → ∀[ Parser (Defn Γ) ]
+mkDefnParser {Γ} pVar = withSpaces (guardM checkDefn pVarVal)
   where
-    parseVarName : ∀[ Parser (∃[ σ ] (Γ ∋ σ)) ]
-    parseVarName = mkVarParser {Γ} vps
+    pVarVal : ∀[ Parser (Var Γ × Val) ]
+    pVarVal =
+      parens (box (lexeme "define-fun" &> box (pVar <&>
+        box (lexeme "()" &> box (parseSort P.>>= λ σ → box (-,_ <$> parseValue σ))))))
 
-    -- |Parse a variable assignment.
-    parseVarAssign : ∀[ Parser (∃[ σ ] (Γ ∋ σ × Value σ)) ]
-    parseVarAssign = guardM checkVarAssign unsafeParseVarAssign
-      where
+    checkDefn : Var Γ × Val → Maybe (Defn Γ)
+    checkDefn ((σ , i) , (σ′ , v)) with σ ≟-Sort σ′
+    ... | yes refl = just (σ , i , v)
+    ... | no  _    = nothing
 
-      -- Parse a variable assignment, with possibly distinct sorts.
-      unsafeParseVarAssign : ∀[ Parser (∃[ σ ] (Γ ∋ σ) × ∃[ σ ] (Value σ)) ]
-      unsafeParseVarAssign =
-        parens (box (lexeme "define-fun" &> box
-          (parseVarName <&> box (lexeme "()" &> box
-            (parseSort P.>>= λ σ → box (-,_ <$> parseValue σ))))))
 
-      -- Check if the expect and actual sorts correspond.
-      checkVarAssign : ∃[ σ ] (Γ ∋ σ) × ∃[ σ ] (Value σ) → Maybe (∃[ σ ] (Γ ∋ σ × Value σ))
-      checkVarAssign ((σ₁ , x) , (σ₂ , v)) with σ₁ ≟-Sort σ₂
-      ... | yes refl = just (σ₂ , x , v)
-      ... | no  _    = nothing
+-- |Construct a definition-list parser from a variable parser.
+mkDefnsParser : ∀[ Parser (Var Γ) ] → ∀[ Parser (List⁺ (Defn Γ)) ]
+mkDefnsParser {Γ} pVar =
+  withSpaces (parens (box (lexeme "model" &> box (list⁺ (mkDefnParser {Γ} pVar)))))
 
-    -- Parse a series of variable assigments.
-    unsafeParseModel : ∀[ Parser (List⁺ (∃[ σ ] (Γ ∋ σ × Value σ))) ]
-    unsafeParseModel = parens (box (lexeme "model" &> box (list⁺ parseVarAssign)))
 
-    -- Insert a variable assignment into an unchecked model.
-    unsafeInsertModel :
-      ∀ {Γ} → ∃[ σ ] (Γ ∋ σ × Value σ) → Env (λ σ _Γ → List (Value σ)) Γ → Env (λ σ _Γ → List (Value σ)) Γ
-    unsafeInsertModel {.σ ∷ Γ} (σ , (Fin.zero  , refl) , v) (vs ∷ env) = (v ∷ vs) ∷ env
-    unsafeInsertModel {σ′ ∷ Γ} (σ , (Fin.suc i , p)    , v) (vs ∷ env) =
-      vs ∷ unsafeInsertModel (σ , (i , p) , v) env
+private
+  MaybeModel : Ctxt → Set
+  MaybeModel Γ = Env (λ σ _Γ → List (Value σ)) Γ
 
-    -- Build an unchecked model from a list of variable assignments.
-    unsafeBuildModel : List (∃[ σ ] (Γ ∋ σ × Value σ)) → Env (λ σ _Γ → List (Value σ)) Γ
-    unsafeBuildModel []       = Env.repeat (λ _σ _Γ → []) Γ
-    unsafeBuildModel (v ∷ vs) = unsafeInsertModel v (unsafeBuildModel vs)
+  insertMM : ∃[ σ ] (Γ ∋ σ × Value σ) → MaybeModel Γ → MaybeModel Γ
+  insertMM {.σ ∷ Γ} (σ , (Fin.zero  , refl) , v) (vs ∷ env) = (v ∷ vs) ∷ env
+  insertMM {σ′ ∷ Γ} (σ , (Fin.suc i , p)    , v) (vs ∷ env) = vs ∷ insertMM (σ , (i , p) , v) env
 
-    -- Check if each variable has been assigned a value, is essentially traverse.
-    checkModel : ∀ {Γ} → Env (λ σ _Γ → List (Value σ)) Γ → Maybe (Model Γ)
-    checkModel [] = just []
-    checkModel (vs ∷ env) = Maybe.zipWith _∷_ (only vs) (checkModel env)
-      where
-        only : {A : Set} → List A → Maybe A
-        only [] = nothing
-        only (v ∷ []) = just v
-        only (_ ∷ _ ∷ _) = nothing
+  mkMM : List (Defn Γ) → MaybeModel Γ
+  mkMM {Γ} []       = Env.repeat (λ _σ _Γ → []) Γ
+  mkMM {Γ} (v ∷ vs) = insertMM v (mkMM vs)
+
+  fromSingleton : {A : Set} → List A → Maybe A
+  fromSingleton [] = nothing
+  fromSingleton (v ∷ []) = just v
+  fromSingleton (_ ∷ _ ∷ _) = nothing
+
+  checkMM : MaybeModel Γ → Maybe (Model Γ)
+  checkMM [] = just []
+  checkMM (vs ∷ env) = Maybe.zipWith _∷_ (fromSingleton vs) (checkMM env)
+
+
+-- |Construct a model parser from a variable parser.
+mkModelParser : ∀[ Parser (Var Γ) ] → ∀[ Parser (Model Γ) ]
+mkModelParser {Γ} pVar = pSat P.>>= λ { sat → box pModel ; _ → box fail }
+  where
+    -- Insert each definition into a model, and check if it is complete.
+    pModel : ∀[ Parser (Model Γ) ]
+    pModel = guardM checkMM (mkMM ∘ List⁺.toList <$> mkDefnsParser {Γ} pVar)
 
 mkOutputParsers⁺ : OutputParsers (ξ ∷ Ξ) → ∀[ Parser (Outputs (ξ ∷ Ξ)) ]
 mkOutputParsers⁺ (op ∷ [])          = (_∷ []) <$> op
 mkOutputParsers⁺ (op ∷ ops@(_ ∷ _)) = _∷_ <$> op <*> box (mkOutputParsers⁺ ops)
-
-mkOutputParsers : OutputParsers Ξ → ∀[ Parser (Outputs Ξ) ]
-mkOutputParsers [] = [] <$ spaces
-mkOutputParsers ops@(_ ∷ _) = mkOutputParsers⁺ ops
 
 
 -- * Name state monad
@@ -241,12 +235,12 @@ showCommandS (assert x) = do
   x ← showTermS x
   return $ mkSTerm ("assert" ∷ x ∷ []) , []
 showCommandS check-sat = do
-  return $ mkSTerm ("check-sat" ∷ []) , parseSat ∷ []
+  return $ mkSTerm ("check-sat" ∷ []) , pSat ∷ []
 showCommandS get-model = do
   (_ns , vps) ← get
   return $ String.unlines ( mkSTerm ("check-sat" ∷ [])
                           ∷ mkSTerm ("get-model" ∷ []) ∷ [] )
-         , parseModel vps ∷ []
+         , mkModelParser (mkVarParser vps) ∷ []
 
 -- |Show a script as an S-expression, and build up an environment of output parsers.
 showScriptS : Script Γ Γ′ Ξ → NameState Γ Γ′ (List String × OutputParsers Ξ)
@@ -262,8 +256,8 @@ showScript : Script [] Γ (ξ ∷ Ξ) → String × ∀[ Parser (Outputs (ξ ∷
 showScript scr = Prod.map String.unlines mkOutputParsers⁺ (proj₁ (showScriptS scr (x′es , [])))
 
 -- |Get the variable parser for a script (for debugging purposes).
-varParser : Script [] Γ Ξ → ∀[ Parser (∃[ σ ] (Γ ∋ σ)) ]
-varParser scr = mkVarParser (proj₂ (proj₂ (showScriptS scr (x′es , []))))
+getVarParser : Script [] Γ Ξ → ∀[ Parser (∃[ σ ] (Γ ∋ σ)) ]
+getVarParser scr = mkVarParser (proj₂ (proj₂ (showScriptS scr (x′es , []))))
 
 -- -}
 -- -}

@@ -5,14 +5,14 @@ module SMT.Script.Base (theory : Theory) where
 open import Data.Fin as Fin using (Fin)
 open import Data.List as List using (List; _∷_; []; _++_)
 open import Data.List.NonEmpty as List⁺ using (List⁺; _∷_)
-open import Data.Product as Prod using (∃; ∃-syntax; _,_)
+open import Data.Product as Prod using (∃; ∃-syntax; _×_; _,_)
 open import Function using (_$_)
 open import Relation.Nullary using (Dec; yes; no)
 open import Relation.Nullary.Decidable using (True)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import SMT.Logics
 open import Data.Environment as Env using (Env; _∷_; [])
-import Reflection
+import Reflection as Agda
 
 open Theory theory
 
@@ -163,31 +163,35 @@ data Outputs : (Ξ : OutputCtxt) → Set where
 ---------------------
 
 -- |Quote a satisfiability result.
-quoteSat : Sat → Reflection.Term
-quoteSat sat     = Reflection.con (quote sat) []
-quoteSat unsat   = Reflection.con (quote unsat) []
-quoteSat unknown = Reflection.con (quote unknown) []
+quoteSat : Sat → Agda.Term
+quoteSat sat     = Agda.con (quote sat) []
+quoteSat unsat   = Agda.con (quote unsat) []
+quoteSat unknown = Agda.con (quote unknown) []
 
 -- |Quote a model.
-quoteModel : (Γ : Ctxt) → Model Γ → Reflection.Term
+quoteModel : (Γ : Ctxt) → Model Γ → Agda.Term
 quoteModel [] [] =
-  Reflection.con (quote Model.[]) []
+  Agda.con (quote Model.[]) []
 quoteModel (σ ∷ Γ) (v ∷ vs) =
-  Reflection.con (quote Model._∷_) $ Reflection.vArg (quoteValue σ v)
-                                   ∷ Reflection.vArg (quoteModel Γ vs) ∷ []
+  Agda.con (quote Model._∷_)
+    $ Agda.hArg Agda.unknown
+    ∷ Agda.hArg (quoteSort σ)
+    ∷ Agda.vArg (quoteValue σ v)
+    ∷ Agda.vArg (quoteModel Γ vs) ∷ []
 
 -- |Quote a result.
-quoteOutput : Output ξ → Reflection.Term
+quoteOutput : Output ξ → Agda.Term
 quoteOutput {SAT}     = quoteSat
 quoteOutput {MODEL Γ} = quoteModel Γ
 
 -- |Quote a list of results.
-quoteOutputs : Outputs Ξ → Reflection.Term
+quoteOutputs : Outputs Ξ → Agda.Term
 quoteOutputs [] =
-  Reflection.con (quote Outputs.[]) $ []
+  Agda.con (quote Outputs.[]) $ []
 quoteOutputs (r ∷ rs) =
-  Reflection.con (quote Outputs._∷_) $ Reflection.vArg (quoteOutput r)
-                                     ∷ Reflection.vArg (quoteOutputs rs) ∷ []
+  Agda.con (quote Outputs._∷_)
+    $ Agda.vArg (quoteOutput r)
+    ∷ Agda.vArg (quoteOutputs rs) ∷ []
 
 ----------------------
 -- SMT-LIB Commands --
@@ -219,3 +223,16 @@ data Script (Γ : Ctxt) : (Γ′ : Ctxt) (Ξ : OutputCtxt) → Set where
   []  : Script Γ Γ []
   _∷_ : Command Γ δΓ δΞ → Script (δΓ ++ Γ) Γ′ Ξ → Script Γ Γ′ (Ξ ++ δΞ)
 
+
+--------------------
+-- Useful aliases --
+--------------------
+
+Var : Ctxt → Set
+Var Γ = ∃[ σ ] (Γ ∋ σ)
+
+Val : Set
+Val = ∃[ σ ] (Value σ)
+
+Defn : Ctxt → Set
+Defn Γ = ∃[ σ ] (Γ ∋ σ × Value σ)
