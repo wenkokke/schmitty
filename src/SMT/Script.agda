@@ -144,13 +144,12 @@ data Results : (Ξ : OutputCtxt) → Set where
 
 -- |SMT-LIB commands.
 --
---  NOTE: It is most natural to think of scripts as a list of commands,
---        but unfortunatly, commands such as `declare-const` bind a new
---        variable. Therefore, Command has two type-level arguments, `Γ`
---        and `Γ′`, which represent the binding context before and after
---        executing the command. Similarly, scripts have outputs. Therefore,
---        Commands have two more type-level arguments, `Ξ` and `Ξ′`, which
---        represent the list of outputs given by the SMT solver in order.
+--  NOTE: Scripts are lists of commands. Unfortunately, some commands,
+--        such as `declare-const`, bind variables variables. Command has
+--        two type-level arguments, `Γ` and `δΓ`, which represent the binding
+--        context before and executing the command, and the new variables bound
+--        after executing the command. We use a similar trick to gather the
+--        types of the outputs, using `Ξ` and `δΞ`.
 --
 data Command (Γ : Ctxt) : (Ξ : OutputCtxt) (δΓ : Ctxt) (δΞ : OutputCtxt) → Set where
   set-logic     : (l : Logic) → Command Γ Ξ [] []
@@ -404,24 +403,27 @@ module Interaction
   _ = _
 
   -- |Parse a variable assignment.
-  parseVarAssign : ∀ {Γ} → ∀[ Parser (∃[ σ ] (Γ ∋ σ)) ] → ∀[ Parser (∃[ σ ] (Γ ∋ σ × Value σ)) ]
-  parseVarAssign {Γ} parseVarName = parens (box (guardM mkAssign parseAssign))
+  parseVarAssign : ∀[ Parser (∃[ σ ] (Γ ∋ σ)) ] → ∀[ Parser (∃[ σ ] (Γ ∋ σ × Value σ)) ]
+  parseVarAssign {Γ} parseVarName = parens (box (guardM checkVarAssign unsafeParseVarAssign))
     where
       -- Parse a pair of a sort and a value of that sort.
       parseSortValue : ∀[ Parser (∃[ σ ] (Value σ)) ]
       parseSortValue = readSort P.>>= λ σ → box (-,_ <$> readValue σ)
 
       -- Parse a variable assignment, with possibly distinct sorts.
-      parseAssign : ∀[ Parser (∃[ σ ] (Γ ∋ σ) × ∃[ σ ] (Value σ)) ]
-      parseAssign = text "define-fun" &> box (parseVarName <&> box (text "()" &> box parseSortValue))
+      unsafeParseVarAssign : ∀[ Parser (∃[ σ ] (Γ ∋ σ) × ∃[ σ ] (Value σ)) ]
+      unsafeParseVarAssign =
+        text "define-fun" &> box (parseVarName <&> box (text "()" &> box parseSortValue))
 
       -- Check if the expect and actual sorts correspond.
-      mkAssign : ∃[ σ ] (Γ ∋ σ) × ∃[ σ ] (Value σ) → Maybe (∃[ σ ] (Γ ∋ σ × Value σ))
-      mkAssign ((σ₁ , x) , (σ₂ , v)) with σ₁ ≟-Sort σ₂
+      checkVarAssign : ∃[ σ ] (Γ ∋ σ) × ∃[ σ ] (Value σ) → Maybe (∃[ σ ] (Γ ∋ σ × Value σ))
+      checkVarAssign ((σ₁ , x) , (σ₂ , v)) with σ₁ ≟-Sort σ₂
       ... | yes refl = just (σ₂ , x , v)
       ... | no  _    = nothing
 
   -- TODO: connect the output of showScript, via parseVarAssign, to the parseResults function.
+  -- parseModel : ∀[ Parser (∃[ σ ] (Γ ∋ σ)) ] → ∀[ Parser (Model Γ) ]
+  -- parseModel parseVarName = {!!}
 
   -- |Parse a result.
   parseResult : (ξ : OutputType) → ∀[ Parser (Result ξ) ]
