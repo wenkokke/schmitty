@@ -17,12 +17,12 @@ blegh = declare-const INT
         x = var (suc zero , refl)
         y = var (    zero , refl)
 ```
-Where is the solving? You might’ve seen that I recently extended Agda with the `execTC` primitive, which allows you to make arbitrary system calls… well, within reason at least. Schmitty lets to take the script above, print it as an SMT-LIB term, and pass it to Z3!
+Where is the solving? You might’ve seen that I recently extended Agda with the `execTC` primitive, which allows you to make arbitrary system calls… well, within reason at least. Schmitty lets you take the script above, print it as an SMT-LIB term, and pass it to Z3!
 ```agda
 _ : z3 blegh ≡ unsat ∷ []
 _ = refl
 ```
-Aww, boo, that one isn’t satisfiable! Did you pick up on that `unsat` there? Schmitty doesn’t just give you back the solver’s output… she is kind enough to actually parse the output for you! In fact, while Schmitty prints the term, she is builds you an output parser, which can parses the solver output, including models! Let’s make sure the next one is satisfiable!
+Aww, boo, that one isn’t satisfiable! Did you pick up on that `unsat` there? Schmitty doesn’t just give you back the solver’s output… she’s kind enough to actually parse the output for you! In fact, when Schmitty prints the term, she also builds you an output parser, which parses the expected solver output, including models! Let’s make sure the next one is satisfiable!
 ```agda
 yesss : Script [] (INT ∷ INT ∷ []) (SAT ∷ [])
 yesss = declare-const INT
@@ -39,7 +39,7 @@ If we call `get-model` instead of `check-sat`, Schmitty will give us back a vali
 _ : z3 yesss ≡ ((+ 0 ∷ + 0 ∷ []) ∷ [])
 _ = refl
 ```
-Okay, I know that wasn’t a particularly hard problem, but I was in a rush. Send me a pull-request if you’ve got better queries for Schmitty!
+Okay, I know that wasn’t a particularly hard problem, but I was in a rush. Send me a pull-request if you’ve got more interesting questions for Schmitty!
 
 If you’d like to work with Schmitty, a good place to start are the examples. Right now, Schmitty supports two theories, [Core][SMT.Theories.Core] and [Ints][SMT.Theories.Ints], and one backend, [Z3][SMT.Backend.Z3]. I’ve got a couple of other theories and backends under development, but if you’d like to contribute, your help is more than welcome!
 
