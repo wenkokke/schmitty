@@ -28,7 +28,7 @@ import Function.Identity.Categorical as Identity
 open import Text.Parser.String as P hiding (_>>=_)
 open import Reflection using (con; vArg)
 
-open import SMT.Script.Base theory
+open import SMT.Script.Base theory public
 open import SMT.Script.Names theory
 
 open Theory theory
@@ -114,7 +114,7 @@ parseModel {Γ} vps =
       where
       -- Parse a pair of a sort and a value of that sort.
       parseSortValue : ∀[ Parser (∃[ σ ] (Value σ)) ]
-      parseSortValue = readSort P.>>= λ σ → box (-,_ <$> readValue σ)
+      parseSortValue = parseSort P.>>= λ σ → box (-,_ <$> parseValue σ)
 
       -- Parse a variable assignment, with possibly distinct sorts.
       unsafeParseVarAssign : ∀[ Parser (∃[ σ ] (Γ ∋ σ) × ∃[ σ ] (Value σ)) ]
@@ -216,12 +216,12 @@ mutual
     n ← freshNameS σ
     x ← showTermS x
     dropNameS
-    return $ mkSTerm ("forall" ∷ mkSTerm (showName n ∷ showSort σ ∷ []) ∷ x ∷ [])
+    return $ mkSTerm ("forall" ∷ mkSTerm (mkSTerm (showName n ∷ showSort σ ∷ []) ∷ []) ∷ x ∷ [])
   showTermS (exists σ x) = do
     n ← freshNameS σ
     x ← showTermS x
     dropNameS
-    return $ mkSTerm ("exists" ∷ mkSTerm (showName n ∷ showSort σ ∷ []) ∷ x ∷ [])
+    return $ mkSTerm ("exists" ∷ mkSTerm (mkSTerm (showName n ∷ showSort σ ∷ []) ∷ []) ∷ x ∷ [])
 
   showArgsS : Args Γ Δ → NameState Γ Γ (List String)
   showArgsS []       = return []

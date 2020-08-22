@@ -37,11 +37,6 @@ data ParseErrorMsg : Set where
   ambiguous-parse : ParseErrorMsg
 
 
-parseError : String → ParseErrorMsg →  String
-parseError input no-parse        = "Failed to parse" <+> input
-parseError input ambiguous-parse = "Ambiguous parse" <+> input
-
-
 private
   variable
     n : ℕ

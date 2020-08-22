@@ -22,7 +22,7 @@ init:
 
 .PHONY: test
 test: index.agda
-	@echo "Checking schmitty.agda-lib..."
+	@echo "Checking schmitty..."
 	@agda -i. -isrc index.agda
 
 

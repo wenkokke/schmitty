@@ -12,18 +12,17 @@ open Theory theory
 open Printable printable
 open Parsable parsable
 
-open import SMT.Script.Base theory hiding (Term)
-open import SMT.Script printable parsable
 open import Data.List as List using (List; _∷_; [])
 open import Data.Maybe as Maybe using (Maybe; just; nothing)
 open import Data.Product using (_×_; _,_; proj₁; proj₂)
-open import Data.String as String using (String; _<+>_)
+open import Data.String as String using (String; _++_)
 open import Data.Sum as Sum using (_⊎_; inj₁; inj₂; [_,_])
 open import Data.Unit as Unit using (⊤)
 open import Function using (case_of_; const; _$_; _∘_)
-open import Reflection
+open import Reflection hiding (Term)
 open import Reflection.External
-open import Text.Parser.String using (parseError; runParser)
+open import Text.Parser.String using (ParseErrorMsg; no-parse; ambiguous-parse; runParser)
+open import SMT.Script printable parsable public
 
 private
   variable
@@ -31,13 +30,16 @@ private
     ξ : OutputType
     Ξ : OutputCtxt
 
-mkZ3Cmd : Script [] Γ Ξ → CmdSpec
-CmdSpec.name  (mkZ3Cmd _)   = "z3"
-CmdSpec.args  (mkZ3Cmd _)   = "-smt2" ∷ "-in" ∷ "-v:0" ∷ []
-CmdSpec.input (mkZ3Cmd scr) = proj₁ (showScript scr)
+parseErrorMsg : (input : String) → ParseErrorMsg →  String
+parseErrorMsg input no-parse        = "Failed to parse '" ++ input ++ "'"
+parseErrorMsg input ambiguous-parse = "Ambiguous parse '" ++ input ++ "'"
 
-runZ3TC : Script [] Γ (ξ ∷ Ξ) → TC (StdErr ⊎ Term)
-runZ3TC {Γ} {ξ} {Ξ} scr = do
+parseError : ∀ {a} {A : Set a} (input : String) (errMsg : ParseErrorMsg) → TC A
+parseError input errMsg = typeError (strErr (parseErrorMsg input errMsg) ∷ [])
+
+
+z3TC : Script [] Γ (ξ ∷ Ξ) → TC Reflection.Term
+z3TC {Γ} {ξ} {Ξ} scr = do
 
   -- Print the SMT-LIB script and build the output parser.
   let (scr , parseOutputs) = showScript scr
@@ -50,14 +52,11 @@ runZ3TC {Γ} {ξ} {Ξ} scr = do
               }
 
   -- Run the Z3 command and parse the output.
-  r ← runCmdTC z3Cmd
-  case r of λ where
-    (inj₁ stderr) → return ∘ inj₁ $ stderr
-    (inj₂ stdout) →
-      case runParser parseOutputs stdout of λ where
-        (inj₁ parserr) → return ∘ inj₁ $ parseError stdout parserr
-        (inj₂ outputs) → return ∘ inj₂ $ quoteOutputs outputs
+  stdout ← runCmdTC z3Cmd
+  case runParser parseOutputs stdout of λ where
+    (inj₁ parserr) → parseError stdout parserr
+    (inj₂ outputs) → return $ quoteOutputs outputs
 
 macro
-  runZ3 : Script [] Γ (ξ ∷ Ξ) → Term → TC ⊤
-  runZ3 scr hole = runZ3TC scr >>= [ userError , unify hole ]
+  z3 : Script [] Γ (ξ ∷ Ξ) → Reflection.Term → TC ⊤
+  z3 scr hole = z3TC scr >>= unify hole

@@ -98,5 +98,5 @@ Printable.showLiteral    corePrintable = showCoreLiteral
 Printable.showIdentifier corePrintable = showCoreIdentifier
 
 coreParsable : Parsable coreTheory
-Parsable.readSort   coreParsable = readCoreSort
-Parsable.readValue  coreParsable = readCoreValue
+Parsable.parseSort   coreParsable = readCoreSort
+Parsable.parseValue  coreParsable = readCoreValue

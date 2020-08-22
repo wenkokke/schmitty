@@ -10,8 +10,6 @@ open import Reflection.External
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
 open import SMT.Theories.Core as Core
-open import SMT.Script.Base Core.coreTheory
-open import SMT.Script Core.corePrintable Core.coreParsable
 open import SMT.Backend.Z3 Core.corePrintable Core.coreParsable
 
 -- |Taken from <http://smtlib.cs.uiowa.edu/examples.shtml>
@@ -35,7 +33,7 @@ script₁ = declare-const BOOL
         where
           p = var (zero , refl)
 
-test₁ : runZ3 script₁ ≡ unsat ∷ []
+test₁ : z3 script₁ ≡ unsat ∷ []
 test₁ = refl
 
 -- |Pierce's law.
@@ -50,5 +48,7 @@ script₂ = assert term₂
         ∷ check-sat
         ∷ []
 
--- test₂ : runZ3 script₂ ≡ sat ∷ []
--- test₂ = refl
+test₂ : z3 script₂ ≡ sat ∷ []
+test₂ = refl
+
+

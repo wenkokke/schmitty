@@ -120,8 +120,8 @@ Value INT      = ℤ
 -- Parsers --
 -------------
 
-readSort : ∀[ Parser Sort ]
-readSort = (CORE <$> readCoreSort) <|> pINT
+parseSort : ∀[ Parser Sort ]
+parseSort = (CORE <$> readCoreSort) <|> pINT
   where
     pINT = withSpaces (INT <$ text "Int")
 
@@ -132,9 +132,9 @@ readInt = withSpaces (readPos <|> readNeg)
     readPos = Int.+_ <$> decimalℕ
     readNeg = Int.-_ <$> parens (box (text "-" &> box spaces &> box readPos))
 
-readValue : (σ : Sort) → ∀[ Parser (Value σ) ]
-readValue (CORE φ) = readCoreValue φ
-readValue INT      = readInt
+parseValue : (σ : Sort) → ∀[ Parser (Value σ) ]
+parseValue (CORE φ) = readCoreValue φ
+parseValue INT      = readInt
 
 quoteSort : Sort → Term
 quoteSort (CORE φ) = con (quote CORE) (vArg (quoteCoreSort φ) ∷ [])
@@ -169,5 +169,5 @@ Printable.showLiteral    printable = showLiteral
 Printable.showIdentifier printable = showIdentifier
 
 parsable : Parsable theory
-Parsable.readSort   parsable = readSort
-Parsable.readValue  parsable = readValue
+Parsable.parseSort   parsable = parseSort
+Parsable.parseValue  parsable = parseValue

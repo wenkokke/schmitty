@@ -12,8 +12,8 @@ import Agda.Builtin.Reflection.External as Builtin
 
 open import Data.Nat.Base using (ℕ; suc; zero; NonZero)
 open import Data.List.Base using (List; _∷_; [])
-open import Data.Product using (_,_)
-open import Data.String.Base using (String; _++_)
+open import Data.Product using (_×_; _,_)
+open import Data.String.Base as String using (String; _++_)
 open import Data.Sum using (_⊎_; inj₁; inj₂; [_,_])
 open import Data.Unit.Base using (⊤; tt)
 open import Function using (case_of_; _$_; _∘_)
@@ -25,10 +25,6 @@ CmdName = String
 StdIn   = String
 StdErr  = String
 StdOut  = String
-
--- |Helper function for throwing an error from reflection.
-userError : String → TC ⊤
-userError err = typeError (strErr err ∷ [])
 
 -- |Representation for exit codes, assuming 0 is consistently used to indicate
 --  success across platforms.
@@ -87,22 +83,40 @@ macro
   unsafeRunCmd : CmdSpec → Term → TC ⊤
   unsafeRunCmd c hole = unsafeRunCmdTC c >>= unify hole ∘ quoteResult
 
+
+-- |Show a command for the user.
+showCmdSpec : CmdSpec → String
+showCmdSpec c = String.unwords $ CmdSpec.name c ∷ CmdSpec.args c
+
+
+-- |Helper function for throwing an error from reflection.
+userError : ∀ {a} {A : Set a} → CmdSpec → StdOut × StdErr → TC A
+userError c (stdout , stderr) = typeError (strErr errMsg ∷ [])
+  where
+    errMsg : String
+    errMsg = String.unlines
+           $ ("Error while running command '" ++ showCmdSpec c ++ "'")
+           ∷ ("Input:\n" ++ CmdSpec.input c)
+           ∷ ("Output:\n" ++ stdout)
+           ∷ ("Error:\n" ++ stderr)
+           ∷ []
+
+
 -- |Run command from specification. If the command succeeds, it returns the
 --  contents of stdout. Otherwise, it throws a type error with the contents
 --  of stderr.
-runCmdTC : CmdSpec → TC (StdErr ⊎ StdOut)
+runCmdTC : CmdSpec → TC StdOut
 runCmdTC c = do
   r ← unsafeRunCmdTC c
   let debugPrefix = ("user." ++ CmdSpec.name c)
   case Result.exitCode r of λ
     { exitSuccess → do
       debugPrint (debugPrefix ++ ".stderr") 10 (strErr (Result.error r) ∷ [])
-      return $ inj₂ (Result.output r)
+      return $ Result.output r
     ; (exitFailure n) → do
-      debugPrint (debugPrefix ++ ".stdout") 10 (strErr (Result.output r) ∷ [])
-      return $ inj₁ (Result.error r)
+      userError c (Result.output r , Result.error r)
     }
 
 macro
   runCmd : CmdSpec → Term → TC ⊤
-  runCmd c hole = runCmdTC c >>= [ userError , unify hole ∘ lit ∘ string ]
+  runCmd c hole = runCmdTC c >>= unify hole ∘ lit ∘ string

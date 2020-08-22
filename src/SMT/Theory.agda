@@ -54,5 +54,5 @@ record Printable (theory : Theory) : Set where
 record Parsable (theory : Theory) : Set₁ where
   open Theory theory
   field
-    readSort   : ∀[ Parser Sort ]
-    readValue  : (σ : Sort) → ∀[ Parser (Value σ) ]
+    parseSort  : ∀[ Parser Sort ]
+    parseValue : (σ : Sort) → ∀[ Parser (Value σ) ]
