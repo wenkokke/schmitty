@@ -17,13 +17,13 @@ open Script.Interaction printable parsable using (showScript; x′es; parseResul
 open import Data.List as List using (List; _∷_; [])
 open import Data.Maybe as Maybe using (Maybe; just; nothing)
 open import Data.Product using (proj₁)
-open import Data.String as String using (String; _++_)
+open import Data.String as String using (String; _<+>_)
 open import Data.Sum as Sum using (_⊎_; inj₁; inj₂; [_,_])
 open import Data.Unit as Unit using (⊤)
 open import Function using (case_of_; const; _$_; _∘_)
 open import Reflection
 open import Reflection.External
-open import Text.Parser.String
+open import Text.Parser.String hiding (_>>=_)
 
 private
   variable
@@ -36,15 +36,11 @@ CmdSpec.name  (mkZ3Cmd _)   = "z3"
 CmdSpec.args  (mkZ3Cmd _)   = "-smt2" ∷ "-in" ∷ "-v:0" ∷ []
 CmdSpec.input (mkZ3Cmd scr) = proj₁ (showScript scr)
 
-parseError : String → ErrorMsg →  TC ⊤
-parseError str no-parse
-  = userError $ "Failed to parse Z3 output:\n" ++ str
-parseError str ambiguous-parse
-  = userError $ "Ambiguous parse:\n" ++ str
+runZ3TC : Script [] Γ (ξ ∷ Ξ) → TC (StdErr ⊎ Term)
+runZ3TC {Γ} {ξ} {Ξ} scr =
+  runCmdTC (mkZ3Cmd scr) >>=
+    return ∘ [ inj₁ , (λ str → Sum.map (parseError str) (quoteResults) ∘ runParser (parseResults ξ Ξ) $ str)]
 
 macro
   runZ3 : Script [] Γ (ξ ∷ Ξ) → Term → TC ⊤
-  runZ3 {Γ} {ξ} {Ξ} scr hole =
-    runCmdTC (mkZ3Cmd scr) >>=
-      [ userError
-      , (λ str → [ parseError str , unify hole ∘ quoteResults ] $ runParser (parseResults ξ Ξ) str) ]
+  runZ3 scr hole = runZ3TC scr >>= [ userError , unify hole ]

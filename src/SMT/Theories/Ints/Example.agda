@@ -2,6 +2,7 @@
 
 module SMT.Theories.Ints.Example where
 
+open import Data.Environment using (Env; _∷_; [])
 open import Data.Fin using (Fin; suc; zero)
 open import Data.List using (List; _∷_; [])
 open import Data.Product using (_×_; _,_)

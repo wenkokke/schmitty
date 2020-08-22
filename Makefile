@@ -22,7 +22,8 @@ init:
 
 .PHONY: test
 test: index.agda
-	agda -i. -isrc index.agda
+	@echo "Checking schmitty.agda-lib..."
+	@agda -i. -isrc index.agda
 
 
 #####################
@@ -30,7 +31,8 @@ test: index.agda
 #####################
 
 docs/index.html: index.agda
-	agda -i. -isrc index.agda --html --html-dir=docs
+	@echo "Generating listings..."
+	@agda -i. -isrc index.agda --html --html-dir=docs
 
 .PHONY: listings
 listings: $(HTML_FILES)

@@ -13,7 +13,7 @@ import Data.Maybe.Categorical as MaybeCat
 open import Data.Nat as Nat using (ℕ)
 import Data.Nat.Properties as Nat
 open import Data.Product as Prod using (_×_; _,_)
-open import Data.String as String using (String)
+open import Data.String as String using (String; _<+>_)
 open import Data.Sum as Sum using (_⊎_; inj₁; inj₂)
 open import Data.Subset -- instances
 open import Data.Unit as Unit using (⊤; tt)
@@ -32,11 +32,14 @@ import Text.Parser.Types as PI
 import Text.Parser.Position as PP
 
 
-data ErrorMsg : Set where
-  no-parse        : ErrorMsg
-  ambiguous-parse : ErrorMsg
+data ParseErrorMsg : Set where
+  no-parse        : ParseErrorMsg
+  ambiguous-parse : ParseErrorMsg
 
-data Error : ErrorMsg → Set where
+
+parseError : String → ParseErrorMsg →  String
+parseError input no-parse        = "Failed to parse" <+> input
+parseError input ambiguous-parse = "Ambiguous parse" <+> input
 
 
 private
@@ -66,7 +69,7 @@ private
   runResult = PM.result (const []) (const []) ((_∷ []) ∘ Prod.proj₁)
 
 private
-  fromSingleton : List A → ErrorMsg ⊎ A
+  fromSingleton : List A → ParseErrorMsg ⊎ A
   fromSingleton []          = inj₁ no-parse
   fromSingleton (v ∷ [])    = inj₂ v
   fromSingleton (_ ∷ _ ∷ _) = inj₁ ambiguous-parse
@@ -77,7 +80,7 @@ Parser : (A : Set) (n : ℕ) → Set
 Parser = PI.Parser PM.Agdarsec′.chars
 
 -- |Run a parser, and return a list of results.
-runParser : ∀[ Parser A ] → String → ErrorMsg ⊎ A
+runParser : ∀[ Parser A ] → String → ParseErrorMsg ⊎ A
 runParser {A} p str
 
   -- Return the single parse, or an error:
@@ -260,8 +263,12 @@ decimalℤ = PCN.decimalℤ
 -- Testing parsers --
 ---------------------
 
+
+-- |Empty type which carries an error message.
+data ParseError : ParseErrorMsg → Set where
+
 private
-  testHelper : (p : ∀[ Parser A ]) (str : String) (f : ErrorMsg → Set) (t : A → Set) → Set
+  testHelper : (p : ∀[ Parser A ]) (str : String) (f : ParseErrorMsg → Set) (t : A → Set) → Set
   testHelper p str f t = case runParser p str of Sum.[ f , t ]′
 
 -- |Tests if the parser accepts a string.
@@ -269,7 +276,7 @@ private
 --  The resulting value is passed to a continuation for further inspection,
 --  for instance, to allow the user to compare it to the expected value.
 _parses_as_ : (p : ∀[ Parser A ]) (str : String) {P : A → Set} (k : (x : A) → Dec (P x)) → Set
-p parses str as k = testHelper p str Error (True ∘ k)
+p parses str as k = testHelper p str ParseError (True ∘ k)
 
 -- |Example use of `_parses_as_`.
 _ : decimalℕ parses "10" as (Nat._≟ 10)

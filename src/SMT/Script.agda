@@ -10,9 +10,9 @@ open import Relation.Nullary using (Dec; yes; no)
 open import Relation.Nullary.Decidable using (True)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import SMT.Logics
+open import Data.Environment as Env using (Env; _∷_; [])
 
 open Theory theory
-
 
 -------------------
 -- SMT-LIB Terms --
@@ -46,9 +46,8 @@ mutual
     forAll : ∀ {σ} (x : Term (σ ∷ Γ) BOOL) → Term Γ BOOL
     exists : ∀ {σ} (x : Term (σ ∷ Γ) BOOL) → Term Γ BOOL
 
-  data Args (Γ : Ctxt) : (Δ : Ctxt) → Set where
-    []  : Args Γ []
-    _∷_ : Term Γ σ → Args Γ Δ → Args Γ (σ ∷ Δ)
+  Args : (Γ Δ : Ctxt) → Set
+  Args Γ = Env (λ σ _Δ → Term Γ σ)
 
 pattern app₁ f x     = app f (x ∷ [])
 pattern app₂ f x y   = app f (x ∷ y ∷ [])
@@ -115,9 +114,8 @@ unknown ≟-Sat unsat   = no (λ ())
 unknown ≟-Sat unknown = yes refl
 
 -- |SMT-LIB models.
-data Model : (Γ : Ctxt) → Set where
-  []  : Model []
-  _∷_ : Term [] σ → Model Γ → Model (σ ∷ Γ)
+Model : Ctxt → Set
+Model = Env (λ σ _Γ → Term [] σ)
 
 -- |SMT-LIB script result.
 Result : OutputType → Set
@@ -125,6 +123,16 @@ Result SAT       = Sat
 Result (MODEL Γ) = Model Γ
 
 -- |List of SMT-LIB results.
+--
+-- The Results type *could* be defined as below, but it is defined as a
+-- datatype of its own to help Agda's reflection mechanism fill in the
+-- implicit arguments during unquoting.
+--
+-- @
+--   Results : (Ξ : OutputCtxt) → Set
+--   Results = Env (λ ξ _Ξ → Result ξ)
+-- @
+--
 data Results : (Ξ : OutputCtxt) → Set where
   []  : Results []
   _∷_ : Result ξ → Results Ξ → Results (ξ ∷ Ξ)
@@ -185,15 +193,10 @@ module Interaction
   open import Function using (const; id; _∘_; _$_)
   import Function.Identity.Categorical as Identity
   open import Text.Parser.String as P hiding (_>>=_)
-  open import Reflection using (con; hArg; vArg)
+  open import Reflection using (con; vArg)
 
   open Printable printable
   open Parsable parsable
-
-  private
-    variable
-      T T′ : Sort → Set
-
 
   -- |Names.
   Name : Set
@@ -203,30 +206,10 @@ module Interaction
   showName : Name → String
   showName = String.fromList ∘ List⁺.toList
 
-
-  -- |Environments, i.e., lists where the types of the elements
+  -- |Name environments, i.e., lists where the types of the elements
   --  are determined by a type-level list.
-  data NameEnv : (Γ : Ctxt) → Set where
-    []  : NameEnv []
-    _∷_ : Name → NameEnv Γ → NameEnv (σ ∷ Γ)
-
-
-  -- |Get the first element in a non-empty environment.
-  headName : NameEnv (σ ∷ Γ) → Name
-  headName (x ∷ _env) = x
-
-
-  -- |Remove the first element from a non-empty environment.
-  tailName : NameEnv (σ ∷ Γ) → NameEnv Γ
-  tailName (_x ∷ env) = env
-
-
-  -- |Get the i'th element from an environment.
-  lookupName : (env : NameEnv Γ) (i : Fin (List.length Γ)) → Name
-  lookupName []          ()
-  lookupName ( x ∷ _env) Fin.zero    = x
-  lookupName (_x ∷  env) (Fin.suc i) = lookupName env i
-
+  NameEnv : Ctxt → Set
+  NameEnv = Env (λ _σ _Γ → Name)
 
   -- |Name states, i.e., an environment of names, one for every
   --  variable in the context Γ, and a supply  of fresh names.
@@ -258,7 +241,7 @@ module Interaction
     names ← get
     let names′ = pushFreshName′ σ names
     put names′
-    return (headName (nameEnv names′))
+    return (Env.head (nameEnv names′))
     where
       pushFreshName′ : (σ : Sort) → Names Γ → Names (σ ∷ Γ)
       nameEnv    (pushFreshName′ σ names) = Stream.head (nameSupply names) ∷ nameEnv names
@@ -270,7 +253,7 @@ module Interaction
   popName = do modify popName′; return _
     where
       popName′ : Names (σ ∷ Γ) → Names Γ
-      nameEnv    (popName′ names) = tailName (nameEnv names)
+      nameEnv    (popName′ names) = Env.tail (nameEnv names)
       nameSupply (popName′ names) = nameSupply names
 
 
@@ -278,7 +261,7 @@ module Interaction
   getName : (i : Γ ∋ σ) → IStateT Names id Γ Γ Name
   getName (i , _prf) = do
     names ← get
-    return (lookupName (nameEnv names) i)
+    return (Env.lookup (nameEnv names) i)
 
 
   -- |Create an S-expression from a list of strings.
@@ -290,50 +273,44 @@ module Interaction
   mkSTerm : List String → String
   mkSTerm = String.parens ∘ String.unwords
 
-
-  data EnvParser : (Γ : Ctxt) → Set where
-    []  : EnvParser []
-    _∷_ : ∀[ Parser ((σ ∷ Γ) ∋ σ) ] → EnvParser Γ → EnvParser (σ ∷ Γ)
+  ParserEnv : Ctxt → Set
+  ParserEnv = Env (λ σ Γ → ∀[ Parser ((σ ∷ Γ) ∋ σ) ])
 
   -- |Extend an environment with a number of failing parsers.
-  extendEP : (δΓ : Ctxt) → EnvParser Γ → EnvParser (δΓ ++ Γ)
-  extendEP []       env = env
-  extendEP (σ ∷ δΓ) env = fail ∷ extendEP δΓ env
+  extendPE : (δΓ : Ctxt) → ParserEnv Γ → ParserEnv (δΓ ++ Γ)
+  extendPE []       env = env
+  extendPE (σ ∷ δΓ) env = fail ∷ extendPE δΓ env
 
   -- |An environment of failing variable parsers.
-  failEP : (Γ : Ctxt) → EnvParser Γ
-  failEP []      = []
-  failEP (σ ∷ Γ) = fail ∷ failEP Γ
+  failPE : (Γ : Ctxt) → ParserEnv Γ
+  failPE []      = []
+  failPE (σ ∷ Γ) = fail ∷ failPE Γ
 
   -- |A singleton variable parser.
-  varEP : Name → Γ ∋ σ → EnvParser Γ
-  varEP {σ′ ∷ Γ} n x@(Fin.zero  , refl) = (x <$ exacts n) ∷ failEP Γ
-  varEP {σ′ ∷ Γ} n   (Fin.suc i , p)    = fail ∷ varEP {Γ} n (i , p)
-
-  -- |Remove the outermost variable parser.
-  dropEP : EnvParser (σ ∷ Γ) → EnvParser Γ
-  dropEP (_ ∷ env) = env
+  varPE : Name → Γ ∋ σ → ParserEnv Γ
+  varPE {σ′ ∷ Γ} n x@(Fin.zero  , refl) = (x <$ exacts n) ∷ failPE Γ
+  varPE {σ′ ∷ Γ} n   (Fin.suc i , p)    = fail ∷ varPE {Γ} n (i , p)
 
   -- |Merge two environments of variable parsers.
-  _<||>_ : EnvParser Γ → EnvParser Γ → EnvParser Γ
+  _<||>_ : ParserEnv Γ → ParserEnv Γ → ParserEnv Γ
   [] <||> [] = []
   (p₁ ∷ env₁) <||> (p₂ ∷ env₂) = (p₁ <|> p₂) ∷ (env₁ <||> env₂)
 
-  -- |Fold an EnvParser to a variable parser.
-  foldEP : EnvParser Γ → ∀[ Parser (∃[ σ ] (Γ ∋ σ)) ]
-  foldEP []            = fail
-  foldEP (p ∷ env) {x} = (-,_ <$> p {x}) <|> (Prod.map id extendVar <$> foldEP env {x})
+  -- |Fold an ParserEnv to a variable parser.
+  foldPE : ParserEnv Γ → ∀[ Parser (∃[ σ ] (Γ ∋ σ)) ]
+  foldPE []            = fail
+  foldPE (p ∷ env) {x} = (-,_ <$> p {x}) <|> (Prod.map id extendVar <$> foldPE env {x})
 
   mutual
 
     -- |Show a term as an S-expression. The code below passes a name state in
     --  a state monad. For the pure version, see `showTerm` below.
-    showTermS : Term Γ σ → IStateT Names id Γ Γ (String × EnvParser Γ)
+    showTermS : Term Γ σ → IStateT Names id Γ Γ (String × ParserEnv Γ)
     showTermS {Γ} {σ} (var i) = do
       n ← getName i
-      return (showName n , varEP n i)
+      return (showName n , varPE n i)
     showTermS {Γ} {σ} (lit l) =
-      return (showLiteral l , failEP Γ)
+      return (showLiteral l , failPE Γ)
     showTermS (app x xs) = do
       let x = showIdentifier x
       (xs , p) ← showArgsS xs
@@ -343,22 +320,22 @@ module Interaction
       (x , p) ← showTermS x
       popName
       let nσs = mkSTerm (mkSTerm (showName n ∷ showSort σ ∷ []) ∷ [])
-      return (mkSTerm ("forall" ∷ nσs ∷ x ∷ []) , dropEP p)
+      return (mkSTerm ("forall" ∷ nσs ∷ x ∷ []) , Env.tail p)
     showTermS (exists {σ} x) = do
       n ← pushFreshName σ
       (x , p) ← showTermS x
       popName
       let nσs = mkSTerm (mkSTerm (showName n ∷ showSort σ ∷ []) ∷ [])
-      return (mkSTerm ("exists" ∷ nσs ∷ x ∷ []) , dropEP p)
+      return (mkSTerm ("exists" ∷ nσs ∷ x ∷ []) , Env.tail p)
 
     -- |Show a series of terms as S-expression.
     --
     --  This is explicit to avoid sized-types, as Agda cannot infer that the call
     --  `mapM showTermS xs` terminates.
     --
-    showArgsS : Args Γ Δ → IStateT Names id Γ Γ (List String × EnvParser Γ)
+    showArgsS : Args Γ Δ → IStateT Names id Γ Γ (List String × ParserEnv Γ)
     showArgsS {Γ} {Δ} [] =
-      return ([] , failEP Γ)
+      return ([] , failPE Γ)
     showArgsS {Γ} {Δ} (x ∷ xs) = do
       (x , p₁) ← showTermS x
       (xs , p₂) ← showArgsS xs
@@ -367,30 +344,30 @@ module Interaction
 
   -- |Show a command as an S-expression. The code below passes a name state in
   --  a state monad. For the pure version, see `showCommand` below.
-  showCommandS : Command Γ Ξ δΓ δΞ → IStateT Names id Γ (δΓ ++ Γ) (String × EnvParser (δΓ ++ Γ))
+  showCommandS : Command Γ Ξ δΓ δΞ → IStateT Names id Γ (δΓ ++ Γ) (String × ParserEnv (δΓ ++ Γ))
   showCommandS {Γ′} {Ξ′} (set-logic l) =
-    return (mkSTerm ("set-logic" ∷ showLogic l ∷ []) , failEP Γ′)
+    return (mkSTerm ("set-logic" ∷ showLogic l ∷ []) , failPE Γ′)
   showCommandS {Γ′} {Ξ′} (declare-const σ) = do
     n ← pushFreshName σ
-    let p = varEP n (Fin.zero , refl)
+    let p = varPE n (Fin.zero , refl)
     return (mkSTerm ("declare-const" ∷ showName n ∷ showSort σ ∷ []) , p)
   showCommandS {Γ′} {Ξ′} (assert x) = do
     (x , p) ← showTermS x
     return (mkSTerm ("assert" ∷ x ∷ []) , p)
   showCommandS {Γ′} {Ξ′} check-sat =
-    return (mkSTerm ("check-sat" ∷ []) , failEP Γ′)
+    return (mkSTerm ("check-sat" ∷ []) , failPE Γ′)
   showCommandS {Γ′} {Ξ′} get-model =
-    return (mkSTerm ("get-model" ∷ []) , failEP Γ′)
+    return (mkSTerm ("get-model" ∷ []) , failPE Γ′)
 
   -- |Show a script as an S-expression. The code below passes a name state in
   --  a state monad. For the pure version, see `showScript` below.
-  showScriptS : Script Γ Γ′ Ξ → IStateT Names id Γ Γ′ (List String × (EnvParser Γ → EnvParser Γ′))
+  showScriptS : Script Γ Γ′ Ξ → IStateT Names id Γ Γ′ (List String × (ParserEnv Γ → ParserEnv Γ′))
   showScriptS {Γ} [] =
     return ([] , id)
   showScriptS (cmd ∷ scr) = do
     (cmd , p₁) ← showCommandS cmd
     (scr , δp) ← showScriptS scr
-    return (cmd ∷ scr , λ p₂ → δp (p₁ <||> extendEP _ p₂))
+    return (cmd ∷ scr , λ p₂ → δp (p₁ <||> extendPE _ p₂))
 
 
   -- |A name state for the empty context, which supplies the names x0, x1, x2, ...
@@ -402,7 +379,7 @@ module Interaction
   -- |Show a script as an S-expression.
   showScript : Script [] Γ Ξ → String × ∀[ Parser (∃[ σ ] (Γ ∋ σ)) ]
   showScript scr =
-    Prod.map String.unlines (λ p → withSpaces (foldEP (p []))) (proj₁ (showScriptS scr x′es))
+    Prod.map String.unlines (λ p → withSpaces (foldPE (p []))) (proj₁ (showScriptS scr x′es))
 
 
   -- |Parse a satisfiability result.
@@ -476,7 +453,7 @@ module Interaction
 
   -- |Quote a list of results.
   quoteResults : Results Ξ → Reflection.Term
-  quoteResults [] = con (quote Results.[]) []
+  quoteResults [] = con (quote Results.[]) $ []
   quoteResults (r ∷ rs) = con (quote Results._∷_) $ vArg (quoteResult r) ∷ vArg (quoteResults rs) ∷ []
 
 -- -}
