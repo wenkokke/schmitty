@@ -202,12 +202,12 @@ quoteOutputs (r ∷ rs) =
 --        after executing the command. We use a similar trick to gather the
 --        types of the outputs, using `Ξ` and `δΞ`.
 --
-data Command (Γ : Ctxt) : (Ξ : OutputCtxt) (δΓ : Ctxt) (δΞ : OutputCtxt) → Set where
-  set-logic     : (l : Logic) → Command Γ Ξ [] []
-  declare-const : (σ : Sort) → Command Γ Ξ (σ ∷ []) []
-  assert        : Term Γ BOOL → Command Γ Ξ [] []
-  check-sat     : Command Γ Ξ [] (SAT ∷ [])
-  get-model     : Command Γ (SAT ∷ Ξ) [] (MODEL Γ ∷ [])
+data Command (Γ : Ctxt) : (δΓ : Ctxt) (δΞ : OutputCtxt) → Set where
+  set-logic     : (l : Logic) → Command Γ [] []
+  declare-const : (σ : Sort) → Command Γ (σ ∷ []) []
+  assert        : Term Γ BOOL → Command Γ [] []
+  check-sat     : Command Γ [] (SAT ∷ [])
+  get-model     : Command Γ [] (MODEL Γ ∷ [])
 
 
 ---------------------
@@ -217,5 +217,5 @@ data Command (Γ : Ctxt) : (Ξ : OutputCtxt) (δΓ : Ctxt) (δΞ : OutputCtxt) �
 -- |SMT-LIB scripts.
 data Script (Γ : Ctxt) : (Γ′ : Ctxt) (Ξ : OutputCtxt) → Set where
   []  : Script Γ Γ []
-  _∷_ : Command Γ Ξ δΓ δΞ → Script (δΓ ++ Γ) Γ′ Ξ → Script Γ Γ′ (δΞ ++ Ξ)
+  _∷_ : Command Γ δΓ δΞ → Script (δΓ ++ Γ) Γ′ Ξ → Script Γ Γ′ (Ξ ++ δΞ)
 

@@ -121,20 +121,35 @@ Value INT      = ℤ
 -------------
 
 parseSort : ∀[ Parser Sort ]
-parseSort = (CORE <$> readCoreSort) <|> pINT
+parseSort = (CORE <$> parseCoreSort) <|> pINT
   where
     pINT = withSpaces (INT <$ text "Int")
 
-readInt : ∀[ Parser ℤ ]
-readInt = withSpaces (readPos <|> readNeg)
+_ : parseSort parses "Bool"
+_ = ! BOOL
+
+_ : parseSort parses "Int"
+_ = ! INT
+
+parseInt : ∀[ Parser ℤ ]
+parseInt = withSpaces (readPos <|> readNeg)
   where
     readPos readNeg : ∀[ Parser ℤ ]
     readPos = Int.+_ <$> decimalℕ
     readNeg = Int.-_ <$> parens (box (text "-" &> box spaces &> box readPos))
 
 parseValue : (σ : Sort) → ∀[ Parser (Value σ) ]
-parseValue (CORE φ) = readCoreValue φ
-parseValue INT      = readInt
+parseValue (CORE φ) = parseCoreValue φ
+parseValue INT      = parseInt
+
+_ : parseValue INT parses "1"
+_ = ! + 1
+
+_ : parseValue INT parses "0"
+_ = ! + 0
+
+_ : parseValue INT parses "(- 1)"
+_ = ! -[1+ 0 ]
 
 quoteSort : Sort → Term
 quoteSort (CORE φ) = con (quote CORE) (vArg (quoteCoreSort φ) ∷ [])

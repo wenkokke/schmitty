@@ -82,19 +82,19 @@ OutputParsers Ξ = Env (λ ξ _Ξ → OutputParser ξ) Ξ
 parseSat : ∀[ Parser Sat ]
 parseSat = withSpaces (pSat <|> pUnsat <|> pUnknown)
   where
-    pSat     = sat     <$ text "sat"
-    pUnsat   = unsat   <$ text "unsat"
-    pUnknown = unknown <$ text "unknown"
+    pSat     = sat     <$ lexeme "sat"
+    pUnsat   = unsat   <$ lexeme "unsat"
+    pUnknown = unknown <$ lexeme "unknown"
 
 
-_ : parseSat parses "sat" as (_≟-Sat sat)
-_ = _
+_ : parseSat parses "sat"
+_ = ! sat
 
-_ : parseSat parses "unsat" as (_≟-Sat unsat)
-_ = _
+_ : parseSat parses "unsat"
+_ = ! unsat
 
-_ : parseSat parses "unknown" as (_≟-Sat unknown)
-_ = _
+_ : parseSat parses "unknown"
+_ = ! unknown
 
 _ : parseSat rejects "dogfood"
 _ = _
@@ -103,23 +103,25 @@ _ = _
 -- Connect the output of showScript, via parseVarAssign, to parse models.
 parseModel : VarParsers Γ → ∀[ Parser (Model Γ) ]
 parseModel {Γ} vps =
-  guardM checkModel ((unsafeBuildModel ∘ List⁺.toList) <$> parseVarAssigns)
+  parseSat P.>>= λ where
+    sat     → box $ guardM checkModel ((unsafeBuildModel ∘ List⁺.toList) <$> unsafeParseModel)
+    unsat   → box $ fail -- should probably either return the Sat value or report an error
+    unknown → box $ fail -- see above
   where
     parseVarName : ∀[ Parser (∃[ σ ] (Γ ∋ σ)) ]
-    parseVarName = withSpaces (mkVarParser {Γ} vps)
+    parseVarName = mkVarParser {Γ} vps
 
     -- |Parse a variable assignment.
     parseVarAssign : ∀[ Parser (∃[ σ ] (Γ ∋ σ × Value σ)) ]
-    parseVarAssign = parens (box (guardM checkVarAssign unsafeParseVarAssign))
+    parseVarAssign = guardM checkVarAssign unsafeParseVarAssign
       where
-      -- Parse a pair of a sort and a value of that sort.
-      parseSortValue : ∀[ Parser (∃[ σ ] (Value σ)) ]
-      parseSortValue = parseSort P.>>= λ σ → box (-,_ <$> parseValue σ)
 
       -- Parse a variable assignment, with possibly distinct sorts.
       unsafeParseVarAssign : ∀[ Parser (∃[ σ ] (Γ ∋ σ) × ∃[ σ ] (Value σ)) ]
       unsafeParseVarAssign =
-        text "define-fun" &> box (parseVarName <&> box (text "()" &> box parseSortValue))
+        parens (box (lexeme "define-fun" &> box
+          (parseVarName <&> box (lexeme "()" &> box
+            (parseSort P.>>= λ σ → box (-,_ <$> parseValue σ))))))
 
       -- Check if the expect and actual sorts correspond.
       checkVarAssign : ∃[ σ ] (Γ ∋ σ) × ∃[ σ ] (Value σ) → Maybe (∃[ σ ] (Γ ∋ σ × Value σ))
@@ -128,8 +130,8 @@ parseModel {Γ} vps =
       ... | no  _    = nothing
 
     -- Parse a series of variable assigments.
-    parseVarAssigns : ∀[ Parser (List⁺ (∃[ σ ] (Γ ∋ σ × Value σ))) ]
-    parseVarAssigns = list⁺ parseVarAssign
+    unsafeParseModel : ∀[ Parser (List⁺ (∃[ σ ] (Γ ∋ σ × Value σ))) ]
+    unsafeParseModel = parens (box (lexeme "model" &> box (list⁺ parseVarAssign)))
 
     -- Insert a variable assignment into an unchecked model.
     unsafeInsertModel :
@@ -181,7 +183,7 @@ freshNameS : (σ : Sort) → NameState Γ (σ ∷ Γ) Name
 freshNameS σ = do
   (ns , vps) ← get
   let (n , ns) = freshName σ ns
-  let vps = ((Fin.zero , refl) <$ exacts n) ∷ vps
+  let vps = ((Fin.zero , refl) <$ withSpaces (exacts n)) ∷ vps
   put (ns , vps)
   return n
 
@@ -229,7 +231,7 @@ mutual
 
 
 -- |Show a command as an S-expression, and build up an environment of output parsers.
-showCommandS : Command Γ Ξ δΓ δΞ → NameState Γ (δΓ ++ Γ) (String × OutputParsers δΞ)
+showCommandS : Command Γ δΓ δΞ → NameState Γ (δΓ ++ Γ) (String × OutputParsers δΞ)
 showCommandS (set-logic l) = do
   return $ mkSTerm ("set-logic" ∷ showLogic l ∷ []) , []
 showCommandS (declare-const σ) = do
@@ -242,7 +244,9 @@ showCommandS check-sat = do
   return $ mkSTerm ("check-sat" ∷ []) , parseSat ∷ []
 showCommandS get-model = do
   (_ns , vps) ← get
-  return $ mkSTerm ("get-model" ∷ []) , parseModel vps ∷ []
+  return $ String.unlines ( mkSTerm ("check-sat" ∷ [])
+                          ∷ mkSTerm ("get-model" ∷ []) ∷ [] )
+         , parseModel vps ∷ []
 
 -- |Show a script as an S-expression, and build up an environment of output parsers.
 showScriptS : Script Γ Γ′ Ξ → NameState Γ Γ′ (List String × OutputParsers Ξ)
@@ -251,11 +255,15 @@ showScriptS [] = do
 showScriptS (cmd ∷ scr) = do
   (cmd , ops₁) ← showCommandS cmd
   (scr , ops₂) ← showScriptS scr
-  return $ cmd ∷ scr , Env.append id ops₁ ops₂
+  return $ cmd ∷ scr , Env.append id ops₂ ops₁
 
 -- |Show a script as an S-expression, and return an environment of output parsers.
-showScript : Script [] Γ Ξ → String × ∀[ Parser (Outputs Ξ) ]
-showScript scr = Prod.map String.unlines mkOutputParsers (proj₁ (showScriptS scr (x′es , [])))
+showScript : Script [] Γ (ξ ∷ Ξ) → String × ∀[ Parser (Outputs (ξ ∷ Ξ)) ]
+showScript scr = Prod.map String.unlines mkOutputParsers⁺ (proj₁ (showScriptS scr (x′es , [])))
+
+-- |Get the variable parser for a script (for debugging purposes).
+varParser : Script [] Γ Ξ → ∀[ Parser (∃[ σ ] (Γ ∋ σ)) ]
+varParser scr = mkVarParser (proj₂ (proj₂ (showScriptS scr (x′es , []))))
 
 -- -}
 -- -}

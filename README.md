@@ -1,36 +1,41 @@
 # Schmitty the Solver
 
-Schmitty is an Agda library which uses the new `execTC` primitive to integrate Agda with SMT-LIB compliant solvers.
+If you wanna solve some problems, you’re in luck! Schmitty is an Agda library which gives you bindings to SMT solvers! I know, cool right?!
 
-The library contains a well-typed embedding of *a subset of* SMT-LIB lisp:
+So basically, what Schmitty can offer you right now is a well-typed embedding of *some* of the SMT-LIB language in Agda. That means you can write SMT queries in Agda, like this!
+```agda
+blegh : Script [] (INT ∷ INT ∷ []) (SAT ∷ [])
+blegh = declare-const INT
+      ∷ declare-const INT
+      ∷ assert (app₂ eq
+               (app₂ sub x y)
+               (app₂ add (app₂ add x (app₁ neg y)) (lit (int 1)))
+               )
+      ∷ check-sat
+      ∷ []
+      where
+        x = var (suc zero , refl)
+        y = var (    zero , refl)
+```
+Where is the solving? You might’ve seen that I recently extended Agda with the `execTC` primitive, which allows you to make arbitrary system calls… well, within reason at least. Schmitty lets to take the script above, print it as an SMT-LIB term, and pass it to Z3!
+```agda
+_ : z3 blegh ≡ unsat ∷ []
+_ = refl
+```
+Aww, boo, that one isn’t satisfiable! Did you pick up on that `unsat` there? Schmitty doesn’t just give you back the solver’s output… she is kind enough to actually parse the output for you! In fact, while Schmitty prints the term, she is builds you an output parser, which can parses the solver output, including models!
 
-- [`SMT.Script`][SMT.Script]
-- [`SMT.Theory`][SMT.Theory]
-- [`SMT.Theories.Core`][SMT.Theories.Core]
-- [`SMT.Theories.Core.Extensions`][SMT.Theories.Core.Extensions]
-- [`SMT.Theories.Ints`][SMT.Theories.Ints]
-- [`SMT.Theories.Reals`][SMT.Theories.Reals]
-- [`SMT.Logics`][SMT.Logics]
+If you wanna get going with Schmitty, a good place to start are the examples. Right now, Schmitty supports two theories, [Core][SMT.Theories.Core] and [Ints][SMT.Theories.Ints], and one backend, [Z3][SMT.Backend.Z3]. You *can* specify the logic you’re targeting, but Z3 actually tends to perform better when you don’t…
 
-Macros to run SMT scripts on various backends:
-
-- [`SMT.Backend.Z3`][SMT.Backend.Z3]
-- [`Reflection.External`][Reflection.External]
-
-As well as a number of examples:
-
-- [`SMT.Theories.Ints.Example`][SMT.Theories.Ints.Example]
-- [`SMT.Theories.Core.Example`][SMT.Theories.Core.Example]
-
-The examples are a good place to start reading!
+The examples are a good place to start reading! You can find them in [`SMT.Theories.Core.Example`][SMT.Theories.Core.Example] and [`SMT.Theories.Ints.Example`][SMT.Theories.Ints.Example]!
 
 # Roadmap
 
+- [ ] Add error reporting to the output parser.
+- [ ] Fix bug in model parsing…
 - [ ] Merge [`Reflection.External`][Reflection.External] into [agda-stdlib][agda-stdlib].
-- [ ] Parse solver *output* and convert to Agda types.
-- [ ] Reflect Agda types to SMT lisp terms.
-- [ ] Provide solver macro which provides “evidence” using postulates.
-- [ ] Integrate Core theory with @kazkansouh’s SAT solver.
+- [ ] Use reflection to reflect Agda expression to SMT-LIB terms.
+- [ ] Use postulates to provide “evidence” when the solver succeeds.
+- [ ] Use @kazkansouh’s SAT solver to provide *actual* evidence for the Core theory.
 
 ---
 
@@ -49,3 +54,4 @@ Note: You’ll need *at least* [Agda version 2.6.2-20eb4f3][agda-version] to run
 [Reflection.External]: https://wenkokke.github.io/schmitty/Reflection.External.html
 [agda-stdlib]: https://github.com/agda/agda-stdlib
 [agda-version]: https://github.com/agda/agda/commit/20eb4f3ebb6eb73385f2651cf9b5c4bdac9a2f10
+

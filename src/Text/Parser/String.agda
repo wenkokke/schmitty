@@ -206,6 +206,14 @@ text : (str : String) {p : T (not (isEmpty str))} → ∀[ Parser (List⁺ Char)
 text = PCC.text
 
 -- |Parser which...
+withSpaces : ∀[ Parser A ⇒ Parser A ]
+withSpaces = PCC.withSpaces
+
+-- |Parser which...
+lexeme : (str : String) {p : T (not (isEmpty str))} → ∀[ Parser (List⁺ Char) ]
+lexeme str {p} = withSpaces (text str {p})
+
+-- |Parser which...
 exact : Char → ∀[ Parser Char ]
 exact = PC.exact
 
@@ -216,10 +224,6 @@ exacts = PC.exacts
 -- |Parser which...
 parens : ∀[ □ Parser A ⇒ Parser A ]
 parens = PCC.parens
-
--- |Parser which...
-withSpaces : ∀[ Parser A ⇒ Parser A ]
-withSpaces = PCC.withSpaces
 
 -- |Parser which...
 lower : ∀[ Parser Char ]
@@ -266,6 +270,14 @@ decimalℤ = PCN.decimalℤ
 -- |Empty type which carries an error message.
 data ParseError : ParseErrorMsg → Set where
 
+
+infix 0 !_
+
+-- |Singleton type to compare the test result.
+data Singleton {A : Set} : (x : A) → Set where
+  !_ : (x : A) → Singleton x
+
+
 private
   testHelper : (p : ∀[ Parser A ]) (str : String) (f : ParseErrorMsg → Set) (t : A → Set) → Set
   testHelper p str f t = case runParser p str of Sum.[ f , t ]′
@@ -274,12 +286,12 @@ private
 --
 --  The resulting value is passed to a continuation for further inspection,
 --  for instance, to allow the user to compare it to the expected value.
-_parses_as_ : (p : ∀[ Parser A ]) (str : String) {P : A → Set} (k : (x : A) → Dec (P x)) → Set
-p parses str as k = testHelper p str ParseError (True ∘ k)
+_parses_ : (p : ∀[ Parser A ]) (str : String) → Set
+p parses str = testHelper p str ParseError Singleton
 
 -- |Example use of `_parses_as_`.
-_ : decimalℕ parses "10" as (Nat._≟ 10)
-_ = _
+_ : decimalℕ parses "10"
+_ = ! 10
 
 -- |Tests if the parser accepts a string.
 _accepts_ : (p : ∀[ Parser A ]) (str : String) → Set

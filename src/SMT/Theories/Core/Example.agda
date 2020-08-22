@@ -5,10 +5,10 @@ module SMT.Theories.Core.Example where
 open import Data.Environment as Env using (Env; _∷_; [])
 open import Data.Fin using (Fin; suc; zero)
 open import Data.List using (List; _∷_; [])
-open import Data.Product using (_×_; _,_)
+open import Data.Product using (∃-syntax; _×_; _,_)
 open import Reflection.External
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
-
+open import Text.Parser.String
 open import SMT.Theories.Core as Core
 open import SMT.Backend.Z3 Core.corePrintable Core.coreParsable
 
@@ -51,4 +51,15 @@ script₂ = assert term₂
 test₂ : z3 script₂ ≡ sat ∷ []
 test₂ = refl
 
+-- |Getting models.
+script₃ : Script [] (BOOL ∷ []) (MODEL (BOOL ∷ []) ∷ [])
+script₃ = declare-const BOOL
+        ∷ assert (var (zero , refl))
+        ∷ get-model
+        ∷ []
 
+vp₃ : ∀[ Parser (∃[ σ ] ((BOOL ∷ []) ∋ σ)) ]
+vp₃ = varParser script₃
+
+_ : vp₃ parses "x0"
+_ = ! BOOL , zero , refl

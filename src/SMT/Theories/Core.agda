@@ -55,8 +55,8 @@ CoreValue BOOL = Bool
 _≟-CoreSort_ : (φ φ′ : CoreSort) → Dec (φ ≡ φ′)
 BOOL ≟-CoreSort BOOL = yes refl
 
-readCoreSort : ∀[ Parser CoreSort ]
-readCoreSort = pBOOL
+parseCoreSort : ∀[ Parser CoreSort ]
+parseCoreSort = pBOOL
   where
     pBOOL = withSpaces (BOOL <$ text "Bool")
 
@@ -66,8 +66,8 @@ readBool = withSpaces (pTrue <|> pFalse)
     pTrue  = true  <$ text "true"
     pFalse = false <$ text "false"
 
-readCoreValue : (φ : CoreSort) → ∀[ Parser (CoreValue φ) ]
-readCoreValue BOOL = readBool
+parseCoreValue : (φ : CoreSort) → ∀[ Parser (CoreValue φ) ]
+parseCoreValue BOOL = readBool
 
 quoteBool : Bool → Term
 quoteBool false = con (quote false) []
@@ -98,5 +98,5 @@ Printable.showLiteral    corePrintable = showCoreLiteral
 Printable.showIdentifier corePrintable = showCoreIdentifier
 
 coreParsable : Parsable coreTheory
-Parsable.parseSort   coreParsable = readCoreSort
-Parsable.parseValue  coreParsable = readCoreValue
+Parsable.parseSort   coreParsable = parseCoreSort
+Parsable.parseValue  coreParsable = parseCoreValue
