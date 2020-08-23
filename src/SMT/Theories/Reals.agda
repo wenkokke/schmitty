@@ -12,7 +12,6 @@ open import Relation.Nullary using (Dec; yes; no)
 open import Reflection using (Term; con; lit; nat; vArg)
 import Relation.Nullary.Decidable as Dec
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
-open import SMT.Logics
 open import SMT.Theory
 open import SMT.Theories.Core hiding (BOOL)
 open import SMT.Theories.Core.Extensions
@@ -139,7 +138,6 @@ BaseTheory.Literal      baseTheory = Literal
 BaseTheory.Identifier   baseTheory = Identifier
 BaseTheory.quoteSort    baseTheory = quoteSort
 BaseTheory.quoteValue   baseTheory = quoteValue
-BaseTheory.defaultLogic baseTheory = NRA
 
 printable : Printable baseTheory
 Printable.showSort       printable = showSort

@@ -90,7 +90,6 @@ BaseTheory.Literal      coreBaseTheory = CoreLiteral
 BaseTheory.Identifier   coreBaseTheory = CoreIdentifier
 BaseTheory.quoteSort    coreBaseTheory = quoteCoreSort
 BaseTheory.quoteValue   coreBaseTheory = quoteCoreValue
-BaseTheory.defaultLogic coreBaseTheory = LIA -- TODO: there's prolly better options?
 
 corePrintable : Printable coreBaseTheory
 Printable.showSort       corePrintable = showCoreSort

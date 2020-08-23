@@ -7,7 +7,6 @@ open import Reflection using (Term)
 open import Relation.Nullary using (Dec; yes; no)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import Text.Parser.String
-open import SMT.Logics
 
 
 record Signature {Sort : Set} (σ : Sort) : Set where
@@ -44,7 +43,6 @@ record BaseTheory : Set₁ where
     Identifier   : {σ : Sort} → Signature σ → Set
     quoteSort    : Sort → Term
     quoteValue   : (σ : Sort) → Value σ → Term
-    defaultLogic : Logic
 
 record Printable (baseTheory : BaseTheory) : Set where
   open BaseTheory baseTheory
