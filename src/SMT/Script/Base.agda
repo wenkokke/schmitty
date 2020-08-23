@@ -200,9 +200,9 @@ quoteOutputs (r ∷ rs) =
 -- |SMT-LIB commands.
 --
 --  NOTE: Scripts are lists of commands. Unfortunately, some commands,
---        such as `declare-const`, bind variables variables. Command has
+--        such as `declare-const`, bind variables. Command has
 --        two type-level arguments, `Γ` and `δΓ`, which represent the binding
---        context before and executing the command, and the new variables bound
+--        context before executing the command, and the new variables bound
 --        after executing the command. We use a similar trick to gather the
 --        types of the outputs, using `Ξ` and `δΞ`.
 --
