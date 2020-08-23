@@ -47,7 +47,7 @@ _ = refl
 ```
 Okay, I know that wasn’t a particularly hard problem, but I was in a rush. Send me a pull-request if you’ve got more interesting questions for Schmitty!
 
-If you’d like to work with Schmitty, a good place to start are the examples. Right now, Schmitty supports three theories—[Core][SMT.Theories.Core], [Ints][SMT.Theories.Ints], and [Reals][SMT.Theories.Reals] (backed by [rationals][Data.Rational.Unnormalised])—and two backends—[Z3][SMT.Backend.Z3], and [CVC4][SMT.Backend.CVC4]. If you’re missing your favourite theory or solver, your contribution is more than welcome!
+If you’d like to work with Schmitty, a good place to start are the examples. Right now, Schmitty supports three theories—[Core][SMT.Theories.Core], [Ints][SMT.Theories.Ints], and [Reals][SMT.Theories.Reals] backed by [rationals][Data.Rational.Unnormalised]—and two backends—[Z3][SMT.Backend.Z3], and [CVC4][SMT.Backend.CVC4]. If you’re missing your favourite theory or solver, your contribution is more than welcome!
 
 The examples are a good place to start reading! You can find them in [`SMT.Theories.Core.Example`][SMT.Theories.Core.Example], [`SMT.Theories.Ints.Example`][SMT.Theories.Ints.Example], [`SMT.Theories.Reals.Example`][SMT.Theories.Reals.Example]!
 
@@ -75,6 +75,7 @@ Note: You’ll need *at least* [Agda version 2.6.2-20eb4f3][agda-version] to run
 [SMT.Script]: https://wenkokke.github.io/schmitty/SMT.Script.html
 [SMT.Logics]: https://wenkokke.github.io/schmitty/SMT.Logics.html
 [SMT.Backend.Z3]: https://wenkokke.github.io/schmitty/SMT.Backend.Z3.html
+[SMT.Backend.CVC4]: https://wenkokke.github.io/schmitty/SMT.Backend.CVC4.html
 [Reflection.External]: https://wenkokke.github.io/schmitty/Reflection.External.html
 [agda-stdlib]: https://github.com/agda/agda-stdlib
 [agda-version]: https://github.com/agda/agda/commit/20eb4f3ebb6eb73385f2651cf9b5c4bdac9a2f10
