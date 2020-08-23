@@ -3,6 +3,7 @@ module index where
 import SMT.Script
 import SMT.Theories.Core.Example
 import SMT.Theories.Core.Extensions
+import SMT.Theories.Reals.Example
 import SMT.Theories.Reals
 import SMT.Theories.Core
 import SMT.Theories.Ints

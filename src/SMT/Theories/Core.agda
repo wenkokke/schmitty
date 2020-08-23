@@ -12,35 +12,82 @@ open import SMT.Logics
 open import Text.Parser.String
 
 
--- Sorts
+-----------
+-- Sorts --
+-----------
 
 data CoreSort : Set where
   BOOL : CoreSort
 
+private
+  variable
+    φ : CoreSort
+    Φ : Signature φ
+
+_≟-CoreSort_ : (φ φ′ : CoreSort) → Dec (φ ≡ φ′)
+BOOL ≟-CoreSort BOOL = yes refl
+
 showCoreSort : CoreSort → String
 showCoreSort BOOL = "Bool"
 
+parseCoreSort : ∀[ Parser CoreSort ]
+parseCoreSort = BOOL <$ lexeme "Bool"
 
--- Literals
+_ : parseCoreSort parses "Bool"
+_ = ! BOOL
+
+_ : parseCoreSort rejects "Int"
+_ = _
+
+quoteCoreSort : CoreSort → Term
+quoteCoreSort BOOL = con (quote BOOL) []
+
+
+------------
+-- Values --
+------------
+
+CoreValue : CoreSort → Set
+CoreValue BOOL = Bool
+
+parseBool : ∀[ Parser Bool ]
+parseBool = true  <$ lexeme "true"
+        <|> false <$ lexeme "false"
+
+parseCoreValue : (φ : CoreSort) → ∀[ Parser (CoreValue φ) ]
+parseCoreValue BOOL = parseBool
+
+quoteBool : Bool → Term
+quoteBool false = con (quote false) []
+quoteBool true  = con (quote true)  []
+
+quoteCoreValue : (φ : CoreSort) → CoreValue φ → Term
+quoteCoreValue BOOL = quoteBool
+
+
+--------------
+-- Literals --
+--------------
 
 data CoreLiteral : CoreSort → Set where
   bool : Bool → CoreLiteral BOOL
 
-showCoreLiteral : {σ : CoreSort} → CoreLiteral σ → String
+showCoreLiteral : CoreLiteral φ → String
 showCoreLiteral (bool false) = "false"
 showCoreLiteral (bool true)  = "true"
 
+-----------------
+-- Identifiers --
+-----------------
 
--- Identifiers
-
-data CoreIdentifier : {σ : CoreSort} (Σ : Signature σ) → Set where
+data CoreIdentifier : (Φ : Signature φ) → Set where
   not     : CoreIdentifier (Op₁ BOOL)
   implies : CoreIdentifier (Op₂ BOOL)
   and     : CoreIdentifier (Op₂ BOOL)
   or      : CoreIdentifier (Op₂ BOOL)
   xor     : CoreIdentifier (Op₂ BOOL)
 
-showCoreIdentifier : {σ : CoreSort} {Σ : Signature σ} → CoreIdentifier Σ → String
+showCoreIdentifier : CoreIdentifier Φ → String
 showCoreIdentifier not     = "not"
 showCoreIdentifier implies = "=>"
 showCoreIdentifier and     = "and"
@@ -48,38 +95,9 @@ showCoreIdentifier or      = "or"
 showCoreIdentifier xor     = "xor"
 
 
--- Parsers
-
-CoreValue : CoreSort → Set
-CoreValue BOOL = Bool
-
-_≟-CoreSort_ : (φ φ′ : CoreSort) → Dec (φ ≡ φ′)
-BOOL ≟-CoreSort BOOL = yes refl
-
-parseCoreSort : ∀[ Parser CoreSort ]
-parseCoreSort = pBOOL
-  where
-    pBOOL = withSpaces (BOOL <$ text "Bool")
-
-readBool : ∀[ Parser Bool ]
-readBool = true  <$ lexeme "true"
-       <|> false <$ lexeme "false"
-
-parseCoreValue : (φ : CoreSort) → ∀[ Parser (CoreValue φ) ]
-parseCoreValue BOOL = readBool
-
-quoteBool : Bool → Term
-quoteBool false = con (quote false) []
-quoteBool true  = con (quote true)  []
-
-quoteCoreSort : CoreSort → Term
-quoteCoreSort BOOL = con (quote BOOL) []
-
-quoteCoreValue : (φ : CoreSort) → CoreValue φ → Term
-quoteCoreValue BOOL = quoteBool
-
-
--- Instances
+---------------
+-- Instances --
+---------------
 
 coreBaseTheory : BaseTheory
 BaseTheory.Sort         coreBaseTheory = CoreSort

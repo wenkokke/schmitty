@@ -108,4 +108,4 @@ module Example₃ where
          ∷ []
 
   _ : cvc4 script ≡ ((+ 0 ∷ + 0 ∷ []) ∷ [])
-  _ = refl -- so, uh, that's cool?
+  _ = refl

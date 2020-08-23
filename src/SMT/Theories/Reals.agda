@@ -1,11 +1,12 @@
 module SMT.Theories.Reals where
 
 open import Data.Bool.Base as Bool using (Bool; false; true)
-open import Data.Integer as Int using (ℤ; +_; -[1+_])
-open import Data.Nat.Base as Nat using (ℕ)
+open import Data.Integer as Int using (ℤ; +_; -[1+_]; ∣_∣)
+open import Data.Nat as Nat using (ℕ)
 open import Data.Nat.Show renaming (show to showℕ)
 open import Data.List as List using (List; _∷_; [])
-open import Data.Rational.Unnormalised as Rat using (ℚᵘ)
+open import Data.Product as Prod using (_×_; _,_)
+open import Data.Rational.Unnormalised as Rat using (ℚᵘ; ↥_)
 open import Data.String as String using (String)
 open import Function.Equivalence using (equivalence)
 open import Relation.Nullary using (Dec; yes; no)
@@ -15,9 +16,12 @@ open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
 open import SMT.Theory
 open import SMT.Theories.Core hiding (BOOL)
 open import SMT.Theories.Core.Extensions
+open import Text.Parser.String
 
 
--- Sorts
+-----------
+-- Sorts --
+-----------
 
 data Sort : Set where
    CORE : (φ : CoreSort) → Sort
@@ -27,10 +31,10 @@ open Sorts Sort CORE
 
 private
   variable
-    σ : Sort
-    Σ : Signature σ
+    σ σ′ : Sort
+    Σ Σ′ : Signature σ
     φ φ′ : CoreSort
-    Φ : Signature φ
+    Φ Φ′ : Signature φ
 
 CORE-injective : CORE φ ≡ CORE φ′ → φ ≡ φ′
 CORE-injective refl = refl
@@ -45,16 +49,81 @@ showSort : Sort → String
 showSort (CORE φ) = showCoreSort φ
 showSort REAL     = "Real"
 
+parseSort : ∀[ Parser Sort ]
+parseSort = CORE <$> parseCoreSort
+        <|> REAL <$  lexeme "Real"
 
--- Values
+_ : parseSort parses "Bool"
+_ = ! BOOL
+
+_ : parseSort rejects "Int"
+_ = _
+
+_ : parseSort parses "Real"
+_ = ! REAL
+
+quoteSort : Sort → Term
+quoteSort (CORE φ) = con (quote CORE) (vArg (quoteCoreSort φ) ∷ [])
+quoteSort REAL     = con (quote REAL) []
+
+
+------------
+-- Values --
+------------
 
 Value : Sort → Set
 Value (CORE φ) = CoreValue φ
 Value REAL     = ℚᵘ
 
-quoteSort : Sort → Term
-quoteSort (CORE φ) = con (quote CORE) (vArg (quoteCoreSort φ) ∷ [])
-quoteSort REAL     = con (quote REAL) []
+private
+  -- |Construct a rational number from a natural number
+  fromℕ : ℕ → ℚᵘ
+  fromℕ n = Rat.mkℚᵘ (+ n) 0
+
+  -- |SMT division (where p ÷ 0 = 0)
+  _÷_ : (p q : ℚᵘ) → ℚᵘ
+  p ÷ q with ∣ ↥ q ∣ Nat.≟ 0
+  ... | yes q≡0 = Rat.0ℚᵘ
+  ... | no ¬q≡0 = Rat._÷_ p q {Dec.fromWitnessFalse ¬q≡0}
+
+-- |Parse an unnormalised rational number
+--
+--  NOTE: We're not taking the fixpoint over expressions,
+--        since it seems that SMT solvers output the numbers
+--        in a normal form with negation after division.
+--
+parseRat : ∀[ Parser ℚᵘ ]
+parseRat = pNum <|> pDiv <|> pNeg
+  where
+    pNum pDiv pNeg : ∀[ Parser ℚᵘ ]
+    pNum = withSpaces (fromℕ <$> (decimalℕ <& box (text ".0")))
+    pDiv = withSpaces (parens (box (text "/" &> box (_÷_ <$> pNum <*> box pNum))))
+    pNeg = withSpaces (parens (box (text "-" &> box (Rat.-_ <$> (pNum <|> pDiv)))))
+
+parseValue : (σ : Sort) → ∀[ Parser (Value σ) ]
+parseValue (CORE φ) = parseCoreValue φ
+parseValue REAL     = parseRat
+
+_ : parseValue BOOL parses "true"
+_ = ! true
+
+_ : parseValue BOOL parses "false"
+_ = ! false
+
+_ : parseValue BOOL rejects "kitty"
+_ = _
+
+_ : parseValue REAL parses "1.0"
+_ = ! Rat.1ℚᵘ
+
+_ : parseValue REAL parses "(/ 1.0 2.0)"
+_ = ! Rat.½
+
+_ : parseValue REAL parses "(- (/ 1.0 2.0))"
+_ = ! Rat.-½
+
+_ : parseValue REAL rejects "10"
+_ = _
 
 quoteRat : ℚᵘ → Term
 quoteRat (Rat.mkℚᵘ n d-1) =
@@ -69,7 +138,9 @@ quoteValue (CORE φ) = quoteCoreValue φ
 quoteValue REAL     = quoteRat
 
 
--- Literals
+--------------
+-- Literals --
+--------------
 
 data Literal : Sort → Set where
   core : CoreLiteral φ → Literal (CORE φ)
@@ -79,14 +150,16 @@ open Literals Sort CORE Literal core
 
 showLiteral : Literal σ → String
 showLiteral (core x) = showCoreLiteral x
-showLiteral (real x) = showℕ x
+showLiteral (real x) = showℕ x String.++ ".0"
 
 private
   variable
     l : Literal σ
 
 
--- Identifiers
+-----------------
+-- Identifiers --
+-----------------
 
 data Identifier : (Σ : Signature σ) → Set where
   -- Core theory
@@ -127,7 +200,9 @@ private
     i : Identifier Σ
 
 
--- Instances
+---------------
+-- Instances --
+---------------
 
 baseTheory : BaseTheory
 BaseTheory.Sort         baseTheory = Sort
@@ -143,3 +218,12 @@ printable : Printable baseTheory
 Printable.showSort       printable = showSort
 Printable.showLiteral    printable = showLiteral
 Printable.showIdentifier printable = showIdentifier
+
+parsable : Parsable baseTheory
+Parsable.parseSort  parsable = parseSort
+Parsable.parseValue parsable = parseValue
+
+theory : Theory
+Theory.baseTheory theory = baseTheory
+Theory.printable  theory = printable
+Theory.parsable   theory = parsable

@@ -47,15 +47,14 @@ _ = refl
 ```
 Okay, I know that wasn’t a particularly hard problem, but I was in a rush. Send me a pull-request if you’ve got more interesting questions for Schmitty!
 
-If you’d like to work with Schmitty, a good place to start are the examples. Right now, Schmitty supports two theories, [Core][SMT.Theories.Core] and [Ints][SMT.Theories.Ints], and one backend, [Z3][SMT.Backend.Z3]. I’ve got a couple of other theories and backends under development, but if you’d like to contribute, your help is more than welcome!
+If you’d like to work with Schmitty, a good place to start are the examples. Right now, Schmitty supports three theories—[Core][SMT.Theories.Core], [Ints][SMT.Theories.Ints], and [Reals][SMT.Theories.Reals] (backed by [rationals][Data.Rational.Unnormalised])—and two backends—[Z3][SMT.Backend.Z3], and [CVC4][SMT.Backend.CVC4]. If you’re missing your favourite theory or solver, your contribution is more than welcome!
 
-The examples are a good place to start reading! You can find them in [`SMT.Theories.Core.Example`][SMT.Theories.Core.Example] and [`SMT.Theories.Ints.Example`][SMT.Theories.Ints.Example]!
+The examples are a good place to start reading! You can find them in [`SMT.Theories.Core.Example`][SMT.Theories.Core.Example], [`SMT.Theories.Ints.Example`][SMT.Theories.Ints.Example], [`SMT.Theories.Reals.Example`][SMT.Theories.Reals.Example]!
 
 # Roadmap
 
-- [ ] Finish Reals theory for Floats and Rationals.
-- [ ] Add error reporting to the output parser.
 - [ ] Merge [`Reflection.External`][Reflection.External] into [agda-stdlib][agda-stdlib].
+- [ ] Add error reporting to the output parser.
 - [ ] Use reflection to reflect Agda expression to SMT-LIB terms.
 - [ ] Use postulates to provide “evidence” when the solver succeeds.
 - [ ] Use [kazkansouh][kazkansouh]’s SAT solver to provide *actual* evidence for the Core theory.
@@ -64,6 +63,7 @@ The examples are a good place to start reading! You can find them in [`SMT.Theor
 
 Note: You’ll need *at least* [Agda version 2.6.2-20eb4f3][agda-version] to run Schmitty.
 
+[Data.Rational.Unnormalised]: https://agda.github.io/agda-stdlib/Data.Rational.Unnormalised.html
 [SMT.Theory]: https://wenkokke.github.io/schmitty/SMT.Theory.html
 [SMT.Theories.Core]: https://wenkokke.github.io/schmitty/SMT.Theories.Core.html
 [SMT.Theories.Core.Extensions]: https://wenkokke.github.io/schmitty/SMT.Theories.Core.Extensions.html
@@ -71,6 +71,7 @@ Note: You’ll need *at least* [Agda version 2.6.2-20eb4f3][agda-version] to run
 [SMT.Theories.Ints]: https://wenkokke.github.io/schmitty/SMT.Theories.Ints.html
 [SMT.Theories.Ints.Example]: https://wenkokke.github.io/schmitty/SMT.Theories.Ints.Example.html
 [SMT.Theories.Reals]: https://wenkokke.github.io/schmitty/SMT.Theories.Reals.html
+[SMT.Theories.Reals.Example]: https://wenkokke.github.io/schmitty/SMT.Theories.Reals.Example.html
 [SMT.Script]: https://wenkokke.github.io/schmitty/SMT.Script.html
 [SMT.Logics]: https://wenkokke.github.io/schmitty/SMT.Logics.html
 [SMT.Backend.Z3]: https://wenkokke.github.io/schmitty/SMT.Backend.Z3.html

@@ -17,7 +17,9 @@ open import SMT.Theories.Core.Extensions
 open import Text.Parser.String
 
 
--- Sort
+-----------
+-- Sorts --
+-----------
 
 data Sort : Set where
    CORE : (φ : CoreSort) → Sort
@@ -27,10 +29,10 @@ open Sorts Sort CORE
 
 private
   variable
-    σ : Sort
-    Σ : Signature σ
+    σ σ′ : Sort
+    Σ Σ′ : Signature σ
     φ φ′ : CoreSort
-    Φ : Signature φ
+    Φ Φ′ : Signature φ
 
 CORE-injective : CORE φ ≡ CORE φ′ → φ ≡ φ′
 CORE-injective refl = refl
@@ -45,7 +47,76 @@ showSort : Sort → String
 showSort (CORE φ) = showCoreSort φ
 showSort INT      = "Int"
 
--- Literals
+parseSort : ∀[ Parser Sort ]
+parseSort = CORE <$> parseCoreSort
+        <|> INT  <$  lexeme "Int"
+
+_ : parseSort parses "Bool"
+_ = ! BOOL
+
+_ : parseSort parses "Int"
+_ = ! INT
+
+_ : parseSort rejects "Real"
+_ = _
+
+quoteSort : Sort → Term
+quoteSort (CORE φ) = con (quote CORE) (vArg (quoteCoreSort φ) ∷ [])
+quoteSort INT      = con (quote INT) []
+
+
+------------
+-- Values --
+------------
+
+Value : Sort → Set
+Value (CORE φ) = CoreValue φ
+Value INT      = ℤ
+
+parseInt : ∀[ Parser ℤ ]
+parseInt = withSpaces (pPos <|> pNeg)
+  where
+    pPos pNeg : ∀[ Parser ℤ ]
+    pPos = Int.+_ <$> decimalℕ
+    pNeg = Int.-_ <$> parens (box (text "-" &> box spaces &> box pPos))
+
+parseValue : (σ : Sort) → ∀[ Parser (Value σ) ]
+parseValue (CORE φ) = parseCoreValue φ
+parseValue INT      = parseInt
+
+_ : parseValue BOOL parses "true"
+_ = ! true
+
+_ : parseValue BOOL parses "false"
+_ = ! false
+
+_ : parseValue BOOL rejects "kitty"
+_ = _
+
+_ : parseValue INT parses "1"
+_ = ! + 1
+
+_ : parseValue INT parses "0"
+_ = ! + 0
+
+_ : parseValue INT parses "(- 1)"
+_ = ! -[1+ 0 ]
+
+_ : parseValue INT rejects "1.0"
+_ = _
+
+quoteInt : ℤ → Term
+quoteInt (+ n)    = con (quote +_) (vArg (lit (nat n)) ∷ [])
+quoteInt -[1+ n ] = con (quote -[1+_]) (vArg (lit (nat n)) ∷ [])
+
+quoteValue : (σ : Sort) → Value σ → Term
+quoteValue (CORE φ) = quoteCoreValue φ
+quoteValue INT      = quoteInt
+
+
+--------------
+-- Literals --
+--------------
 
 data Literal : Sort → Set where
   core : CoreLiteral φ → Literal (CORE φ)
@@ -62,7 +133,9 @@ private
     l : Literal σ
 
 
--- Identifiers
+-----------------
+-- Identifiers --
+-----------------
 
 data Identifier : (Σ : Signature σ) → Set where
   -- Core theory
@@ -105,63 +178,6 @@ showIdentifier gt       = ">"
 private
   variable
     i : Identifier Σ
-
-
-------------
--- Values --
-------------
-
-Value : Sort → Set
-Value (CORE φ) = CoreValue φ
-Value INT      = ℤ
-
-
--------------
--- Parsers --
--------------
-
-parseSort : ∀[ Parser Sort ]
-parseSort = (CORE <$> parseCoreSort) <|> pINT
-  where
-    pINT = withSpaces (INT <$ text "Int")
-
-_ : parseSort parses "Bool"
-_ = ! BOOL
-
-_ : parseSort parses "Int"
-_ = ! INT
-
-parseInt : ∀[ Parser ℤ ]
-parseInt = withSpaces (readPos <|> readNeg)
-  where
-    readPos readNeg : ∀[ Parser ℤ ]
-    readPos = Int.+_ <$> decimalℕ
-    readNeg = Int.-_ <$> parens (box (text "-" &> box spaces &> box readPos))
-
-parseValue : (σ : Sort) → ∀[ Parser (Value σ) ]
-parseValue (CORE φ) = parseCoreValue φ
-parseValue INT      = parseInt
-
-_ : parseValue INT parses "1"
-_ = ! + 1
-
-_ : parseValue INT parses "0"
-_ = ! + 0
-
-_ : parseValue INT parses "(- 1)"
-_ = ! -[1+ 0 ]
-
-quoteSort : Sort → Term
-quoteSort (CORE φ) = con (quote CORE) (vArg (quoteCoreSort φ) ∷ [])
-quoteSort INT      = con (quote INT) []
-
-quoteInt : ℤ → Term
-quoteInt (+ n)    = con (quote +_) (vArg (lit (nat n)) ∷ [])
-quoteInt -[1+ n ] = con (quote -[1+_]) (vArg (lit (nat n)) ∷ [])
-
-quoteValue : (σ : Sort) → Value σ → Term
-quoteValue (CORE φ) = quoteCoreValue φ
-quoteValue INT      = quoteInt
 
 
 ---------------
