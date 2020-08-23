@@ -26,7 +26,7 @@ open import Data.Vec as Vec using (Vec)
 open import Function using (const; id; _∘_; _$_)
 import Function.Identity.Categorical as Identity
 open import Text.Parser.String as P hiding (_>>=_)
-open import Reflection using (con; vArg)
+import Reflection as Rfl
 
 open Theory theory
 

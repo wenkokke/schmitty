@@ -7,13 +7,15 @@ open import Data.List as List using (List; _∷_; []; _++_)
 open import Data.List.NonEmpty as List⁺ using (List⁺; _∷_)
 open import Data.Nat as Nat using (ℕ; _<?_)
 open import Data.Product as Prod using (∃; ∃-syntax; _×_; _,_)
+open import Data.String as String using (String)
 open import Function using (_$_)
 open import Relation.Nullary using (Dec; yes; no)
 open import Relation.Nullary.Decidable using (True; toWitness)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import SMT.Logics
 open import Data.Environment as Env using (Env; _∷_; [])
-import Reflection as Agda
+import Reflection as Rfl
+open import Text.Parser.String using (ParseErrorMsg; no-parse; ambiguous-parse)
 
 open BaseTheory baseTheory
 
@@ -131,7 +133,7 @@ unknown ≟-Sat unknown = yes refl
 -- |SMT-LIB models.
 --
 -- The Model type *could* be defined as below, but it is defined as a
--- datatype of its own to help Agda's reflection mechanism fill in the
+-- datatype of its own to help Rfl's reflection mechanism fill in the
 -- implicit arguments during unquoting.
 --
 -- @
@@ -152,7 +154,7 @@ Output (MODEL Γ) = Model Γ
 -- |List of SMT-LIB results.
 --
 -- The Outputs type *could* be defined as below, but it is defined as a
--- datatype of its own to help Agda's reflection mechanism fill in the
+-- datatype of its own to help Rfl's reflection mechanism fill in the
 -- implicit arguments during unquoting.
 --
 -- @
@@ -170,35 +172,35 @@ data Outputs : (Ξ : OutputCtxt) → Set where
 ---------------------
 
 -- |Quote a satisfiability result.
-quoteSat : Sat → Agda.Term
-quoteSat sat     = Agda.con (quote sat) []
-quoteSat unsat   = Agda.con (quote unsat) []
-quoteSat unknown = Agda.con (quote unknown) []
+quoteSat : Sat → Rfl.Term
+quoteSat sat     = Rfl.con (quote sat) []
+quoteSat unsat   = Rfl.con (quote unsat) []
+quoteSat unknown = Rfl.con (quote unknown) []
 
 -- |Quote a model.
-quoteModel : (Γ : Ctxt) → Model Γ → Agda.Term
+quoteModel : (Γ : Ctxt) → Model Γ → Rfl.Term
 quoteModel [] [] =
-  Agda.con (quote Model.[]) []
+  Rfl.con (quote Model.[]) []
 quoteModel (σ ∷ Γ) (v ∷ vs) =
-  Agda.con (quote Model._∷_)
-    $ Agda.hArg Agda.unknown
-    ∷ Agda.hArg (quoteSort σ)
-    ∷ Agda.vArg (quoteValue σ v)
-    ∷ Agda.vArg (quoteModel Γ vs) ∷ []
+  Rfl.con (quote Model._∷_)
+    $ Rfl.hArg Rfl.unknown
+    ∷ Rfl.hArg (quoteSort σ)
+    ∷ Rfl.vArg (quoteValue σ v)
+    ∷ Rfl.vArg (quoteModel Γ vs) ∷ []
 
 -- |Quote a result.
-quoteOutput : Output ξ → Agda.Term
+quoteOutput : Output ξ → Rfl.Term
 quoteOutput {SAT}     = quoteSat
 quoteOutput {MODEL Γ} = quoteModel Γ
 
 -- |Quote a list of results.
-quoteOutputs : Outputs Ξ → Agda.Term
+quoteOutputs : Outputs Ξ → Rfl.Term
 quoteOutputs [] =
-  Agda.con (quote Outputs.[]) $ []
+  Rfl.con (quote Outputs.[]) $ []
 quoteOutputs (r ∷ rs) =
-  Agda.con (quote Outputs._∷_)
-    $ Agda.vArg (quoteOutput r)
-    ∷ Agda.vArg (quoteOutputs rs) ∷ []
+  Rfl.con (quote Outputs._∷_)
+    $ Rfl.vArg (quoteOutput r)
+    ∷ Rfl.vArg (quoteOutputs rs) ∷ []
 
 ----------------------
 -- SMT-LIB Commands --
@@ -243,3 +245,17 @@ Val = ∃[ σ ] (Value σ)
 
 Defn : Ctxt → Set
 Defn Γ = ∃[ σ ] (Γ ∋ σ × Value σ)
+
+
+----------------------
+-- Parser utilities --
+----------------------
+
+-- |Format a parser error to the user.
+parseErrorMsg : (input : String) → ParseErrorMsg →  String
+parseErrorMsg input no-parse        = "Failed to parse '" String.++ input String.++ "'"
+parseErrorMsg input ambiguous-parse = "Ambiguous parse '" String.++ input String.++ "'"
+
+-- |Display a parser error to the user.
+parseError : ∀ {a} {A : Set a} (input : String) (errMsg : ParseErrorMsg) → Rfl.TC A
+parseError input errMsg = Rfl.typeError (Rfl.strErr (parseErrorMsg input errMsg) ∷ [])

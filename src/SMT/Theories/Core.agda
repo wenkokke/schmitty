@@ -8,6 +8,7 @@ open import Reflection
 open import Relation.Nullary using (Dec; yes; no)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import SMT.Theory
+open import SMT.Logics
 open import Text.Parser.String
 
 
@@ -81,14 +82,15 @@ quoteCoreValue BOOL = quoteBool
 -- Instances
 
 coreBaseTheory : BaseTheory
-BaseTheory.Sort       coreBaseTheory = CoreSort
-BaseTheory.BOOL       coreBaseTheory = BOOL
-BaseTheory._≟-Sort_   coreBaseTheory = _≟-CoreSort_
-BaseTheory.Value      coreBaseTheory = CoreValue
-BaseTheory.Literal    coreBaseTheory = CoreLiteral
-BaseTheory.Identifier coreBaseTheory = CoreIdentifier
-BaseTheory.quoteSort  coreBaseTheory = quoteCoreSort
-BaseTheory.quoteValue coreBaseTheory = quoteCoreValue
+BaseTheory.Sort         coreBaseTheory = CoreSort
+BaseTheory.BOOL         coreBaseTheory = BOOL
+BaseTheory._≟-Sort_     coreBaseTheory = _≟-CoreSort_
+BaseTheory.Value        coreBaseTheory = CoreValue
+BaseTheory.Literal      coreBaseTheory = CoreLiteral
+BaseTheory.Identifier   coreBaseTheory = CoreIdentifier
+BaseTheory.quoteSort    coreBaseTheory = quoteCoreSort
+BaseTheory.quoteValue   coreBaseTheory = quoteCoreValue
+BaseTheory.defaultLogic coreBaseTheory = LIA -- TODO: there's prolly better options?
 
 corePrintable : Printable coreBaseTheory
 Printable.showSort       corePrintable = showCoreSort

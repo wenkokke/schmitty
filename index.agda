@@ -8,6 +8,7 @@ import SMT.Theories.Core
 import SMT.Theories.Ints
 import SMT.Theories.Ints.Example
 import SMT.Backend.Z3
+import SMT.Backend.CVC4
 import SMT.Theory
 import SMT.Script.Names
 import SMT.Script.Base

@@ -2,7 +2,7 @@
 
 open import SMT.Theory
 
-module SMT.Backend.Z3 (theory : Theory) where
+module SMT.Backend.CVC4 (theory : Theory) where
 
 open Theory theory
 
@@ -15,8 +15,8 @@ open import Data.Unit as Unit using (⊤)
 open import Function using (case_of_; const; _$_; _∘_)
 open import Reflection as Rfl using (return; _>>=_; _>>_)
 open import Reflection.External
-open import Text.Parser.String using (runParser)
 open import SMT.Script theory public
+open import Text.Parser.String using (runParser)
 
 private
   variable
@@ -24,25 +24,29 @@ private
     ξ : OutputType
     Ξ : OutputCtxt
 
-z3TC : Script [] Γ (ξ ∷ Ξ) → Rfl.TC Rfl.Term
-z3TC {Γ} {ξ} {Ξ} scr = do
+cvc4TC : Script [] Γ (ξ ∷ Ξ) → Rfl.TC Rfl.Term
+cvc4TC {Γ} {ξ} {Ξ} scr = do
 
   -- Print the SMT-LIB script and build the output parser.
   let (scr , parseOutputs) = showScript scr
 
   -- Construct the command specification.
-  let z3Cmd = record
-              { name  = "z3"
-              ; args  = "-smt2" ∷ "-in" ∷ "-v:0" ∷ []
-              ; input = scr
-              }
+  --
+  -- TODO: Inspect the output type to see if any models should be produced,
+  --       and set the --produce-models flag accordingly.
+  --
+  let cvc4Cmd = record
+                { name  = "cvc4"
+                ; args  = "--lang=smt2" ∷ "--output-lang=smt2" ∷ "--produce-models" ∷ "-q" ∷ "-" ∷ []
+                ; input = scr
+                }
 
   -- Run the Z3 command and parse the output.
-  stdout ← runCmdTC z3Cmd
+  stdout ← runCmdTC cvc4Cmd
   case runParser parseOutputs stdout of λ where
     (inj₁ parserr) → parseError stdout parserr
     (inj₂ outputs) → return $ quoteOutputs outputs
 
 macro
-  z3 : Script [] Γ (ξ ∷ Ξ) → Rfl.Term → Rfl.TC ⊤
-  z3 scr hole = z3TC scr >>= Rfl.unify hole
+  cvc4 : Script [] Γ (ξ ∷ Ξ) → Rfl.Term → Rfl.TC ⊤
+  cvc4 scr hole = cvc4TC scr >>= Rfl.unify hole

@@ -6,16 +6,15 @@ open import Data.Fin using (Fin; suc; zero)
 open import Data.Integer using (ℤ; +_; -[1+_])
 open import Data.List using (List; _∷_; [])
 open import Data.List.NonEmpty using (List⁺; _∷_)
-open import Data.Product as Prod using (∃-syntax; _×_; _,_)
+open import Data.Product as Prod using (∃-syntax; _×_; _,_; proj₁; proj₂)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import Text.Parser.String
+open import SMT.Logics
 open import SMT.Theories.Ints as Ints
-open import SMT.Backend.Z3 Ints.theory
 
 module Example₁ where
 
-  Γ : Ctxt
-  Γ = INT ∷ INT ∷ []
+  open import SMT.Backend.Z3 Ints.theory
 
   -- |Taken from <http://smtlib.cs.uiowa.edu/examples.shtml>
   --
@@ -30,23 +29,23 @@ module Example₁ where
   --   (exit)
   -- @
   --
-  script : Script [] Γ (SAT ∷ [])
+  script : Script [] (INT ∷ INT ∷ []) (SAT ∷ [])
   script = declare-const INT
          ∷ declare-const INT
          ∷ assert (app₂ eq
-                  (app₂ sub x y)
-                  (app₂ add (app₂ add x (app₁ neg y)) (lit (int 1)))
+                  (app₂ sub (# 0) (# 1))
+                  (app₂ add (app₂ add (# 0) (app₁ neg (# 1))) (lit (int 1)))
                   )
          ∷ check-sat
          ∷ []
-         where
-           x = var (suc zero , refl)
-           y = var (    zero , refl)
 
   _ : z3 script ≡ unsat ∷ []
   _ = refl
 
+
 module Example₂ where
+
+  open import SMT.Backend.Z3 Ints.theory
 
   Γ : Ctxt
   Γ = INT ∷ INT ∷ []
@@ -54,12 +53,9 @@ module Example₂ where
   script : Script [] Γ (MODEL Γ ∷ [])
   script = declare-const INT
          ∷ declare-const INT
-         ∷ assert (app₂ eq x y)
+         ∷ assert (app₂ eq (# 0) (# 1))
          ∷ get-model
          ∷ []
-         where
-           x = var (suc zero , refl)
-           y = var (    zero , refl)
 
   pVar : ∀[ Parser (Var Γ) ]
   pVar = getVarParser script
@@ -98,3 +94,18 @@ module Example₂ where
   _ : z3 script ≡ ((+ 0 ∷ + 0 ∷ []) ∷ [])
   _ = refl
 
+
+module Example₃ where
+
+  open import SMT.Backend.CVC4 Ints.theory
+
+  script : Script [] (INT ∷ INT ∷ []) (MODEL (INT ∷ INT ∷ []) ∷ [])
+  script = set-logic QF-LIA
+         ∷ declare-const INT
+         ∷ declare-const INT
+         ∷ assert (app₂ lt (# 0) (app₂ add (# 1) (lit (int 10))))
+         ∷ get-model
+         ∷ []
+
+  _ : cvc4 script ≡ ((+ 0 ∷ + 0 ∷ []) ∷ [])
+  _ = refl -- so, uh, that's cool?
