@@ -1,3 +1,3 @@
 name: schmitty
-include: src
+include: . src
 depend: standard-library agdarsec

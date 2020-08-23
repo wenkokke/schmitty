@@ -1,6 +1,6 @@
 open import SMT.Theory
 
-module SMT.Script.Names (theory : Theory) where
+module SMT.Script.Names (baseTheory : BaseTheory) where
 
 open import Data.Fin as Fin using (Fin)
 open import Data.List as List using (List; _∷_; []; _++_)
@@ -28,9 +28,9 @@ import Function.Identity.Categorical as Identity
 open import Text.Parser.String as P hiding (_>>=_)
 open import Reflection using (con; vArg)
 
-open import SMT.Script.Base theory
+open import SMT.Script.Base baseTheory
 
-open Theory theory
+open BaseTheory baseTheory
 
 private
   variable

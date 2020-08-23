@@ -61,17 +61,15 @@ parseCoreSort = pBOOL
     pBOOL = withSpaces (BOOL <$ text "Bool")
 
 readBool : ∀[ Parser Bool ]
-readBool = withSpaces (pTrue <|> pFalse)
-  where
-    pTrue  = true  <$ text "true"
-    pFalse = false <$ text "false"
+readBool = true  <$ lexeme "true"
+       <|> false <$ lexeme "false"
 
 parseCoreValue : (φ : CoreSort) → ∀[ Parser (CoreValue φ) ]
 parseCoreValue BOOL = readBool
 
 quoteBool : Bool → Term
 quoteBool false = con (quote false) []
-quoteBool true = con (quote true) []
+quoteBool true  = con (quote true)  []
 
 quoteCoreSort : CoreSort → Term
 quoteCoreSort BOOL = con (quote BOOL) []
@@ -82,21 +80,26 @@ quoteCoreValue BOOL = quoteBool
 
 -- Instances
 
-coreTheory : Theory
-Theory.Sort       coreTheory = CoreSort
-Theory.BOOL       coreTheory = BOOL
-Theory._≟-Sort_   coreTheory = _≟-CoreSort_
-Theory.Value      coreTheory = CoreValue
-Theory.Literal    coreTheory = CoreLiteral
-Theory.Identifier coreTheory = CoreIdentifier
-Theory.quoteSort  coreTheory = quoteCoreSort
-Theory.quoteValue coreTheory = quoteCoreValue
+coreBaseTheory : BaseTheory
+BaseTheory.Sort       coreBaseTheory = CoreSort
+BaseTheory.BOOL       coreBaseTheory = BOOL
+BaseTheory._≟-Sort_   coreBaseTheory = _≟-CoreSort_
+BaseTheory.Value      coreBaseTheory = CoreValue
+BaseTheory.Literal    coreBaseTheory = CoreLiteral
+BaseTheory.Identifier coreBaseTheory = CoreIdentifier
+BaseTheory.quoteSort  coreBaseTheory = quoteCoreSort
+BaseTheory.quoteValue coreBaseTheory = quoteCoreValue
 
-corePrintable : Printable coreTheory
+corePrintable : Printable coreBaseTheory
 Printable.showSort       corePrintable = showCoreSort
 Printable.showLiteral    corePrintable = showCoreLiteral
 Printable.showIdentifier corePrintable = showCoreIdentifier
 
-coreParsable : Parsable coreTheory
+coreParsable : Parsable coreBaseTheory
 Parsable.parseSort   coreParsable = parseCoreSort
 Parsable.parseValue  coreParsable = parseCoreValue
+
+coreTheory : Theory
+Theory.baseTheory coreTheory = coreBaseTheory
+Theory.printable  coreTheory = corePrintable
+Theory.parsable   coreTheory = coreParsable

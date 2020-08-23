@@ -2,15 +2,9 @@
 
 open import SMT.Theory
 
-module SMT.Backend.Z3
-  {theory : Theory}
-  (printable : Printable theory)
-  (parsable : Parsable theory)
-  where
+module SMT.Backend.Z3 (theory : Theory) where
 
 open Theory theory
-open Printable printable
-open Parsable parsable
 
 open import Data.List as List using (List; _∷_; [])
 open import Data.Maybe as Maybe using (Maybe; just; nothing)
@@ -22,7 +16,7 @@ open import Function using (case_of_; const; _$_; _∘_)
 open import Reflection hiding (Term)
 open import Reflection.External
 open import Text.Parser.String using (ParseErrorMsg; no-parse; ambiguous-parse; runParser)
-open import SMT.Script printable parsable public
+open import SMT.Script theory public
 
 private
   variable

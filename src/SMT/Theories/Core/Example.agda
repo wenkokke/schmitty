@@ -8,7 +8,7 @@ open import Data.List using (List; _∷_; [])
 open import Data.Product using (∃-syntax; _×_; _,_)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import SMT.Theories.Core as Core
-open import SMT.Backend.Z3 Core.corePrintable Core.coreParsable
+open import SMT.Backend.Z3 Core.coreTheory
 
 
 module Example₁ where
@@ -28,11 +28,9 @@ module Example₁ where
   --
   script : Script [] (BOOL ∷ []) (SAT ∷ [])
   script = declare-const BOOL
-         ∷ assert (app₂ and p (app₁ not p))
+         ∷ assert (app₂ and (# 0) (app₁ not (# 0)))
          ∷ check-sat
          ∷ []
-         where
-           p = var (zero , refl)
 
   _ : z3 script ≡ unsat ∷ []
   _ = refl
@@ -42,12 +40,9 @@ module Example₂ where
 
   -- |Pierce's law.
   script : Script [] [] (SAT ∷ [])
-  script = assert (forAll BOOL (forAll BOOL ((app₂ implies (app₂ implies (app₂ implies p q) p) p))))
+  script = assert (forAll BOOL (forAll BOOL ((app₂ implies (app₂ implies (app₂ implies (# 1) (# 0)) (# 1)) (# 1)))))
          ∷ check-sat
          ∷ []
-         where
-           p = var (suc zero , refl)
-           q = var (    zero , refl)
 
   _ : z3 script ≡ sat ∷ []
   _ = refl
@@ -58,7 +53,7 @@ module Example₃ where
   -- |Parsing models.
   script : Script [] (BOOL ∷ []) (MODEL (BOOL ∷ []) ∷ [])
   script = declare-const BOOL
-         ∷ assert (var (zero , refl))
+         ∷ assert (# 0)
          ∷ get-model
          ∷ []
   _ : z3 script ≡ (true ∷ []) ∷ []

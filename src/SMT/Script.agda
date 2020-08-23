@@ -1,6 +1,6 @@
 open import SMT.Theory
 
-module SMT.Script {theory : Theory} (printable : Printable theory) (parsable : Parsable theory) where
+module SMT.Script (theory : Theory) where
 
 open import Data.Fin as Fin using (Fin; suc; zero)
 open import Data.List as List using (List; _∷_; []; _++_)
@@ -28,12 +28,10 @@ import Function.Identity.Categorical as Identity
 open import Text.Parser.String as P hiding (_>>=_)
 open import Reflection using (con; vArg)
 
-open import SMT.Script.Base theory public
-open import SMT.Script.Names theory
-
 open Theory theory
-open Printable printable
-open Parsable parsable
+
+open import SMT.Script.Base baseTheory public
+open import SMT.Script.Names baseTheory
 
 private
   variable
@@ -46,14 +44,15 @@ private
     Ξ Ξ′ δΞ : OutputCtxt
 
 
--- |Create an S-expression from a list of strings.
---
--- @
---   mkSTerm ("*" ∷ "4" ∷ "5") ≡ "(* 4 5)"
--- @
---
-mkSTerm : List String → String
-mkSTerm = String.parens ∘ String.unwords
+private
+  -- |Create an S-expression from a list of strings.
+  --
+  -- @
+  --   mkSTerm ("*" ∷ "4" ∷ "5") ≡ "(* 4 5)"
+  -- @
+  --
+  mkSTerm : List String → String
+  mkSTerm = String.parens ∘ String.unwords
 
 
 -- * Variable parsers

@@ -1,20 +1,21 @@
 open import SMT.Theory
 
-module SMT.Script.Base (theory : Theory) where
+module SMT.Script.Base (baseTheory : BaseTheory) where
 
 open import Data.Fin as Fin using (Fin)
 open import Data.List as List using (List; _∷_; []; _++_)
 open import Data.List.NonEmpty as List⁺ using (List⁺; _∷_)
+open import Data.Nat as Nat using (ℕ; _<?_)
 open import Data.Product as Prod using (∃; ∃-syntax; _×_; _,_)
 open import Function using (_$_)
 open import Relation.Nullary using (Dec; yes; no)
-open import Relation.Nullary.Decidable using (True)
+open import Relation.Nullary.Decidable using (True; toWitness)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import SMT.Logics
 open import Data.Environment as Env using (Env; _∷_; [])
 import Reflection as Agda
 
-open Theory theory
+open BaseTheory baseTheory
 
 
 -------------------
@@ -55,6 +56,12 @@ mutual
 pattern app₁ f x     = app f (x ∷ [])
 pattern app₂ f x y   = app f (x ∷ y ∷ [])
 pattern app₃ f x y z = app f (x ∷ y ∷ z ∷ [])
+
+-- |Helper function for writing variables.
+#_ : {Γ : Ctxt} {σ : Sort} (n : ℕ)
+     {n<∣Γ∣ : True (n <? List.length Γ)}
+     {Γ∋σ : True (List.lookup Γ (Fin.fromℕ< (toWitness n<∣Γ∣)) ≟-Sort σ)} → Term Γ σ
+#_ {Γ} {σ} n {n<∣Γ∣} {Γ∋σ} = var (Fin.fromℕ< (toWitness n<∣Γ∣) , toWitness Γ∋σ)
 
 Rename : (Γ Δ : Ctxt) → Set
 Rename Γ Δ = ∀ {σ} → Γ ∋ σ → Δ ∋ σ

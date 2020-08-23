@@ -33,7 +33,7 @@ module _ {Sort : Set} where
   map CORE Φ = record { ArgTypes = List.map CORE (ArgTypes Φ) }
 
 
-record Theory : Set₁ where
+record BaseTheory : Set₁ where
   field
     Sort       : Set
     _≟-Sort_   : (σ σ′ : Sort) → Dec (σ ≡ σ′)
@@ -44,15 +44,25 @@ record Theory : Set₁ where
     quoteSort  : Sort → Term
     quoteValue : (σ : Sort) → Value σ → Term
 
-record Printable (theory : Theory) : Set where
-  open Theory theory
+record Printable (baseTheory : BaseTheory) : Set where
+  open BaseTheory baseTheory
   field
     showSort       : Sort → String
     showLiteral    : {σ : Sort} → Literal σ → String
     showIdentifier : {σ : Sort} {Σ : Signature σ} → Identifier Σ → String
 
-record Parsable (theory : Theory) : Set₁ where
-  open Theory theory
+record Parsable (baseTheory : BaseTheory) : Set₁ where
+  open BaseTheory baseTheory
   field
     parseSort  : ∀[ Parser Sort ]
     parseValue : (σ : Sort) → ∀[ Parser (Value σ) ]
+
+record Theory : Set₁ where
+  field
+    baseTheory : BaseTheory
+    printable : Printable baseTheory
+    parsable : Parsable baseTheory
+
+  open BaseTheory baseTheory public
+  open Printable printable public
+  open Parsable parsable public

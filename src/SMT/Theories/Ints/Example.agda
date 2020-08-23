@@ -10,7 +10,7 @@ open import Data.Product as Prod using (∃-syntax; _×_; _,_)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import Text.Parser.String
 open import SMT.Theories.Ints as Ints
-open import SMT.Backend.Z3 Ints.printable Ints.parsable
+open import SMT.Backend.Z3 Ints.theory
 
 module Example₁ where
 
