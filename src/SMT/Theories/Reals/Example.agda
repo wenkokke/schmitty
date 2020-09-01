@@ -21,9 +21,9 @@ module Example₁ where
   script : Script [] Γ (MODEL Γ ∷ [])
   script = declare-const REAL
          ∷ declare-const REAL
-         ∷ assert (app₂ eq (# 0) (app₂ div (# 1) (lit (real 2))))
-         ∷ assert (app₂ gt (# 0) (lit (real 1)))
-         ∷ assert (app₂ gt (# 1) (lit (real 1)))
+         ∷ assert (app₂ eq (# 0) (app₂ div (# 1) (lit (nat 2))))
+         ∷ assert (app₂ gt (# 0) (lit (nat 1)))
+         ∷ assert (app₂ gt (# 1) (lit (nat 1)))
          ∷ get-model
          ∷ []
 
@@ -42,9 +42,9 @@ module Example₂ where
   script : Script [] Γ (MODEL Γ ∷ [])
   script = declare-const REAL
          ∷ declare-const REAL
-         ∷ assert (app₂ eq (# 0) (app₂ div (# 1) (lit (real 2))))
-         ∷ assert (app₂ gt (# 0) (lit (real 1)))
-         ∷ assert (app₂ gt (# 1) (lit (real 1)))
+         ∷ assert (app₂ eq (# 0) (app₂ div (# 1) (lit (nat 2))))
+         ∷ assert (app₂ gt (# 0) (lit (nat 1)))
+         ∷ assert (app₂ gt (# 1) (lit (nat 1)))
          ∷ get-model
          ∷ []
 

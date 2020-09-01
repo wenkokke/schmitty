@@ -144,13 +144,13 @@ quoteValue REAL     = quoteRat
 
 data Literal : Sort → Set where
   core : CoreLiteral φ → Literal (CORE φ)
-  real : ℕ → Literal REAL
+  nat  : ℕ → Literal REAL
 
 open Literals Sort CORE Literal core
 
 showLiteral : Literal σ → String
 showLiteral (core x) = showCoreLiteral x
-showLiteral (real x) = showℕ x String.++ ".0"
+showLiteral (nat  x) = showℕ x String.++ ".0"
 
 private
   variable

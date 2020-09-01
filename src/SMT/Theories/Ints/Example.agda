@@ -11,7 +11,7 @@ open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import Text.Parser.String
 open import SMT.Logics
 open import SMT.Theories.Ints as Ints
-open import SMT.Script Int.theory
+open import SMT.Script Ints.theory
 
 module Example₁ where
 
@@ -35,7 +35,7 @@ module Example₁ where
          ∷ declare-const INT
          ∷ assert (app₂ eq
                   (app₂ sub (# 0) (# 1))
-                  (app₂ add (app₂ add (# 0) (app₁ neg (# 1))) (lit (int 1)))
+                  (app₂ add (app₂ add (# 0) (app₁ neg (# 1))) (lit (nat 1)))
                   )
          ∷ check-sat
          ∷ []
@@ -104,7 +104,7 @@ module Example₃ where
   script = set-logic QF-LIA
          ∷ declare-const INT
          ∷ declare-const INT
-         ∷ assert (app₂ lt (# 0) (app₂ add (# 1) (lit (int 10))))
+         ∷ assert (app₂ lt (# 0) (app₂ add (# 1) (lit (nat 10))))
          ∷ get-model
          ∷ []
 

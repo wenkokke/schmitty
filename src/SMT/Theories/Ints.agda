@@ -120,13 +120,13 @@ quoteValue INT      = quoteInt
 
 data Literal : Sort → Set where
   core : CoreLiteral φ → Literal (CORE φ)
-  int  : ℕ → Literal INT
+  nat  : ℕ → Literal INT
 
 open Literals Sort CORE Literal core
 
 showLiteral : Literal σ → String
 showLiteral (core x) = showCoreLiteral x
-showLiteral (int  x) = showℕ x
+showLiteral (nat  x) = showℕ x
 
 private
   variable
