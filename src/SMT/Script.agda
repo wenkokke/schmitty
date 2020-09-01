@@ -23,7 +23,7 @@ open import Data.Product as Product using (_×_; _,_; -,_; proj₁; proj₂)
 open import Data.String as String using (String)
 open import Data.Unit as Unit using (⊤)
 open import Data.Vec as Vec using (Vec)
-open import Function using (const; id; _∘_; _$_)
+open import Function using (_$_; _∘_; const; flip; id)
 import Function.Identity.Categorical as Identity
 open import Text.Parser.String as P hiding (_>>=_)
 import Reflection as Rfl
@@ -154,7 +154,7 @@ mkModelParser {Γ} pVar = pSat P.>>= λ { sat → box pModel ; _ → box fail }
 
 mkOutputParsers⁺ : OutputParsers (ξ ∷ Ξ) → ∀[ Parser (Outputs (ξ ∷ Ξ)) ]
 mkOutputParsers⁺ (op ∷ [])          = (_∷ []) <$> op
-mkOutputParsers⁺ (op ∷ ops@(_ ∷ _)) = _∷_ <$> op <*> box (mkOutputParsers⁺ ops)
+mkOutputParsers⁺ (op ∷ ops@(_ ∷ _)) = flip _∷_ <$> mkOutputParsers⁺ ops <*> box op
 
 
 -- * Name state monad
@@ -248,7 +248,7 @@ showScriptS [] = do
 showScriptS (cmd ∷ scr) = do
   (cmd , ops₁) ← showCommandS cmd
   (scr , ops₂) ← showScriptS scr
-  return $ cmd ∷ scr , Env.append id ops₂ ops₁
+  return $ cmd ∷ scr , Env.append id ops₁ ops₂
 
 -- |Show a script as an S-expression, and return an environment of output parsers.
 showScript : Script [] Γ (ξ ∷ Ξ) → String × ∀[ Parser (Outputs (ξ ∷ Ξ)) ]

@@ -27,7 +27,7 @@ data Sort : Set where
    CORE : (φ : CoreSort) → Sort
    REAL  : Sort
 
-open Sorts Sort CORE
+open Sorts Sort CORE public
 
 private
   variable
@@ -146,7 +146,7 @@ data Literal : Sort → Set where
   core : CoreLiteral φ → Literal (CORE φ)
   nat  : ℕ → Literal REAL
 
-open Literals Sort CORE Literal core
+open Literals Sort CORE Literal core public
 
 showLiteral : Literal σ → String
 showLiteral (core x) = showCoreLiteral x
@@ -178,7 +178,7 @@ data Identifier : (Σ : Signature σ) → Set where
   geq  : Identifier (Rel REAL)
   gt   : Identifier (Rel REAL)
 
-open Identifiers Sort CORE Identifier core
+open Identifiers Sort CORE Identifier core public
 
 showIdentifier : Identifier Σ → String
 showIdentifier (core x) = showCoreIdentifier x

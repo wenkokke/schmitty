@@ -36,7 +36,7 @@
 <a id="1364" class="Keyword">private</a>
   <a id="1374" class="Keyword">variable</a>
     <a id="1387" href="SMT.Script.Names.html#1387" class="Generalizable">σ</a> <a id="1389" href="SMT.Script.Names.html#1389" class="Generalizable">σ′</a> <a id="1392" class="Symbol">:</a> <a id="1394" href="SMT.Theory.html#885" class="Field">Sort</a>
-    <a id="1403" href="SMT.Script.Names.html#1403" class="Generalizable">Γ</a> <a id="1405" href="SMT.Script.Names.html#1405" class="Generalizable">Γ′</a> <a id="1408" class="Symbol">:</a> <a id="1410" href="SMT.Script.Base.html#905" class="Function">Ctxt</a>
+    <a id="1403" href="SMT.Script.Names.html#1403" class="Generalizable">Γ</a> <a id="1405" href="SMT.Script.Names.html#1405" class="Generalizable">Γ′</a> <a id="1408" class="Symbol">:</a> <a id="1410" href="SMT.Script.Base.html#1014" class="Function">Ctxt</a>
 
 <a id="1416" class="Comment">-- |Names.</a>
 <a id="Name"></a><a id="1427" href="SMT.Script.Names.html#1427" class="Function">Name</a> <a id="1432" class="Symbol">:</a> <a id="1434" href="Agda.Primitive.html#326" class="Primitive">Set</a>
@@ -48,7 +48,7 @@
 
 <a id="1541" class="Comment">-- |Name environments, i.e., lists where the types of the elements</a>
 <a id="1608" class="Comment">--  are determined by a type-level list.</a>
-<a id="NameEnv"></a><a id="1649" href="SMT.Script.Names.html#1649" class="Function">NameEnv</a> <a id="1657" class="Symbol">:</a> <a id="1659" href="SMT.Script.Base.html#905" class="Function">Ctxt</a> <a id="1664" class="Symbol">→</a> <a id="1666" href="Agda.Primitive.html#326" class="Primitive">Set</a>
+<a id="NameEnv"></a><a id="1649" href="SMT.Script.Names.html#1649" class="Function">NameEnv</a> <a id="1657" class="Symbol">:</a> <a id="1659" href="SMT.Script.Base.html#1014" class="Function">Ctxt</a> <a id="1664" class="Symbol">→</a> <a id="1666" href="Agda.Primitive.html#326" class="Primitive">Set</a>
 <a id="1670" href="SMT.Script.Names.html#1649" class="Function">NameEnv</a> <a id="1678" class="Symbol">=</a> <a id="1680" href="Data.Environment.html#360" class="Datatype">Env</a> <a id="1684" class="Symbol">(λ</a> <a id="1687" href="SMT.Script.Names.html#1687" class="Bound Operator">_σ</a> <a id="1690" href="SMT.Script.Names.html#1690" class="Bound Operator">_Γ</a> <a id="1693" class="Symbol">→</a> <a id="1695" href="SMT.Script.Names.html#1427" class="Function">Name</a><a id="1699" class="Symbol">)</a>
 
 <a id="1702" class="Comment">-- |Name states, i.e., an environment of names, one for every</a>
@@ -58,7 +58,7 @@
 <a id="1889" class="Comment">--        each name in the supply is distinct. If we need this</a>
 <a id="1952" class="Comment">--        in the future, there is `Data.List.Fresh`.</a>
 <a id="2005" class="Comment">--</a>
-<a id="2008" class="Keyword">record</a> <a id="Names"></a><a id="2015" href="SMT.Script.Names.html#2015" class="Record">Names</a> <a id="2021" class="Symbol">(</a><a id="2022" href="SMT.Script.Names.html#2022" class="Bound">Γ</a> <a id="2024" class="Symbol">:</a> <a id="2026" href="SMT.Script.Base.html#905" class="Function">Ctxt</a><a id="2030" class="Symbol">)</a> <a id="2032" class="Symbol">:</a> <a id="2034" href="Agda.Primitive.html#326" class="Primitive">Set</a> <a id="2038" class="Keyword">where</a>
+<a id="2008" class="Keyword">record</a> <a id="Names"></a><a id="2015" href="SMT.Script.Names.html#2015" class="Record">Names</a> <a id="2021" class="Symbol">(</a><a id="2022" href="SMT.Script.Names.html#2022" class="Bound">Γ</a> <a id="2024" class="Symbol">:</a> <a id="2026" href="SMT.Script.Base.html#1014" class="Function">Ctxt</a><a id="2030" class="Symbol">)</a> <a id="2032" class="Symbol">:</a> <a id="2034" href="Agda.Primitive.html#326" class="Primitive">Set</a> <a id="2038" class="Keyword">where</a>
   <a id="2046" class="Keyword">field</a>
     <a id="Names.nameEnv"></a><a id="2056" href="SMT.Script.Names.html#2056" class="Field">nameEnv</a>    <a id="2067" class="Symbol">:</a> <a id="2069" href="SMT.Script.Names.html#1649" class="Function">NameEnv</a> <a id="2077" href="SMT.Script.Names.html#2022" class="Bound">Γ</a>
     <a id="Names.nameSupply"></a><a id="2083" href="SMT.Script.Names.html#2083" class="Field">nameSupply</a> <a id="2094" class="Symbol">:</a> <a id="2096" href="Codata.Musical.Stream.html#674" class="Datatype">Stream</a> <a id="2103" href="SMT.Script.Names.html#1427" class="Function">Name</a>

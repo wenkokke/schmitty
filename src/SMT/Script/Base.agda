@@ -3,15 +3,17 @@ open import SMT.Theory
 module SMT.Script.Base (baseTheory : BaseTheory) where
 
 open import Data.Fin as Fin using (Fin)
-open import Data.List as List using (List; _∷_; []; _++_)
+open import Data.List as List using (List; _∷_; []; _++_; _ʳ++_)
+import Data.List.Properties as List
 open import Data.List.NonEmpty as List⁺ using (List⁺; _∷_)
+open import Data.Maybe using (Maybe; just; nothing)
 open import Data.Nat as Nat using (ℕ; _<?_)
 open import Data.Product as Prod using (∃; ∃-syntax; _×_; _,_)
 open import Data.String as String using (String)
-open import Function using (_$_)
+open import Function using (_$_; _∘_; id)
 open import Relation.Nullary using (Dec; yes; no)
 open import Relation.Nullary.Decidable using (True; toWitness)
-open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym)
 open import SMT.Logics
 open import Data.Environment as Env using (Env; _∷_; [])
 import Reflection as Rfl
@@ -76,23 +78,23 @@ extendRename r (Fin.zero  , p) = Fin.zero , p
 extendRename r (Fin.suc i , p) = extendVar (r (i , p))
 
 mutual
-  rename : Rename Γ Γ′ → Term Γ σ → Term Γ′ σ
-  rename r (var i)      = var (r i)
-  rename r (lit l)      = lit l
-  rename r (app x xs)   = app x (renameArgs r xs)
-  rename r (forAll σ x) = forAll σ (rename (extendRename r) x)
-  rename r (exists σ x) = exists σ (rename (extendRename r) x)
+  renameTerm : Rename Γ Γ′ → Term Γ σ → Term Γ′ σ
+  renameTerm r (var i)      = var (r i)
+  renameTerm r (lit l)      = lit l
+  renameTerm r (app x xs)   = app x (renameArgs r xs)
+  renameTerm r (forAll σ x) = forAll σ (renameTerm (extendRename r) x)
+  renameTerm r (exists σ x) = exists σ (renameTerm (extendRename r) x)
 
   renameArgs : Rename Γ Γ′ → Args Γ Δ → Args Γ′ Δ
   renameArgs r [] = []
-  renameArgs r (x ∷ xs) = rename r x ∷ renameArgs r xs
+  renameArgs r (x ∷ xs) = renameTerm r x ∷ renameArgs r xs
 
 injectVar : (Γ′ : Ctxt) → Γ ∋ σ → (Γ List.++ Γ′) ∋ σ
 injectVar {σ′ ∷ Γ} Γ′ (Fin.zero  , p) = Fin.zero , p
 injectVar {σ′ ∷ Γ} Γ′ (Fin.suc i , p) = extendVar (injectVar {Γ} Γ′ (i , p))
 
-weaken : Term Γ σ → Term (σ′ ∷ Γ) σ
-weaken = rename extendVar
+weakenTerm : Term Γ σ → Term (σ′ ∷ Γ) σ
+weakenTerm = renameTerm extendVar
 
 --------------------------
 -- SMT-LIB Outputs --
@@ -230,7 +232,7 @@ data Command (Γ : Ctxt) : (δΓ : Ctxt) (δΞ : OutputCtxt) → Set where
 -- |SMT-LIB scripts.
 data Script (Γ : Ctxt) : (Γ′ : Ctxt) (Ξ : OutputCtxt) → Set where
   []  : Script Γ Γ []
-  _∷_ : Command Γ δΓ δΞ → Script (δΓ ++ Γ) Γ′ Ξ → Script Γ Γ′ (Ξ ++ δΞ)
+  _∷_ : Command Γ δΓ δΞ → Script (δΓ ++ Γ) Γ′ Ξ → Script Γ Γ′ (δΞ ++ Ξ)
 
 
 --------------------
@@ -245,6 +247,16 @@ Val = ∃[ σ ] (Value σ)
 
 Defn : Ctxt → Set
 Defn Γ = ∃[ σ ] (Γ ∋ σ × Value σ)
+
+
+----------------------
+-- Useful functions --
+----------------------
+
+declare-consts : (δΓ : Ctxt) → Script (δΓ ʳ++ Γ) Γ′ Ξ → Script Γ Γ′ Ξ
+declare-consts {Γ} [] scr = scr
+declare-consts {Γ} (σ ∷ δΓ) scr
+  rewrite List.ʳ++-++ (σ ∷ []) {δΓ} {Γ} = declare-const σ ∷ declare-consts δΓ scr
 
 
 ----------------------
