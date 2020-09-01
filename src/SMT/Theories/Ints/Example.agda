@@ -11,6 +11,7 @@ open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import Text.Parser.String
 open import SMT.Logics
 open import SMT.Theories.Ints as Ints
+open import SMT.Script Int.theory
 
 module Example₁ where
 

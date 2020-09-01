@@ -16,7 +16,7 @@ open import Function using (case_of_; const; _$_; _∘_)
 open import Reflection as Rfl using (return; _>>=_; _>>_)
 open import Reflection.External
 open import Text.Parser.String using (runParser)
-open import SMT.Script theory public
+open import SMT.Script theory
 
 private
   variable

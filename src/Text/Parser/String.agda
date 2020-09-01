@@ -137,6 +137,34 @@ _<&_ = PC._<&_
 _&>_ : ∀[ Parser A ⇒ □ Parser B ⇒ Parser B ]
 _&>_ = PC._&>_
 
+infixl 4 _<&?>_ _<&?_ _&?>_
+
+-- |Parser which...
+_<&?>_ : ∀[ Parser A ⇒ □ Parser B ⇒ Parser (A × Maybe B) ]
+_<&?>_ = PC._<&?>_
+
+-- |Parser which...
+_<&?_ : ∀[ Parser A ⇒ □ Parser B ⇒ Parser A ]
+_<&?_ = PC._<&?_
+
+-- |Parser which...
+_&?>_ : ∀[ Parser A ⇒ □ Parser B ⇒ Parser (Maybe B) ]
+_&?>_ = PC._&?>_
+
+infixl 4 _<?&>_ _<?&_ _?&>_
+
+-- |Parser which...
+_<?&>_ : ∀[ Parser A ⇒ Parser B ⇒ Parser (Maybe A × B) ]
+_<?&>_ = PC._<?&>_
+
+-- |Parser which...
+_<?&_ : ∀[ Parser A ⇒ Parser B ⇒ Parser (Maybe A) ]
+_<?&_ = PC._<?&_
+
+-- |Parser which...
+_?&>_ : ∀[ Parser A ⇒ Parser B ⇒ Parser B ]
+_?&>_ = PC._?&>_
+
 -- |Parser which...
 box : ∀[ Parser A ⇒ □ Parser A ]
 box = PC.box

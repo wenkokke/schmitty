@@ -8,6 +8,7 @@ open import Data.List using (List; _∷_; [])
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import Text.Parser.String
 open import SMT.Theories.Reals as Reals
+open import SMT.Script Reals.theory
 
 
 module Example₁ where

@@ -8,6 +8,7 @@ open import Data.List using (List; _∷_; [])
 open import Data.Product using (∃-syntax; _×_; _,_)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import SMT.Theories.Core as Core
+open import SMT.Script Core.coreTheory
 open import SMT.Backend.Z3 Core.coreTheory
 
 
