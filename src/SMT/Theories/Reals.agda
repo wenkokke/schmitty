@@ -1,9 +1,10 @@
 module SMT.Theories.Reals where
 
-open import Data.Bool.Base as Bool using (Bool; false; true)
+open import Data.Bool.Base as Bool using (Bool; false; true; if_then_else_)
 open import Data.Integer as Int using (ℤ; +_; -[1+_]; ∣_∣)
+open import Data.Float as Float using (Float)
 open import Data.Nat as Nat using (ℕ)
-open import Data.Nat.Show renaming (show to showℕ)
+import Data.Nat.Show as Nat using (show)
 open import Data.List as List using (List; _∷_; [])
 open import Data.Product as Prod using (_×_; _,_)
 open import Data.Rational.Unnormalised as Rat using (ℚᵘ; ↥_)
@@ -143,14 +144,17 @@ quoteValue REAL     = quoteRat
 --------------
 
 data Literal : Sort → Set where
-  core : CoreLiteral φ → Literal (CORE φ)
-  nat  : ℕ → Literal REAL
+  core  : CoreLiteral φ → Literal (CORE φ)
+  nat   : ℕ → Literal REAL
+  float : Float → Literal REAL
 
 open Literals Sort CORE Literal core public
 
 showLiteral : Literal σ → String
-showLiteral (core x) = showCoreLiteral x
-showLiteral (nat  x) = showℕ x String.++ ".0"
+showLiteral (core  x) = showCoreLiteral x
+showLiteral (nat   x) = Nat.show x String.++ ".0"
+showLiteral (float x) =
+  if x Float.<ᵇ 0.0 then mkSTerm ("-" ∷ Float.show (Float.- x) ∷ []) else Float.show x
 
 private
   variable

@@ -2,7 +2,7 @@ open import SMT.Theory
 
 module SMT.Script.Base (baseTheory : BaseTheory) where
 
-open import Data.Fin as Fin using (Fin)
+open import Data.Fin as Fin using (Fin; zero; suc)
 open import Data.List as List using (List; _∷_; []; _++_; _ʳ++_)
 import Data.List.Properties as List
 open import Data.List.NonEmpty as List⁺ using (List⁺; _∷_)
@@ -13,7 +13,7 @@ open import Data.String as String using (String)
 open import Function using (_$_; _∘_; id)
 open import Relation.Nullary using (Dec; yes; no)
 open import Relation.Nullary.Decidable using (True; toWitness)
-open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym)
+open import Relation.Binary.PropositionalEquality as Eq using (_≡_; refl)
 open import SMT.Logics
 open import Data.Environment as Env using (Env; _∷_; [])
 import Reflection as Rfl
@@ -32,8 +32,10 @@ Ctxt = List Sort
 
 private
   variable
-    σ σ′    : Sort
-    Γ Γ′ δΓ : Ctxt
+    σ σ′ σ″ : Sort
+    τ τ′ τ″ : Sort
+    Γ Γ′ Γ″ : Ctxt
+    δΓ      : Ctxt
     Δ Δ′    : Ctxt
     Σ       : Signature σ
     Σ′      : Signature σ′
@@ -71,11 +73,11 @@ Rename : (Γ Δ : Ctxt) → Set
 Rename Γ Δ = ∀ {σ} → Γ ∋ σ → Δ ∋ σ
 
 extendVar : Γ ∋ σ → (σ′ ∷ Γ) ∋ σ
-extendVar (i , p) = Fin.suc i , p
+extendVar (i , p) = suc i , p
 
 extendRename : Rename Γ Γ′ → Rename (σ ∷ Γ) (σ ∷ Γ′)
-extendRename r (Fin.zero  , p) = Fin.zero , p
-extendRename r (Fin.suc i , p) = extendVar (r (i , p))
+extendRename r (zero  , p) = zero , p
+extendRename r (suc i , p) = extendVar (r (i , p))
 
 mutual
   renameTerm : Rename Γ Γ′ → Term Γ σ → Term Γ′ σ
@@ -89,12 +91,42 @@ mutual
   renameArgs r [] = []
   renameArgs r (x ∷ xs) = renameTerm r x ∷ renameArgs r xs
 
-injectVar : (Γ′ : Ctxt) → Γ ∋ σ → (Γ List.++ Γ′) ∋ σ
-injectVar {σ′ ∷ Γ} Γ′ (Fin.zero  , p) = Fin.zero , p
-injectVar {σ′ ∷ Γ} Γ′ (Fin.suc i , p) = extendVar (injectVar {Γ} Γ′ (i , p))
+injectVar : (Γ : Ctxt) → Γ ∋ σ → (Γ ++ Γ′) ∋ σ
+injectVar (σ′ ∷ Γ) (zero  , p) = zero , p
+injectVar (σ′ ∷ Γ) (suc i , p) = extendVar (injectVar Γ (i , p))
 
-weakenTerm : Term Γ σ → Term (σ′ ∷ Γ) σ
-weakenTerm = renameTerm extendVar
+raiseVar : (Γ′ : Ctxt) → Γ ∋ σ → (Γ′ ++ Γ) ∋ σ
+raiseVar []       x = x
+raiseVar (σ ∷ Γ′) x = extendVar (raiseVar Γ′ x)
+
+swapVar : (Γ : Ctxt) → (Γ ++ τ ∷ τ′ ∷ Γ′) ∋ σ → (Γ ++ τ′ ∷ τ ∷ Γ′) ∋ σ
+swapVar [] (zero        , p) = (suc zero    , p)
+swapVar [] (suc zero    , p) = (zero        , p)
+swapVar [] (suc (suc i) , p) = (suc (suc i) , p)
+swapVar (σ′ ∷ Γ) (zero  , p) = (zero        , p)
+swapVar (σ′ ∷ Γ) (suc i , p) = extendVar (swapVar Γ (i , p))
+
+moveVar : (Γ Γ′ {Γ″} : Ctxt) → (Γ ++ τ ∷ Γ′ ++ Γ″) ∋ σ → (Γ ++ Γ′ ++ τ ∷ Γ″) ∋ σ
+moveVar {τ} {σ} Γ []        {Γ″} x = x
+moveVar {τ} {σ} Γ (σ′ ∷ Γ′) {Γ″} x = x″
+  where
+    x′ : ((Γ ++ σ′ ∷ []) ++ τ ∷ Γ′ ++ Γ″) ∋ σ
+    x′ rewrite List.++-assoc Γ (σ′ ∷ []) (τ ∷ Γ′ ++ Γ″) = swapVar Γ x
+    x″ : (Γ ++ σ′ ∷ Γ′ ++ τ ∷ Γ″) ∋ σ
+    x″ rewrite Eq.sym (List.++-assoc Γ (σ′ ∷ []) (Γ′ ++ τ ∷ Γ″)) = moveVar (Γ ++ σ′ ∷ []) Γ′ x′
+
+reverseVar : (Γ {Γ′} : Ctxt) → (Γ ++ Γ′) ∋ σ → (Γ ʳ++ Γ′) ∋ σ
+reverseVar [] x = x
+reverseVar {σ} (σ′ ∷ Γ) {Γ′} x rewrite List.ʳ++-++ (σ′ ∷ []) {Γ} {Γ′} = reverseVar Γ (moveVar [] Γ x)
+
+inject : (Γ : Ctxt) → Term Γ σ → Term (Γ ++ Γ′) σ
+inject Γ = renameTerm (injectVar Γ)
+
+raise : (Γ′ : Ctxt) → Term Γ σ → Term (Γ′ ++ Γ) σ
+raise Γ′ = renameTerm (raiseVar Γ′)
+
+reverse : (Γ : Ctxt) → Term (Γ ++ Γ′) σ → Term (Γ ʳ++ Γ′) σ
+reverse Γ = renameTerm (reverseVar Γ)
 
 --------------------------
 -- SMT-LIB Outputs --

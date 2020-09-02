@@ -2,7 +2,8 @@ module SMT.Theory where
 
 open import Level
 open import Data.List as List using (List; _∷_; [])
-open import Data.String using (String)
+open import Data.String as String using (String)
+open import Function using (_∘_)
 open import Reflection using (Term)
 open import Relation.Nullary using (Dec; yes; no)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
@@ -66,3 +67,18 @@ record Theory : Set₁ where
   open BaseTheory baseTheory public
   open Printable printable public
   open Parsable parsable public
+
+
+
+-----------------------
+-- Printer utilities --
+-----------------------
+
+-- |Create an S-expression from a list of strings.
+--
+-- @
+--   mkSTerm ("*" ∷ "4" ∷ "5") ≡ "(* 4 5)"
+-- @
+--
+mkSTerm : List String → String
+mkSTerm = String.parens ∘ String.unwords

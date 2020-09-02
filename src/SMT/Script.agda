@@ -44,17 +44,6 @@ private
     Ξ Ξ′ δΞ : OutputCtxt
 
 
-private
-  -- |Create an S-expression from a list of strings.
-  --
-  -- @
-  --   mkSTerm ("*" ∷ "4" ∷ "5") ≡ "(* 4 5)"
-  -- @
-  --
-  mkSTerm : List String → String
-  mkSTerm = String.parens ∘ String.unwords
-
-
 -- * Variable parsers
 
 -- |Environment of variable parsers.
