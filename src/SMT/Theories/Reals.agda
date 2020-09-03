@@ -149,11 +149,16 @@ data Literal : Sort → Set where
 
 open Literals Sort CORE Literal core public
 
+showFloat : Float → String
+showFloat x =
+  if x Float.<ᵇ 0.0
+  then mkSTerm ("-" ∷ Float.simpleShow (Float.- x) ∷ [])
+  else Float.simpleShow x
+
 showLiteral : Literal σ → String
 showLiteral (core  x) = showCoreLiteral x
 showLiteral (nat   x) = Nat.show x String.++ ".0"
-showLiteral (float x) =
-  if x Float.<ᵇ 0.0 then mkSTerm ("-" ∷ Float.show (Float.- x) ∷ []) else Float.show x
+showLiteral (float x) = showFloat x
 
 checkLiteral : (σ : Sort) → Rfl.Term → Maybe (Literal σ)
 checkLiteral (CORE φ) x          = Maybe.map core (checkCoreLiteral φ x)

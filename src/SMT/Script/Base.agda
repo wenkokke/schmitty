@@ -266,6 +266,11 @@ data Script (Γ : Ctxt) : (Γ′ : Ctxt) (Ξ : OutputCtxt) → Set where
   []  : Script Γ Γ []
   _∷_ : Command Γ δΓ δΞ → Script (δΓ ++ Γ) Γ′ Ξ → Script Γ Γ′ (δΞ ++ Ξ)
 
+infixr 5 _◆_
+
+_◆_ : Script Γ Γ′ Ξ → Script Γ′ Γ″ Ξ′ → Script Γ Γ″ (Ξ ++ Ξ′)
+_◆_ {Ξ′ = Ξ′} [] scr′ = scr′
+_◆_ {Ξ′ = Ξ′} (_∷_ {δΞ = δΞ} {Ξ = Ξ} cmd scr) scr′ rewrite List.++-assoc δΞ Ξ Ξ′ = cmd ∷ (scr ◆ scr′)
 
 --------------------
 -- Useful aliases --
