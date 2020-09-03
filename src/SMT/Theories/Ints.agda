@@ -1,18 +1,20 @@
 module SMT.Theories.Ints where
 
 open import Data.Bool.Base as Bool using (Bool; false; true)
-open import Data.Integer.Base as Int using (ℤ; +_; -[1+_])
+open import Data.Integer as Int using (ℤ; +_; -[1+_]) renaming (show to showℤ)
+open import Data.Maybe as Maybe using (Maybe; nothing; just)
 open import Data.Nat.Base as Nat using (ℕ)
 open import Data.Nat.Show renaming (show to showℕ)
 open import Data.List as List using (List; _∷_; [])
+open import Data.Product as Prod using (Σ-syntax; -,_)
 open import Data.String as String using (String)
 open import Function.Equivalence using (equivalence)
-open import Reflection using (Term; con; lit; nat; vArg)
+import Reflection as Rfl
 open import Relation.Nullary using (Dec; yes; no)
 import Relation.Nullary.Decidable as Dec
-open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
+open import Relation.Binary.PropositionalEquality as Eq using (_≡_; refl; cong)
 open import SMT.Theory
-open import SMT.Theories.Core hiding (BOOL)
+open import SMT.Theories.Core as Core hiding (BOOL)
 open import SMT.Theories.Core.Extensions
 open import Text.Parser.String
 
@@ -21,11 +23,17 @@ open import Text.Parser.String
 -- Sorts --
 -----------
 
+
 data Sort : Set where
    CORE : (φ : CoreSort) → Sort
    INT  : Sort
 
-open Sorts Sort CORE public
+pattern `CORE φ = Rfl.con (quote CORE) (Rfl.vArg φ ∷ [])
+pattern `INT    = Rfl.con (quote INT) []
+
+open Sorts Sort CORE public hiding (BOOL)
+
+pattern BOOL = CORE Core.BOOL
 
 private
   variable
@@ -60,10 +68,12 @@ _ = ! INT
 _ : parseSort rejects "Real"
 _ = _
 
-quoteSort : Sort → Term
-quoteSort (CORE φ) = con (quote CORE) (vArg (quoteCoreSort φ) ∷ [])
-quoteSort INT      = con (quote INT) []
+quoteSort : Sort → Rfl.Term
+quoteSort (CORE φ) = `CORE (quoteCoreSort φ)
+quoteSort INT      = `INT
 
+sorts : List Sort
+sorts = INT ∷ List.map CORE coreSorts
 
 ------------
 -- Values --
@@ -105,11 +115,16 @@ _ = ! -[1+ 0 ]
 _ : parseValue INT rejects "1.0"
 _ = _
 
-quoteInt : ℤ → Term
-quoteInt (+ n)    = con (quote +_) (vArg (lit (nat n)) ∷ [])
-quoteInt -[1+ n ] = con (quote -[1+_]) (vArg (lit (nat n)) ∷ [])
+private
+  pattern `nat    n = Rfl.lit (Rfl.nat n)
+  pattern `+_     n = Rfl.con (quote +_) (Rfl.vArg (`nat n) ∷ [])
+  pattern `-[1+_] n = Rfl.con (quote -[1+_]) (Rfl.vArg (`nat n) ∷ [])
 
-quoteValue : (σ : Sort) → Value σ → Term
+quoteInt : ℤ → Rfl.Term
+quoteInt (+ n)    = `+ n
+quoteInt -[1+ n ] = `-[1+ n ]
+
+quoteValue : (σ : Sort) → Value σ → Rfl.Term
 quoteValue (CORE φ) = quoteCoreValue φ
 quoteValue INT      = quoteInt
 
@@ -121,12 +136,21 @@ quoteValue INT      = quoteInt
 data Literal : Sort → Set where
   core : CoreLiteral φ → Literal (CORE φ)
   nat  : ℕ → Literal INT
+  int  : ℤ → Literal INT
 
 open Literals Sort CORE Literal core public
 
 showLiteral : Literal σ → String
 showLiteral (core x) = showCoreLiteral x
 showLiteral (nat  x) = showℕ x
+showLiteral (int  x) = showℤ x
+
+checkLiteral : (σ : Sort) → Rfl.Term → Maybe (Literal σ)
+checkLiteral (CORE φ) x         = Maybe.map core (checkCoreLiteral φ x)
+checkLiteral INT      (`nat n)  = just (nat n)
+checkLiteral INT      (`+ n)    = just (int (+ n))
+checkLiteral INT      `-[1+ n ] = just (int -[1+ n ])
+checkLiteral INT      _         = nothing
 
 private
   variable
@@ -176,6 +200,46 @@ showIdentifier geq      = ">="
 showIdentifier gt       = ">"
 
 private
+  pattern `eq  = quote Eq._≡_
+  pattern `neq = quote Eq._≢_
+  -- NOTE: We're interpreting BOOL to be Set. Unfortunately, that means that `ite`
+  --       cannot really be given a sensible interpretation. (Unless, perhaps, we
+  --       involve Dec.)
+  --
+  -- pattern `ite = ?
+  pattern `neg = quote Int.-_
+  pattern `sub = quote Int._-_
+  pattern `add = quote Int._+_
+  pattern `mul = quote Int._*_
+  -- NOTE: Integer division and modulo are currently not defined in the standard
+  --       library, so we don't map them here. Note that division by zero is
+  --       allowed in SMT-LIB, so care should be taken.
+  --
+  -- pattern `div = ?
+  -- pattern `mod = ?
+  pattern `abs = quote Int.∣_∣
+  pattern `leq = quote Int._≤_
+  pattern `lt  = quote Int._<_
+  pattern `geq = quote Int._≥_
+  pattern `gt  = quote Int._>_
+
+checkIdentifier : (σ : Sort) → Rfl.Name → Maybe (Σ[ Σ ∈ Signature σ ] Identifier Σ)
+checkIdentifier BOOL     `eq  = just (-, eq)
+checkIdentifier BOOL     `neq = just (-, neq)
+checkIdentifier INT      `neg = just (-, neg)
+checkIdentifier INT      `sub = just (-, sub)
+checkIdentifier INT      `add = just (-, add)
+checkIdentifier INT      `mul = just (-, mul)
+checkIdentifier INT      `abs = just (-, abs)
+checkIdentifier BOOL     `leq = just (-, leq)
+checkIdentifier BOOL     `lt  = just (-, lt)
+checkIdentifier BOOL     `geq = just (-, geq)
+checkIdentifier BOOL     `gt  = just (-, gt)
+checkIdentifier INT       _   = nothing
+checkIdentifier (CORE φ)  x   =
+  Maybe.map (Prod.map fromCoreSignature core) (checkCoreIdentifier φ x)
+
+private
   variable
     i : Identifier Σ
 
@@ -203,7 +267,13 @@ parsable : Parsable baseTheory
 Parsable.parseSort   parsable = parseSort
 Parsable.parseValue  parsable = parseValue
 
+reflectable : Reflectable baseTheory
+Reflectable.sorts           reflectable = sorts
+Reflectable.checkLiteral    reflectable = checkLiteral
+Reflectable.checkIdentifier reflectable = checkIdentifier
+
 theory : Theory
-Theory.baseTheory theory = baseTheory
-Theory.printable  theory = printable
-Theory.parsable   theory = parsable
+Theory.baseTheory  theory = baseTheory
+Theory.printable   theory = printable
+Theory.parsable    theory = parsable
+Theory.reflectable theory = reflectable

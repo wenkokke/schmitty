@@ -3,20 +3,21 @@ module SMT.Theories.Reals where
 open import Data.Bool.Base as Bool using (Bool; false; true; if_then_else_)
 open import Data.Integer as Int using (ℤ; +_; -[1+_]; ∣_∣)
 open import Data.Float as Float using (Float)
+open import Data.Maybe as Maybe using (Maybe; nothing; just)
 open import Data.Nat as Nat using (ℕ)
 import Data.Nat.Show as Nat using (show)
-open import Data.List as List using (List; _∷_; [])
-open import Data.Product as Prod using (_×_; _,_)
-open import Data.Rational.Unnormalised as Rat using (ℚᵘ; ↥_)
+open import Data.List as List using (List; []; _∷_)
+open import Data.Product as Prod using (Σ-syntax; -,_; _×_; _,_)
 open import Data.String as String using (String)
 open import Function.Equivalence using (equivalence)
 open import Relation.Nullary using (Dec; yes; no)
-open import Reflection using (Term; con; lit; nat; vArg)
+import Reflection as Rfl
 import Relation.Nullary.Decidable as Dec
-open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
+open import Relation.Binary.PropositionalEquality as Eq using (_≡_; refl; cong)
 open import SMT.Theory
-open import SMT.Theories.Core hiding (BOOL)
+open import SMT.Theories.Core as Core hiding (BOOL)
 open import SMT.Theories.Core.Extensions
+import SMT.Utils.Float as Float
 open import Text.Parser.String
 
 
@@ -28,7 +29,12 @@ data Sort : Set where
    CORE : (φ : CoreSort) → Sort
    REAL  : Sort
 
-open Sorts Sort CORE public
+pattern `CORE φ = Rfl.con (quote CORE) (Rfl.vArg φ ∷ [])
+pattern `REAL   = Rfl.con (quote REAL) []
+
+open Sorts Sort CORE public hiding (BOOL)
+
+pattern BOOL = CORE Core.BOOL
 
 private
   variable
@@ -63,9 +69,12 @@ _ = _
 _ : parseSort parses "Real"
 _ = ! REAL
 
-quoteSort : Sort → Term
-quoteSort (CORE φ) = con (quote CORE) (vArg (quoteCoreSort φ) ∷ [])
-quoteSort REAL     = con (quote REAL) []
+quoteSort : Sort → Rfl.Term
+quoteSort (CORE φ) = `CORE (quoteCoreSort φ)
+quoteSort REAL     = `REAL
+
+sorts : List Sort
+sorts = REAL ∷ List.map CORE coreSorts
 
 
 ------------
@@ -74,32 +83,21 @@ quoteSort REAL     = con (quote REAL) []
 
 Value : Sort → Set
 Value (CORE φ) = CoreValue φ
-Value REAL     = ℚᵘ
+Value REAL     = Float
 
-private
-  -- |Construct a rational number from a natural number
-  fromℕ : ℕ → ℚᵘ
-  fromℕ n = Rat.mkℚᵘ (+ n) 0
-
-  -- |SMT division (where p ÷ 0 = 0)
-  _÷_ : (p q : ℚᵘ) → ℚᵘ
-  p ÷ q with ∣ ↥ q ∣ Nat.≟ 0
-  ... | yes q≡0 = Rat.0ℚᵘ
-  ... | no ¬q≡0 = Rat._÷_ p q {Dec.fromWitnessFalse ¬q≡0}
-
--- |Parse an unnormalised rational number
+-- |Parse a rational number as a Float.
 --
 --  NOTE: We're not taking the fixpoint over expressions,
 --        since it seems that SMT solvers output the numbers
 --        in a normal form with negation after division.
 --
-parseRat : ∀[ Parser ℚᵘ ]
+parseRat : ∀[ Parser Float ]
 parseRat = pNum <|> pDiv <|> pNeg
   where
-    pNum pDiv pNeg : ∀[ Parser ℚᵘ ]
-    pNum = withSpaces (fromℕ <$> (decimalℕ <& box (text ".0")))
-    pDiv = withSpaces (parens (box (text "/" &> box (_÷_ <$> pNum <*> box pNum))))
-    pNeg = withSpaces (parens (box (text "-" &> box (Rat.-_ <$> (pNum <|> pDiv)))))
+    pNum pDiv pNeg : ∀[ Parser Float ]
+    pNum = withSpaces (Float.fromℕ <$> (decimalℕ <& box (text ".0")))
+    pDiv = withSpaces (parens (box (text "/" &> box (Float._÷_ <$> pNum <*> box pNum))))
+    pNeg = withSpaces (parens (box (text "-" &> box (Float.-_ <$> (pNum <|> pDiv)))))
 
 parseValue : (σ : Sort) → ∀[ Parser (Value σ) ]
 parseValue (CORE φ) = parseCoreValue φ
@@ -115,28 +113,29 @@ _ : parseValue BOOL rejects "kitty"
 _ = _
 
 _ : parseValue REAL parses "1.0"
-_ = ! Rat.1ℚᵘ
+_ = ! 1.0
 
 _ : parseValue REAL parses "(/ 1.0 2.0)"
-_ = ! Rat.½
+_ = ! 0.5
 
 _ : parseValue REAL parses "(- (/ 1.0 2.0))"
-_ = ! Rat.-½
+_ = ! -0.5
 
 _ : parseValue REAL rejects "10"
 _ = _
 
-quoteRat : ℚᵘ → Term
-quoteRat (Rat.mkℚᵘ n d-1) =
-  con (quote Rat.mkℚᵘ) (vArg (quoteInt n) ∷ vArg (lit (nat d-1)) ∷ [])
-  where
-    quoteInt : ℤ → Term
-    quoteInt (+ n)    = con (quote +_) (vArg (lit (nat n)) ∷ [])
-    quoteInt -[1+ n ] = con (quote -[1+_]) (vArg (lit (nat n)) ∷ [])
+private
+  pattern `nat    n = Rfl.lit (Rfl.nat n)
+  pattern `float  f = Rfl.lit (Rfl.float f)
+  pattern `+_     n = Rfl.con (quote +_) (Rfl.vArg (`nat n) ∷ [])
+  pattern `-[1+_] n = Rfl.con (quote -[1+_]) (Rfl.vArg (`nat n) ∷ [])
 
-quoteValue : (σ : Sort) → Value σ → Term
+quoteFloat : Float → Rfl.Term
+quoteFloat f = `float f
+
+quoteValue : (σ : Sort) → Value σ → Rfl.Term
 quoteValue (CORE φ) = quoteCoreValue φ
-quoteValue REAL     = quoteRat
+quoteValue REAL     = quoteFloat
 
 
 --------------
@@ -155,6 +154,11 @@ showLiteral (core  x) = showCoreLiteral x
 showLiteral (nat   x) = Nat.show x String.++ ".0"
 showLiteral (float x) =
   if x Float.<ᵇ 0.0 then mkSTerm ("-" ∷ Float.show (Float.- x) ∷ []) else Float.show x
+
+checkLiteral : (σ : Sort) → Rfl.Term → Maybe (Literal σ)
+checkLiteral (CORE φ) x          = Maybe.map core (checkCoreLiteral φ x)
+checkLiteral REAL     (`float f) = just (float f)
+checkLiteral REAL     _          = nothing
 
 private
   variable
@@ -200,6 +204,49 @@ showIdentifier geq      = ">="
 showIdentifier gt       = ">"
 
 private
+  pattern `eq  = quote Eq._≡_
+  pattern `neq = quote Eq._≢_
+  -- NOTE: We're interpreting BOOL to be Set. Unfortunately, that means that `ite`
+  --       cannot really be given a sensible interpretation. (Unless, perhaps, we
+  --       involve Dec.)
+  --
+  -- pattern `ite = ?
+  pattern `neg = quote Float.-_
+  pattern `sub = quote Float._-_
+  pattern `add = quote Float._+_
+  pattern `mul = quote Float._*_
+  pattern `div = quote Float._÷_
+  -- NOTE: Float modulo is currently not defined in the standard library, so we
+  --       don't map them here.
+  --
+  -- pattern `mod = ?
+  --
+  -- NOTE: Float relations are currently not defined in the standard library, so
+  --       provide quick and dirty definitions in SMT.Utils.Float, which are
+  --       mapped below. These should be replaced once proper orderings on Float
+  --       become available in the standard library.
+  pattern `leq = quote Float._≤_
+  pattern `lt  = quote Float._<_
+  pattern `geq = quote Float._≥_
+  pattern `gt  = quote Float._>_
+
+checkIdentifier : (σ : Sort) → Rfl.Name → Maybe (Σ[ Σ ∈ Signature σ ] Identifier Σ)
+checkIdentifier BOOL     `eq  = just (-, eq)
+checkIdentifier BOOL     `neq = just (-, neq)
+checkIdentifier REAL     `neg = just (-, neg)
+checkIdentifier REAL     `sub = just (-, sub)
+checkIdentifier REAL     `add = just (-, add)
+checkIdentifier REAL     `mul = just (-, mul)
+checkIdentifier REAL     `div = just (-, div)
+checkIdentifier BOOL     `leq = just (-, leq)
+checkIdentifier BOOL     `lt  = just (-, lt)
+checkIdentifier BOOL     `geq = just (-, geq)
+checkIdentifier BOOL     `gt  = just (-, gt)
+checkIdentifier REAL      _   = nothing
+checkIdentifier (CORE φ)  x   =
+  Maybe.map (Prod.map fromCoreSignature core) (checkCoreIdentifier φ x)
+
+private
   variable
     i : Identifier Σ
 
@@ -227,7 +274,13 @@ parsable : Parsable baseTheory
 Parsable.parseSort  parsable = parseSort
 Parsable.parseValue parsable = parseValue
 
+reflectable : Reflectable baseTheory
+Reflectable.sorts           reflectable = sorts
+Reflectable.checkLiteral    reflectable = checkLiteral
+Reflectable.checkIdentifier reflectable = checkIdentifier
+
 theory : Theory
-Theory.baseTheory theory = baseTheory
-Theory.printable  theory = printable
-Theory.parsable   theory = parsable
+Theory.baseTheory  theory = baseTheory
+Theory.printable   theory = printable
+Theory.parsable    theory = parsable
+Theory.reflectable theory = reflectable

@@ -3,7 +3,6 @@
 module SMT.Theories.Reals.Example where
 
 open import Data.Integer using (+_)
-open import Data.Rational.Unnormalised using (_/_)
 open import Data.List using (List; _∷_; [])
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import Text.Parser.String
@@ -27,7 +26,7 @@ module Example₁ where
          ∷ get-model
          ∷ []
 
-  _ : z3 script ≡ ((+ 3 / 2 ∷ + 3 / 1 ∷ []) ∷ [])
+  _ : z3 script ≡ ((1.5 ∷ 3.0 ∷ []) ∷ [])
   _ = refl
 
 
@@ -48,5 +47,5 @@ module Example₂ where
          ∷ get-model
          ∷ []
 
-  _ : cvc4 script ≡ ((+ 2 / 1 ∷ + 4 / 1 ∷ []) ∷ [])
+  _ : cvc4 script ≡ ((2.0 ∷ 4.0 ∷ []) ∷ [])
   _ = refl

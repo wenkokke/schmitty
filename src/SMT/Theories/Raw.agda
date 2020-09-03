@@ -6,55 +6,55 @@ module SMT.Theories.Raw where
 open import Data.Empty as Empty using (⊥; ⊥-elim)
 open import Data.List as List using (List; []; _∷_)
 open import Data.String as String using (String)
-open import Data.Unit as Unit using (⊤; tt)
+open import Data.Unit as Unit public using () renaming (⊤ to RawSort; tt to ⋆)
 open import Function using (id)
 import Reflection as Rfl
 open import Relation.Nullary using (Dec; yes; no)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import SMT.Theory
 
-baseTheory : BaseTheory
-BaseTheory.Sort       baseTheory = ⊤
-BaseTheory._≟-Sort_   baseTheory = λ _ _ → yes refl
-BaseTheory.BOOL       baseTheory = tt
-BaseTheory.Value      baseTheory = λ _ → ⊥
-BaseTheory.Literal    baseTheory = λ _ → Rfl.Term
-BaseTheory.Identifier baseTheory = λ _ → Rfl.Name
-BaseTheory.quoteSort  baseTheory = λ _ → Rfl.con (quote tt) []
-BaseTheory.quoteValue baseTheory = λ _ → ⊥-elim
+rawBaseTheory : BaseTheory
+BaseTheory.Sort       rawBaseTheory = RawSort
+BaseTheory._≟-Sort_   rawBaseTheory = λ _ _ → yes refl
+BaseTheory.BOOL       rawBaseTheory = ⋆
+BaseTheory.Value      rawBaseTheory = λ _ → ⊥
+BaseTheory.Literal    rawBaseTheory = λ _ → Rfl.Term
+BaseTheory.Identifier rawBaseTheory = λ _ → Rfl.Name
+BaseTheory.quoteSort  rawBaseTheory = λ _ → Rfl.con (quote ⋆) []
+BaseTheory.quoteValue rawBaseTheory = λ _ → ⊥-elim
 
-printable : Printable baseTheory
-Printable.showSort       printable = λ _ → "⋆"
-Printable.showLiteral    printable = Rfl.showTerm
-Printable.showIdentifier printable = Rfl.showName
+rawPrintable : Printable rawBaseTheory
+Printable.showSort       rawPrintable = λ _ → "⋆"
+Printable.showLiteral    rawPrintable = Rfl.showTerm
+Printable.showIdentifier rawPrintable = Rfl.showName
 
 -- Export basic constructs from SMT.Script.Base, renamed to use 'Raw' whenever
 -- conflicts with other theories are possible.
-open import SMT.Script.Base baseTheory as RawScript public
-  renaming ( Ctxt    to RawCtxt
-           ; Term    to RawTerm
-           ; Args    to RawArgs
-           ; Command to RawCommand
-           ; Script  to RawScript
-           )
-  using      -- Term
-           ( var
-           ; lit
-           ; app
-           ; forAll
-           ; exists
-             -- Command
-           ; set-logic
-           ; declare-const
-           ; assert
-           ; check-sat
-           ; get-model
-             -- Script
-           ; []
-           ; _∷_
+open import SMT.Script.Base rawBaseTheory public
+  using ()
+  renaming ( OutputType    to RawOutputType
+           ; OutputCtxt    to RawOutputCtxt
+           ; Ctxt          to RawCtxt
+           ; _∋_           to _∋ᵣ_
+           ; Term          to RawTerm
+           ; var           to varᵣ
+           ; lit           to litᵣ
+           ; app           to appᵣ
+           ; forAll        to forAllᵣ
+           ; exists        to existsᵣ
+           ; Args          to RawArgs
+           ; Command       to RawCommand
+           ; set-logic     to set-logicᵣ
+           ; declare-const to declare-constᵣ
+           ; assert        to assertᵣ
+           ; check-sat     to check-satᵣ
+           ; get-model     to get-modelᵣ
+           ; Script        to RawScript
+           ; []            to []ᵣ
+           ; _∷_           to _∷ᵣ_
            )
 
 -- Define a raw variable, instead of re-exporting _∋_, since there is only a
 -- single sort, so exposing the sort at the type-level is pointless.
 RawVar : RawCtxt → Set
-RawVar Γ = Γ RawScript.∋ tt
+RawVar Γ = Γ ∋ᵣ ⋆

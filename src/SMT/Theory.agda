@@ -3,8 +3,10 @@ module SMT.Theory where
 open import Level
 open import Data.List as List using (List; _∷_; [])
 open import Data.String as String using (String)
+open import Data.Maybe as Maybe using (Maybe)
+open import Data.Product as Prod using (Σ-syntax)
 open import Function using (_∘_)
-open import Reflection using (Term)
+import Reflection as Rfl
 open import Relation.Nullary using (Dec; yes; no)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import Text.Parser.String
@@ -42,8 +44,8 @@ record BaseTheory : Set₁ where
     Value        : Sort → Set
     Literal      : Sort → Set
     Identifier   : {σ : Sort} → Signature σ → Set
-    quoteSort    : Sort → Term
-    quoteValue   : (σ : Sort) → Value σ → Term
+    quoteSort    : Sort → Rfl.Term
+    quoteValue   : (σ : Sort) → Value σ → Rfl.Term
 
 record Printable (baseTheory : BaseTheory) : Set where
   open BaseTheory baseTheory
@@ -58,15 +60,24 @@ record Parsable (baseTheory : BaseTheory) : Set₁ where
     parseSort  : ∀[ Parser Sort ]
     parseValue : (σ : Sort) → ∀[ Parser (Value σ) ]
 
+record Reflectable (baseTheory : BaseTheory) : Set where
+  open BaseTheory baseTheory
+  field
+    sorts           : List Sort
+    checkLiteral    : (σ : Sort) → Rfl.Term → Maybe (Literal σ)
+    checkIdentifier : (σ : Sort) → Rfl.Name → Maybe (Σ[ Σ ∈ Signature σ ] Identifier Σ)
+
 record Theory : Set₁ where
   field
-    baseTheory : BaseTheory
-    printable : Printable baseTheory
-    parsable : Parsable baseTheory
+    baseTheory  : BaseTheory
+    printable   : Printable   baseTheory
+    parsable    : Parsable    baseTheory
+    reflectable : Reflectable baseTheory
 
-  open BaseTheory baseTheory public
-  open Printable printable public
-  open Parsable parsable public
+  open BaseTheory  baseTheory  public
+  open Printable   printable   public
+  open Parsable    parsable    public
+  open Reflectable reflectable public
 
 
 
