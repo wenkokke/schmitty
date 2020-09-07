@@ -10,6 +10,7 @@ open import Data.Maybe using (Maybe; just; nothing)
 open import Data.Nat as Nat using (ℕ; _<?_)
 open import Data.Product as Prod using (∃; ∃-syntax; _×_; _,_)
 open import Data.String as String using (String)
+open import Data.Unit as Unit using (⊤)
 open import Function using (_$_; _∘_; id)
 open import Relation.Nullary using (Dec; yes; no)
 open import Relation.Nullary.Decidable using (True; toWitness)
@@ -179,11 +180,18 @@ data Model : (Γ : Ctxt) → Set where
   []  : Model []
   _∷_ : Value σ → Model Γ → Model (σ ∷ Γ)
 
+_if-sat_ : (A : Set) → Sat → Set
+A if-sat sat = A
+A if-sat _   = ⊤
+
+QualifiedModel : (Γ : Ctxt) → Set
+QualifiedModel Γ = ∃[ s ] (Model Γ if-sat s)
+
 
 -- |SMT-LIB script result.
 Output : OutputType → Set
 Output SAT       = Sat
-Output (MODEL Γ) = Model Γ
+Output (MODEL Γ) = QualifiedModel Γ
 
 -- |List of SMT-LIB results.
 --
@@ -222,10 +230,28 @@ quoteModel (σ ∷ Γ) (v ∷ vs) =
     ∷ Rfl.vArg (quoteValue σ v)
     ∷ Rfl.vArg (quoteModel Γ vs) ∷ []
 
+-- |Quote a qualified model.
+quoteQualifiedModel : (Γ : Ctxt) → QualifiedModel Γ → Rfl.Term
+quoteQualifiedModel Γ (s@sat , m) =
+  Rfl.con (quote Prod._,_)
+    $ Rfl.vArg (quoteSat s)
+    ∷ Rfl.vArg (quoteModel Γ m)
+    ∷ []
+quoteQualifiedModel Γ (s@unsat , m) =
+  Rfl.con (quote Prod._,_)
+    $ Rfl.vArg (quoteSat s)
+    ∷ Rfl.vArg (Rfl.con (quote Unit.tt) [])
+    ∷ []
+quoteQualifiedModel Γ (s@unknown , m) =
+  Rfl.con (quote Prod._,_)
+    $ Rfl.vArg (quoteSat s)
+    ∷ Rfl.vArg (Rfl.con (quote Unit.tt) [])
+    ∷ []
+
 -- |Quote a result.
 quoteOutput : Output ξ → Rfl.Term
 quoteOutput {SAT}     = quoteSat
-quoteOutput {MODEL Γ} = quoteModel Γ
+quoteOutput {MODEL Γ} = quoteQualifiedModel Γ
 
 -- |Quote a list of results.
 quoteOutputs : Outputs Ξ → Rfl.Term

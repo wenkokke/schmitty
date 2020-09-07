@@ -57,5 +57,5 @@ module Example₃ where
          ∷ assert (# 0)
          ∷ get-model
          ∷ []
-  _ : z3 script ≡ (true ∷ []) ∷ []
+  _ : z3 script ≡ (sat , true ∷ []) ∷ []
   _ = refl

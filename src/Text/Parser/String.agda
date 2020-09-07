@@ -19,7 +19,7 @@ open import Data.Subset -- instances
 open import Data.Unit as Unit using (⊤; tt)
 open import Data.Vec as Vec using (Vec)
 open import Function using (id; const; _∘_; _∘′_; _$_; case_of_)
-open import Induction.Nat.Strong using (□_) public
+open import Induction.Nat.Strong as Box using (□_) public
 open import Relation.Nullary using (Dec; yes; no)
 open import Relation.Nullary.Decidable using (True; ⌊_⌋)
 open import Relation.Unary using (IUniversal; _⇒_) public -- imports ∀[_] syntax
@@ -27,9 +27,9 @@ open import Relation.Binary.PropositionalEquality.Decidable --instances
 
 open import Data.Subset public
 
-import Text.Parser.Monad as PM
-import Text.Parser.Types as PI
-import Text.Parser.Position as PP
+import Text.Parser.Monad as ParserMonad
+open import Text.Parser.Types as Parser using (_^_,_)
+import Text.Parser.Position as Position
 
 
 data ParseErrorMsg : Set where
@@ -46,22 +46,22 @@ private
 private
   -- |The success type, specialised to strings.
   Success : (A : Set) (n : ℕ) → Set
-  Success A n = PI.Success (Vec Char) A n
+  Success A n = Parser.Success (Vec Char) A n
 
   -- |Check if a Success were, in fact, a success.
   runSuccess : Success A n → Maybe A
   runSuccess s =
-    if ⌊ PI.Success.size s Nat.≟ 0 ⌋ then just (PI.Success.value s) else nothing
+    if ⌊ Parser.Success.size s Nat.≟ 0 ⌋ then just (Parser.Success.value s) else nothing
 
 
 private
   -- |The result type, specialised to carry no error information or annotations.
   Result : (A : Set) → Set
-  Result A = PM.Result ⊤ (A × PP.Position × List ⊥)
+  Result A = ParserMonad.Result ⊤ (A × Position.Position × List ⊥)
 
   -- |Discard errors, and return only the results.
   runResult : Result A → List A
-  runResult = PM.result (const []) (const []) ((_∷ []) ∘ Prod.proj₁)
+  runResult = ParserMonad.result (const []) (const []) ((_∷ []) ∘ Prod.proj₁)
 
 private
   fromSingleton : List A → ParseErrorMsg ⊎ A
@@ -72,7 +72,7 @@ private
 
 -- |The parser type, specialised to strings.
 Parser : (A : Set) (n : ℕ) → Set
-Parser = PI.Parser PM.Agdarsec′.chars
+Parser = Parser.Parser ParserMonad.Agdarsec′.chars
 
 -- |Run a parser, and return a list of results.
 runParser : ∀[ Parser A ] → String → ParseErrorMsg ⊎ A
@@ -88,7 +88,7 @@ runParser {A} p str
   $ runResult
 
   -- Run the parser:
-  $ (λ input -> PI.runParser p (Nat.n≤1+n _) input (PP.start , []))
+  $ (λ input -> Parser.runParser p (Nat.n≤1+n _) input (Position.start , []))
 
   -- Convert the input from a String to a length-indexed Vector:
   $ Vec.fromList (String.toList str)
@@ -110,9 +110,9 @@ import Text.Parser.Combinators.Numbers as PCN
 
 private
   instance
-    Agdarsec′M  = PM.Agdarsec′.monad
-    Agdarsec′M0 = PM.Agdarsec′.monadZero
-    Agdarsec′M+ = PM.Agdarsec′.monadPlus
+    Agdarsec′M  = ParserMonad.Agdarsec′.monad
+    Agdarsec′M0 = ParserMonad.Agdarsec′.monadZero
+    Agdarsec′M+ = ParserMonad.Agdarsec′.monadPlus
 
 
 -- |Parser which...
@@ -248,6 +248,14 @@ exact = PC.exact
 -- |Parser which...
 exacts : (str : List⁺ Char) → ∀[ Parser (List⁺ Char) ]
 exacts = PC.exacts
+
+-- |Parser which...
+between : ∀[ Parser A ⇒ □ Parser C ⇒ □ Parser B ⇒ Parser B ]
+between A C B = A &> B <& C
+
+-- |Parser which...
+between? : ∀[ Parser A ⇒ □ Parser C ⇒ Parser B ⇒ Parser B ]
+between? A C B = between A C (box B) <|> B
 
 -- |Parser which...
 parens : ∀[ □ Parser A ⇒ Parser A ]

@@ -86,13 +86,16 @@ module Example₂ where
   _ : pDefns parses "(model (define-fun x1 () Int 0) (define-fun x0 () Int 0))"
   _ = ! ((INT , (zero , refl) , + 0) ∷ (INT , (suc zero , refl) , + 0) ∷ [])
 
-  pModel : ∀[ Parser (Model Γ) ]
+  pModel : ∀[ Parser (QualifiedModel Γ) ]
   pModel = mkModelParser pVar
 
   _ : pModel parses "sat (model (define-fun x1 () Int 0) (define-fun x0 () Int 0))"
-  _ = ! + 0 ∷ + 0 ∷ []
+  _ = ! sat , + 0 ∷ + 0 ∷ []
 
-  _ : z3 script ≡ ((+ 0 ∷ + 0 ∷ []) ∷ [])
+  _ : pModel parses "unsat (error \"line 5 column 10: model is not available\")"
+  _ = ! unsat , _
+
+  _ : z3 script ≡ ((sat , + 0 ∷ + 0 ∷ []) ∷ [])
   _ = refl
 
 
@@ -108,5 +111,14 @@ module Example₃ where
          ∷ get-model
          ∷ []
 
-  _ : cvc4 script ≡ ((+ 0 ∷ + 0 ∷ []) ∷ [])
+  _ : cvc4 script ≡ ((sat , + 0 ∷ + 0 ∷ []) ∷ [])
   _ = refl
+
+
+module Example₄ where
+
+  open import Data.Integer using (_+_; _-_; _≤_)
+  open import SMT.Backend.Z3 Ints.theory
+
+  test : (x y : ℤ) → x + y ≡ y + x
+  test = solveZ3

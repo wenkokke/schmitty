@@ -6,7 +6,7 @@ module SMT.Backend.Z3 (theory : Theory) where
 
 open Theory theory
 
-open import Data.List as List using (List; _∷_; [])
+open import Data.List as List using (List; _∷_; _∷ʳ_; [])
 open import Data.Maybe as Maybe using (Maybe; just; nothing)
 open import Data.Product using (_×_; _,_; proj₁; proj₂)
 open import Data.String as String using (String; _++_)
@@ -17,6 +17,7 @@ open import Reflection as Rfl using (return; _>>=_; _>>_)
 open import Reflection.External
 open import Text.Parser.String using (runParser)
 open import SMT.Script theory
+open import SMT.Backend.Base
 
 private
   variable
@@ -24,7 +25,8 @@ private
     ξ : OutputType
     Ξ : OutputCtxt
 
-z3TC : Script [] Γ (ξ ∷ Ξ) → Rfl.TC Rfl.Term
+
+z3TC : Script [] Γ (ξ ∷ Ξ) → Rfl.TC (Outputs (ξ ∷ Ξ))
 z3TC {Γ} {ξ} {Ξ} scr = do
 
   -- Print the SMT-LIB script and build the output parser.
@@ -38,11 +40,28 @@ z3TC {Γ} {ξ} {Ξ} scr = do
               }
 
   -- Run the Z3 command and parse the output.
-  stdout ← runCmdTC z3Cmd
+  (result exitCode stdout stderr) ← unsafeRunCmdTC z3Cmd
   case runParser parseOutputs stdout of λ where
     (inj₁ parserr) → parseError stdout parserr
-    (inj₂ outputs) → return $ quoteOutputs outputs
+    (inj₂ outputs) → return outputs
+
 
 macro
   z3 : Script [] Γ (ξ ∷ Ξ) → Rfl.Term → Rfl.TC ⊤
-  z3 scr hole = z3TC scr >>= Rfl.unify hole
+  z3 scr hole = z3TC scr >>= Rfl.unify hole ∘ quoteOutputs
+
+typeErrorCounterExample : Model Γ → Rfl.TC ⊤
+typeErrorCounterExample {Γ} m =
+  Rfl.typeErrorFmt "Found counter-example: %t" (quoteModel Γ m)
+
+macro
+  solveZ3 : Rfl.Term → Rfl.TC ⊤
+  solveZ3 hole = do
+    goal ← Rfl.inferType hole
+    Γ , scr ← reflectToScript goal
+    let scr′ = scr ◆ get-model ∷ []
+    qm ∷ [] ← z3TC scr′
+    case qm of λ where
+      (sat     , m) → typeErrorCounterExample m
+      (unsat   , _) → Rfl.unify hole (`because "z3" goal)
+      (unknown , _) → Rfl.typeErrorFmt "Solver returned 'unknown'"
