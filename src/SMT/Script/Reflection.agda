@@ -74,7 +74,7 @@ module _ where
       return $ lit l
     checkRawTerm Γ σ (appᵣ f args) = do
       (Σ , f) ← checkIdentifier σ f
-      args ← checkRawArgs Γ (ArgTypes Σ) args
+      args ← checkRawArgs Γ (ArgSorts Σ) args
       return $ app f args
     checkRawTerm Γ σ (forAllᵣ ⋆ x) = do
       refl ← Maybe.decToMaybe (σ ≟-Sort BOOL)

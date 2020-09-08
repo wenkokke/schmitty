@@ -14,7 +14,7 @@ open import Text.Parser.String
 
 record Signature {Sort : Set} (σ : Sort) : Set where
   field
-    ArgTypes : List Sort
+    ArgSorts : List Sort
 
 open Signature public
 
@@ -24,7 +24,7 @@ module _ {Sort : Set} where
   infix 3 _↦_
 
   _↦_ : (σs : List Sort) (σ : Sort) → Signature σ
-  Σ ↦ _ = record { ArgTypes = Σ }
+  Σ ↦ _ = record { ArgSorts = Σ }
 
   Op₁ : (σ : Sort) → Signature σ
   Op₁ σ = σ ∷ [] ↦ σ
@@ -33,7 +33,7 @@ module _ {Sort : Set} where
   Op₂ σ = σ ∷ σ ∷ [] ↦ σ
 
   map : {CoreSort : Set} {φ : CoreSort} (CORE : CoreSort → Sort) → Signature φ → Signature (CORE φ)
-  map CORE Φ = record { ArgTypes = List.map CORE (ArgTypes Φ) }
+  map CORE Φ = record { ArgSorts = List.map CORE (ArgSorts Φ) }
 
 
 record BaseTheory : Set₁ where

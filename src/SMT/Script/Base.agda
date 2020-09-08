@@ -53,12 +53,15 @@ mutual
   data Term (Γ : Ctxt) : (σ : Sort) → Set where
     var    : ∀ {σ} (x : Γ ∋ σ) → Term Γ σ
     lit    : ∀ {σ} (l : Literal σ) → Term Γ σ
-    app    : ∀ {σ} {Σ : Signature σ} (x : Identifier Σ) (xs : Args Γ (ArgTypes Σ)) → Term Γ σ
+    app    : ∀ {σ} {Σ : Signature σ} (x : Identifier Σ) (xs : Args Γ (ArgSorts Σ)) → Term Γ σ
     forAll : ∀ (σ : Sort) (x : Term (σ ∷ Γ) BOOL) → Term Γ BOOL
     exists : ∀ (σ : Sort) (x : Term (σ ∷ Γ) BOOL) → Term Γ BOOL
 
   Args : (Γ Δ : Ctxt) → Set
   Args Γ = Env (λ σ _Δ → Term Γ σ)
+
+Fun : (Γ : Ctxt) (Σ : Signature σ) → Set
+Fun {σ} Γ Σ = List.foldr (λ σ′ A → Term Γ σ′ → A) (Term Γ σ) (ArgSorts Σ)
 
 pattern app₁ f x     = app f (x ∷ [])
 pattern app₂ f x y   = app f (x ∷ y ∷ [])

@@ -18,7 +18,7 @@ import Reflection.TypeChecking.Monad.Categorical as TC
 open import Relation.Nullary using (¬_; Dec; yes; no)
 open import Relation.Nullary.Decidable using (isYes)
 open import SMT.Theory
-open import SMT.Theories.Raw
+open import SMT.Theories.Raw.Base
 
 private
   open module TCMonad {ℓ} = Category.Monad.RawMonad {ℓ} TC.monad renaming (_⊛_ to _<*>_)
@@ -33,9 +33,9 @@ private
   -- We don't know the type of raw function symbols, so just look at
   -- the arguments. Design decision: only keep visible arguments.
   argTypes : List (Arg A) → Signature ⋆
-  argTypes []              .ArgTypes = []
-  argTypes (vArg _ ∷ args) .ArgTypes = _ ∷ argTypes args .ArgTypes
-  argTypes (_      ∷ args) .ArgTypes =     argTypes args .ArgTypes
+  argTypes []              .ArgSorts = []
+  argTypes (vArg _ ∷ args) .ArgSorts = _ ∷ argTypes args .ArgSorts
+  argTypes (_      ∷ args) .ArgSorts =     argTypes args .ArgSorts
 
 
 reflectToRawVar : (Γ : RawCtxt) (n : ℕ) → TC (RawVar Γ)
@@ -96,11 +96,11 @@ mutual
   reflectToRawTerm Γ fv (pi (arg _ a) (abs _ b)) = do
     a ← reflectToRawTerm Γ fv a
     b ← reflectToRawTerm Γ (suc fv) b
-    return (appᵣ {Σ = record {ArgTypes = ⋆ ∷ ⋆ ∷ []}} (quote Morphism) (a ∷ b ∷ []))
+    return (appᵣ {Σ = record {ArgSorts = ⋆ ∷ ⋆ ∷ []}} (quote Morphism) (a ∷ b ∷ []))
   reflectToRawTerm Γ fv (meta x _) = blockOnMeta x
   reflectToRawTerm Γ fv t = typeErrorFmt "reflectToRawTerm failed"
 
-  reflectToRawArgs : ∀ Γ (fv : ℕ) (ts : List (Arg Term)) → TC (RawArgs Γ (ArgTypes (argTypes ts)))
+  reflectToRawArgs : ∀ Γ (fv : ℕ) (ts : List (Arg Term)) → TC (RawArgs Γ (ArgSorts (argTypes ts)))
   reflectToRawArgs Γ fv [] = return []
   reflectToRawArgs Γ fv (vArg t ∷ ts) = ⦇ reflectToRawTerm Γ fv t ∷ reflectToRawArgs Γ fv ts ⦈
   reflectToRawArgs Γ fv (hArg _ ∷ ts) = reflectToRawArgs Γ fv ts

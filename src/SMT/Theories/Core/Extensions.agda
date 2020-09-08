@@ -22,13 +22,13 @@ module Sorts
   BOOL = CORE Core.BOOL
 
   Rel : (σ : Sort) → Signature BOOL
-  Rel σ = record { ArgTypes = σ ∷ σ ∷ [] }
+  Rel σ = record { ArgSorts = σ ∷ σ ∷ [] }
 
   ITE : (σ : Sort) → Signature σ
-  ITE σ = record { ArgTypes = BOOL ∷ σ ∷ σ ∷ [] }
+  ITE σ = record { ArgSorts = BOOL ∷ σ ∷ σ ∷ [] }
 
   fromCoreSignature : ∀ {φ} → Signature φ → Signature (CORE φ)
-  fromCoreSignature Φ = record { ArgTypes = List.map CORE (ArgTypes Φ) }
+  fromCoreSignature Φ = record { ArgSorts = List.map CORE (ArgSorts Φ) }
 
 
 module Literals

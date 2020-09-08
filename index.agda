@@ -15,6 +15,7 @@ import SMT.Theories.Ints
 import SMT.Theories.Ints.Example
 import SMT.Theories.Ints.Base
 import SMT.Theories.Ints.Reflection
+import SMT.Theories.Raw.Base
 import SMT.Theories.Raw.Reflection
 import SMT.Utils.Float
 import SMT.Backend.Z3
