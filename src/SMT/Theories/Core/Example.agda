@@ -28,7 +28,7 @@ module Example₁ where
   -- @
   --
   script : Script [] (BOOL ∷ []) (SAT ∷ [])
-  script = declare-const BOOL
+  script = declare-const "b" BOOL
          ∷ assert (app₂ and (# 0) (app₁ not (# 0)))
          ∷ check-sat
          ∷ []
@@ -53,7 +53,7 @@ module Example₃ where
 
   -- |Parsing models.
   script : Script [] (BOOL ∷ []) (MODEL (BOOL ∷ []) ∷ [])
-  script = declare-const BOOL
+  script = declare-const "b" BOOL
          ∷ assert (# 0)
          ∷ get-model
          ∷ []

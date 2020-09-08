@@ -19,8 +19,8 @@ module Example₁ where
   Γ = REAL ∷ REAL ∷ []
 
   script : Script [] Γ (MODEL Γ ∷ [])
-  script = declare-const REAL
-         ∷ declare-const REAL
+  script = declare-const "x" REAL
+         ∷ declare-const "y" REAL
          ∷ assert (app₂ eq (# 0) (app₂ div (# 1) (lit (nat 2))))
          ∷ assert (app₂ gt (# 0) (lit (nat 1)))
          ∷ assert (app₂ gt (# 1) (lit (nat 1)))
@@ -40,8 +40,8 @@ module Example₂ where
   Γ = REAL ∷ REAL ∷ []
 
   script : Script [] Γ (MODEL Γ ∷ [])
-  script = declare-const REAL
-         ∷ declare-const REAL
+  script = declare-const "x" REAL
+         ∷ declare-const "y" REAL
          ∷ assert (app₂ eq (# 0) (app₂ div (# 1) (lit (nat 2))))
          ∷ assert (app₂ gt (# 0) (lit (nat 1)))
          ∷ assert (app₂ gt (# 1) (lit (nat 1)))

@@ -6,6 +6,7 @@ open import Data.Fin as Fin using (Fin; zero; suc)
 open import Data.List as List using (List; _∷_; []; _++_; _ʳ++_)
 import Data.List.Properties as List
 open import Data.List.NonEmpty as List⁺ using (List⁺; _∷_)
+open import Data.List.Relation.Unary.All
 open import Data.Maybe using (Maybe; just; nothing)
 open import Data.Nat as Nat using (ℕ; _<?_)
 open import Data.Product as Prod using (∃; ∃-syntax; _×_; _,_)
@@ -280,7 +281,7 @@ quoteOutputs (r ∷ rs) =
 --
 data Command (Γ : Ctxt) : (δΓ : Ctxt) (δΞ : OutputCtxt) → Set where
   set-logic     : (l : Logic) → Command Γ [] []
-  declare-const : (σ : Sort) → Command Γ (σ ∷ []) []
+  declare-const : (x : String) (σ : Sort) → Command Γ (σ ∷ []) []
   assert        : Term Γ BOOL → Command Γ [] []
   check-sat     : Command Γ [] (SAT ∷ [])
   get-model     : Command Γ [] (MODEL Γ ∷ [])
@@ -322,8 +323,22 @@ Defn Γ = ∃[ σ ] (Γ ∋ σ × Value σ)
 declare-consts : (δΓ : Ctxt) → Script (δΓ ʳ++ Γ) Γ′ Ξ → Script Γ Γ′ Ξ
 declare-consts {Γ} [] scr = scr
 declare-consts {Γ} (σ ∷ δΓ) scr
-  rewrite List.ʳ++-++ (σ ∷ []) {δΓ} {Γ} = declare-const σ ∷ declare-consts δΓ scr
+  rewrite List.ʳ++-++ (σ ∷ []) {δΓ} {Γ} = declare-const "_" σ ∷ declare-consts δΓ scr
 
+VarNames : Ctxt → Set
+VarNames = All (λ _ → String)
+
+private
+  scriptVarNames′ : Script Γ′ Γ Ξ → VarNames Γ′ → VarNames Γ
+  scriptVarNames′ [] acc = acc
+  scriptVarNames′ (set-logic l       ∷ s) acc = scriptVarNames′ s acc
+  scriptVarNames′ (declare-const x σ ∷ s) acc = scriptVarNames′ s (x ∷ acc)
+  scriptVarNames′ (assert x          ∷ s) acc = scriptVarNames′ s acc
+  scriptVarNames′ (check-sat         ∷ s) acc = scriptVarNames′ s acc
+  scriptVarNames′ (get-model         ∷ s) acc = scriptVarNames′ s acc
+
+scriptVarNames : Script [] Γ Ξ → VarNames Γ
+scriptVarNames s = scriptVarNames′ s []
 
 ----------------------
 -- Parser utilities --

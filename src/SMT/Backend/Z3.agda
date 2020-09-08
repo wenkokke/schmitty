@@ -23,10 +23,9 @@ open import SMT.Backend.Base
 
 private
   variable
-    Γ : Ctxt
+    Γ Γ′ : Ctxt
     ξ : OutputType
     Ξ : OutputCtxt
-
 
 z3TC : Script [] Γ (ξ ∷ Ξ) → Rfl.TC (Outputs (ξ ∷ Ξ))
 z3TC {Γ} {ξ} {Ξ} scr = do
@@ -52,18 +51,8 @@ macro
   z3 : Script [] Γ (ξ ∷ Ξ) → Rfl.Term → Rfl.TC ⊤
   z3 scr hole = z3TC scr >>= Rfl.unify hole ∘ quoteOutputs
 
-typeErrorCounterExample : Model Γ → Rfl.TC ⊤
-typeErrorCounterExample {Γ} m =
-  Rfl.typeErrorFmt "Found counter-example: %t" (quoteModel Γ m)
+open Solver theory reflectable
 
 macro
   solveZ3 : Rfl.Term → Rfl.TC ⊤
-  solveZ3 hole = do
-    goal ← Rfl.inferType hole
-    Γ , scr ← reflectToScript goal
-    let scr′ = scr ◆ get-model ∷ []
-    qm ∷ [] ← z3TC scr′
-    case qm of λ where
-      (sat     , m) → typeErrorCounterExample m
-      (unsat   , _) → Rfl.unify hole (`because "z3" goal)
-      (unknown , _) → Rfl.typeErrorFmt "Solver returned 'unknown'"
+  solveZ3 = solve "z3" z3TC
