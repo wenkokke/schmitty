@@ -27,8 +27,8 @@ module Sorts
   ITE : (σ : Sort) → Signature σ
   ITE σ = record { ArgSorts = BOOL ∷ σ ∷ σ ∷ [] }
 
-  fromCoreSignature : ∀ {φ} → Signature φ → Signature (CORE φ)
-  fromCoreSignature Φ = record { ArgSorts = List.map CORE (ArgSorts Φ) }
+  liftCoreSignature : ∀ {φ} → Signature φ → Signature (CORE φ)
+  liftCoreSignature Φ = record { ArgSorts = List.map CORE (ArgSorts Φ) }
 
 
 module Literals

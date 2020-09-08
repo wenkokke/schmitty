@@ -60,8 +60,8 @@ mutual
   Args : (Γ Δ : Ctxt) → Set
   Args Γ = Env (λ σ _Δ → Term Γ σ)
 
-Fun : (Γ : Ctxt) (Σ : Signature σ) → Set
-Fun {σ} Γ Σ = List.foldr (λ σ′ A → Term Γ σ′ → A) (Term Γ σ) (ArgSorts Σ)
+Macro : (Σ : Signature σ) → Set
+Macro {σ} Σ = ∀ {Γ} → Args Γ (ArgSorts Σ) → Term Γ σ
 
 pattern app₁ f x     = app f (x ∷ [])
 pattern app₂ f x y   = app f (x ∷ y ∷ [])

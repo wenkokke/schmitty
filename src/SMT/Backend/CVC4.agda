@@ -1,6 +1,7 @@
 {-# OPTIONS --allow-exec #-}
 
 open import SMT.Theory
+open import SMT.Theory.Reflection
 
 module SMT.Backend.CVC4 (theory : Theory) (reflectable : Reflectable theory) where
 

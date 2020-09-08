@@ -6,10 +6,11 @@ open import Data.Maybe as Maybe using (Maybe; nothing; just)
 open import Data.Nat.Base as Nat using (ℕ)
 open import Data.Nat.Show renaming (show to showℕ)
 open import Data.List as List using (List; _∷_; [])
-open import Data.Product as Prod using (Σ-syntax; -,_)
+open import Data.Product as Prod using (Σ-syntax; _,_)
 import Reflection as Rfl
 open import Relation.Binary.PropositionalEquality as PropEq using (_≡_; refl)
 open import SMT.Theory
+open import SMT.Theory.Reflection
 open import SMT.Theories.Core as Core hiding (BOOL)
 open import SMT.Theories.Core.Extensions
 open import SMT.Theories.Ints.Base as Ints
@@ -69,21 +70,21 @@ private
   pattern `geq = quote Int._≥_
   pattern `gt  = quote Int._>_
 
-checkIdentifier : (σ : Sort) → Rfl.Name → Maybe (Σ[ Σ ∈ Signature σ ] Identifier Σ)
-checkIdentifier BOOL     `eq  = just (-, eq)
-checkIdentifier BOOL     `neq = just (-, neq)
-checkIdentifier INT      `neg = just (-, neg)
-checkIdentifier INT      `sub = just (-, sub)
-checkIdentifier INT      `add = just (-, add)
-checkIdentifier INT      `mul = just (-, mul)
-checkIdentifier INT      `abs = just (-, abs)
-checkIdentifier BOOL     `leq = just (-, leq)
-checkIdentifier BOOL     `lt  = just (-, lt)
-checkIdentifier BOOL     `geq = just (-, geq)
-checkIdentifier BOOL     `gt  = just (-, gt)
+checkIdentifier : (σ : Sort) → Rfl.Name → Maybe (Σ[ Σ ∈ Signature σ ] Macro Σ)
+checkIdentifier BOOL     `eq  = just (Rel INT , app eq)
+checkIdentifier BOOL     `neq = just (Rel INT , app neq)
+checkIdentifier INT      `neg = just (Op₁ INT , app neg)
+checkIdentifier INT      `sub = just (Op₂ INT , app sub)
+checkIdentifier INT      `add = just (Op₂ INT , app add)
+checkIdentifier INT      `mul = just (Op₂ INT , app mul)
+checkIdentifier INT      `abs = just (Op₁ INT , app abs)
+checkIdentifier BOOL     `leq = just (Rel INT , app leq)
+checkIdentifier BOOL     `lt  = just (Rel INT , app lt)
+checkIdentifier BOOL     `geq = just (Rel INT , app geq)
+checkIdentifier BOOL     `gt  = just (Rel INT , app gt)
 checkIdentifier INT       _   = nothing
 checkIdentifier (CORE φ)  x   =
-  Maybe.map (Prod.map fromCoreSignature core) (checkCoreIdentifier φ x)
+  Maybe.map (Prod.map liftCoreSignature (λ i → app (core i))) (checkCoreIdentifier′ φ x)
 
 
 ---------------

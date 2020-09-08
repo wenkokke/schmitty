@@ -7,7 +7,7 @@ open import Data.Maybe as Maybe using (Maybe; nothing; just)
 open import Data.Nat as Nat using (ℕ)
 import Data.Nat.Show as Nat using (show)
 open import Data.List as List using (List; []; _∷_)
-open import Data.Product as Prod using (Σ-syntax; -,_; _×_; _,_)
+open import Data.Product as Prod using (Σ-syntax; _×_; _,_)
 open import Data.String as String using (String)
 open import Function.Equivalence using (equivalence)
 open import Relation.Nullary using (Dec; yes; no)
@@ -15,6 +15,7 @@ import Reflection as Rfl
 import Relation.Nullary.Decidable as Dec
 open import Relation.Binary.PropositionalEquality as Eq using (_≡_; refl; cong)
 open import SMT.Theory
+open import SMT.Theory.Reflection
 open import SMT.Theories.Core as Core hiding (BOOL)
 open import SMT.Theories.Core.Extensions
 open import SMT.Theories.Reals.Base as Reals
@@ -74,21 +75,21 @@ private
   pattern `geq = quote Float._≥_
   pattern `gt  = quote Float._>_
 
-checkIdentifier : (σ : Sort) → Rfl.Name → Maybe (Σ[ Σ ∈ Signature σ ] Identifier Σ)
-checkIdentifier BOOL     `eq  = just (-, eq)
-checkIdentifier BOOL     `neq = just (-, neq)
-checkIdentifier REAL     `neg = just (-, neg)
-checkIdentifier REAL     `sub = just (-, sub)
-checkIdentifier REAL     `add = just (-, add)
-checkIdentifier REAL     `mul = just (-, mul)
-checkIdentifier REAL     `div = just (-, div)
-checkIdentifier BOOL     `leq = just (-, leq)
-checkIdentifier BOOL     `lt  = just (-, lt)
-checkIdentifier BOOL     `geq = just (-, geq)
-checkIdentifier BOOL     `gt  = just (-, gt)
+checkIdentifier : (σ : Sort) → Rfl.Name → Maybe (Σ[ Σ ∈ Signature σ ] Macro Σ)
+checkIdentifier BOOL     `eq  = just (Rel REAL , app eq)
+checkIdentifier BOOL     `neq = just (Rel REAL , app neq)
+checkIdentifier REAL     `neg = just (Op₁ REAL , app neg)
+checkIdentifier REAL     `sub = just (Op₂ REAL , app sub)
+checkIdentifier REAL     `add = just (Op₂ REAL , app add)
+checkIdentifier REAL     `mul = just (Op₂ REAL , app mul)
+checkIdentifier REAL     `div = just (Op₂ REAL , app div)
+checkIdentifier BOOL     `leq = just (Rel REAL , app leq)
+checkIdentifier BOOL     `lt  = just (Rel REAL , app lt)
+checkIdentifier BOOL     `geq = just (Rel REAL , app geq)
+checkIdentifier BOOL     `gt  = just (Rel REAL , app gt)
 checkIdentifier REAL      _   = nothing
 checkIdentifier (CORE φ)  x   =
-  Maybe.map (Prod.map fromCoreSignature core) (checkCoreIdentifier φ x)
+  Maybe.map (Prod.map liftCoreSignature (λ i → app (core i))) (checkCoreIdentifier′ φ x)
 
 
 ---------------

@@ -1,4 +1,5 @@
 open import SMT.Theory
+open import SMT.Theory.Reflection
 
 module SMT.Script (theory : Theory) (reflectable : Reflectable theory) where
 

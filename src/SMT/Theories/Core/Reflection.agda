@@ -4,16 +4,17 @@ open import Data.Empty as Empty using (⊥)
 open import Data.Bool.Base as Bool using (Bool; false; true)
 open import Data.List.Base as List using (List; _∷_; [])
 open import Data.Maybe as Maybe using (Maybe; nothing; just)
-open import Data.Product as Prod using (Σ-syntax; -,_; _×_)
+open import Data.Product as Prod using (Σ-syntax; _,_; _×_)
 open import Data.Sum as Sum using (_⊎_)
 open import Data.Unit as Unit using (⊤)
 open import Function using (Morphism)
 import Reflection as Rfl
 open import Relation.Nullary using (¬_)
 open import SMT.Theory
+open import SMT.Theory.Reflection
 open import SMT.Theories.Raw as Raw
 open import SMT.Theories.Core.Base as Core
-open import SMT.Script.Base Core.coreBaseTheory
+open import SMT.Script.Base Core.coreBaseTheory renaming ( Macro to CoreMacro )
 
 
 -----------
@@ -53,13 +54,20 @@ private
   pattern `and     = quote _×_
   pattern `or      = quote _⊎_
 
-checkCoreIdentifier : (φ : CoreSort) → Rfl.Name → Maybe (Σ[ Φ ∈ Signature φ ] CoreIdentifier Φ)
-checkCoreIdentifier BOOL `not     = just (-, not)
-checkCoreIdentifier BOOL `implies = just (-, implies)
-checkCoreIdentifier BOOL `and     = just (-, and)
-checkCoreIdentifier BOOL `or      = just (-, or)
-checkCoreIdentifier BOOL  _       = nothing
 
+-- NOTE: The core theory is not allowed to use macros, because this gets us in
+--       trouble while extending theories: we cannot lift CoreMacros into
+--       arbitrary Macros, since that would require us to *lower* arbitrary
+--       Terms to CoreTerms. With great power comes very little extensibility.
+checkCoreIdentifier′ : (φ : CoreSort) → Rfl.Name → Maybe (Σ[ Φ ∈ Signature φ ] CoreIdentifier Φ)
+checkCoreIdentifier′ BOOL `not     = just (Op₁ BOOL , not)
+checkCoreIdentifier′ BOOL `implies = just (Op₂ BOOL , implies)
+checkCoreIdentifier′ BOOL `and     = just (Op₂ BOOL , and)
+checkCoreIdentifier′ BOOL `or      = just (Op₂ BOOL , or)
+checkCoreIdentifier′ BOOL  _       = nothing
+
+checkCoreIdentifier : (φ : CoreSort) → Rfl.Name → Maybe (Σ[ Φ ∈ Signature φ ] CoreMacro Φ)
+checkCoreIdentifier φ n = Maybe.map (Prod.map₂ λ {Φ} f args → app f args) (checkCoreIdentifier′ φ n)
 
 ---------------
 -- Instances --

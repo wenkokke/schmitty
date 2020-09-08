@@ -9,7 +9,7 @@ open import Function using (_∘_)
 import Reflection as Rfl
 open import Relation.Nullary using (Dec; yes; no)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
-open import Text.Parser.String
+open import Text.Parser.String using (IUniversal; Parser)
 
 
 record Signature {Sort : Set} (σ : Sort) : Set where
@@ -69,14 +69,6 @@ record Theory : Set₁ where
   open BaseTheory  baseTheory  public
   open Printable   printable   public
   open Parsable    parsable    public
-
-
-record Reflectable (theory : Theory) : Set where
-  open Theory theory
-  field
-    sorts           : List Sort
-    checkLiteral    : (σ : Sort) → Rfl.Term → Maybe (Literal σ)
-    checkIdentifier : (σ : Sort) → Rfl.Name → Maybe (Σ[ Σ ∈ Signature σ ] Identifier Σ)
 
 
 -----------------------

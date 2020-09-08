@@ -1,4 +1,5 @@
 open import SMT.Theory
+open import SMT.Theory.Reflection
 
 module SMT.Script.Reflection (theory : Theory) (reflectable : Reflectable theory) where
 
@@ -75,7 +76,7 @@ module _ where
     checkRawTerm Γ σ (appᵣ f args) = do
       (Σ , f) ← checkIdentifier σ f
       args ← checkRawArgs Γ (ArgSorts Σ) args
-      return $ app f args
+      return $ f args
     checkRawTerm Γ σ (forAllᵣ ⋆ x) = do
       refl ← Maybe.decToMaybe (σ ≟-Sort BOOL)
       checkRawQ forAll Γ x

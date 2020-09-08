@@ -1,6 +1,7 @@
 module index where
 
 import SMT.Script
+import SMT.Theory.Reflection
 import SMT.Theories.Core.Example
 import SMT.Theories.Core.Extensions
 import SMT.Theories.Core.Base
