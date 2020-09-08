@@ -27,19 +27,37 @@ module Solver (theory : Theory) (reflectable : Reflectable theory) where
       Γ : Ctxt
       Ξ : OutputCtxt
 
+    piApply′ : Rfl.Term → List Rfl.Term → Rfl.Term
+    piApply′ t [] = t
+    piApply′ (Rfl.pi (Rfl.arg _ a) (Rfl.abs x b)) (v ∷ args) =
+      Rfl.def (quote Function._$′_)
+              ( Rfl.hArg Rfl.unknown
+              ∷ Rfl.hArg a
+              ∷ Rfl.hArg Rfl.unknown
+              ∷ Rfl.hArg Rfl.unknown
+              ∷ Rfl.vArg (Rfl.lam Rfl.visible (Rfl.abs x (piApply′ b args)))
+              ∷ Rfl.vArg v
+              ∷ [])
+    piApply′ t _ = t -- impossible?
+
+    modelToQuotedList : Model Γ → List Rfl.Term → List Rfl.Term
+    modelToQuotedList [] acc = acc
+    modelToQuotedList (v ∷ m) acc = modelToQuotedList m (quoteValue _ v ∷ acc)
+
+    -- Assume all declare-consts are up front (this is what we parse in reflectToRawScript).
+    piApply : Rfl.Term → Model Γ → Rfl.Term
+    piApply goal m = piApply′ goal (modelToQuotedList m [])
+
   private
     counterExample : VarNames Γ → Model Γ → List Rfl.ErrorPart → List Rfl.ErrorPart
     counterExample []       []      acc = acc
     counterExample (x ∷ xs) (v ∷ m) acc =
-      counterExample xs m (Rfl.strErr "  " ∷ Rfl.strErr x ∷ Rfl.strErr " = " ∷ Rfl.termErr (quoteValue _ v) ∷ nl acc)
-      where
-        nl : List Rfl.ErrorPart → List Rfl.ErrorPart
-        nl []  = []
-        nl err = Rfl.strErr "\n" ∷ err
+      counterExample xs m (Rfl.strErr "  " ∷ Rfl.strErr x ∷ Rfl.strErr " = " ∷ Rfl.termErr (quoteValue _ v) ∷ Rfl.strErr "\n" ∷ acc)
 
-  typeErrorCounterExample : Script [] Γ Ξ → Model Γ → Rfl.TC ⊤
-  typeErrorCounterExample {Γ} scr m =
-    Rfl.typeErrorFmt "Found counter-example:\n%e" (counterExample (scriptVarNames scr) m [])
+  typeErrorCounterExample : Rfl.Term → Script [] Γ Ξ → Model Γ → Rfl.TC ⊤
+  typeErrorCounterExample {Γ} goal scr m = do
+    inst-goal ← Rfl.normalise (piApply goal m)
+    Rfl.typeErrorFmt "Found counter-example:\n%erefuting %t" (counterExample (scriptVarNames scr) m []) inst-goal
 
   solve : String → (∀ {Γ ξ Ξ} → Script [] Γ (ξ ∷ Ξ) → Rfl.TC (Outputs (ξ ∷ Ξ))) → Rfl.Term → Rfl.TC ⊤
   solve name solver hole = do
@@ -48,6 +66,6 @@ module Solver (theory : Theory) (reflectable : Reflectable theory) where
     let scr′ = scr ◆ get-model ∷ []
     qm ∷ [] ← solver scr′
     case qm of λ where
-      (sat     , m) → typeErrorCounterExample scr′ m
+      (sat     , m) → typeErrorCounterExample goal scr′ m
       (unsat   , _) → Rfl.unify hole (`because name goal)
       (unknown , _) → Rfl.typeErrorFmt "Solver returned 'unknown'"
