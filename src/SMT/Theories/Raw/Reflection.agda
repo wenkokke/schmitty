@@ -143,37 +143,3 @@ reflectToRawScript = reflectToRawScript′ [] 0
     reflectToRawScript′ Γ fv t = do
       t ← reflectToRawTerm Γ fv t
       return (Γ , assertᵣ (appᵣ (quote ¬_) (t ∷ [])) ∷ᵣ []ᵣ)
-
-
-private
-  module Example where
-
-    postulate
-      debug : {A B : Set} → A → B
-
-    `debug : Term → Term
-    `debug t = def (quote debug) (vArg t ∷ [])
-
-    macro
-      testDecode : Term → TC ⊤
-      testDecode hole = do
-        goal ← inferType hole
-        Γ , s ← reflectToRawScript goal
-        unify hole ∘ `debug =<< quoteTC s
-
-    test : (x y : ℤ) → x Int.- y Int.≤ x Int.+ y → x ≡ y
-    test = testDecode
-
-    _ : test ≡ debug
-      ( declare-constᵣ ⋆ ∷ᵣ
-      ( declare-constᵣ ⋆ ∷ᵣ
-      ( assertᵣ
-        ( appᵣ (quote Int._≤_)
-          ( appᵣ (quote Int._-_) (varᵣ (suc zero , refl) ∷ (varᵣ (zero , refl) ∷ []))
-          ∷ ( appᵣ (quote Int._+_) (varᵣ (suc zero , refl) ∷ (varᵣ (zero , refl) ∷ []))
-          ∷ []))) ∷ᵣ
-      ( assertᵣ
-        (appᵣ (quote ¬_)
-          (appᵣ (quote _≡_) (varᵣ (suc zero , refl) ∷ (varᵣ (zero , refl) ∷ []))
-          ∷ [])) ∷ᵣ []ᵣ))))
-    _ = refl

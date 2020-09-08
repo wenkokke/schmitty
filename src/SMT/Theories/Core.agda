@@ -157,13 +157,12 @@ coreParsable : Parsable coreBaseTheory
 Parsable.parseSort   coreParsable = parseCoreSort
 Parsable.parseValue  coreParsable = parseCoreValue
 
-coreReflectable : Reflectable coreBaseTheory
-Reflectable.sorts           coreReflectable = coreSorts
-Reflectable.checkLiteral    coreReflectable = checkCoreLiteral
-Reflectable.checkIdentifier coreReflectable = checkCoreIdentifier
-
 coreTheory : Theory
 Theory.baseTheory  coreTheory = coreBaseTheory
 Theory.printable   coreTheory = corePrintable
 Theory.parsable    coreTheory = coreParsable
-Theory.reflectable coreTheory = coreReflectable
+
+coreReflectable : Reflectable coreTheory
+Reflectable.sorts           coreReflectable = coreSorts
+Reflectable.checkLiteral    coreReflectable = checkCoreLiteral
+Reflectable.checkIdentifier coreReflectable = checkCoreIdentifier

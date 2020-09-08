@@ -279,13 +279,12 @@ parsable : Parsable baseTheory
 Parsable.parseSort  parsable = parseSort
 Parsable.parseValue parsable = parseValue
 
-reflectable : Reflectable baseTheory
-Reflectable.sorts           reflectable = sorts
-Reflectable.checkLiteral    reflectable = checkLiteral
-Reflectable.checkIdentifier reflectable = checkIdentifier
-
 theory : Theory
 Theory.baseTheory  theory = baseTheory
 Theory.printable   theory = printable
 Theory.parsable    theory = parsable
-Theory.reflectable theory = reflectable
+
+reflectable : Reflectable theory
+Reflectable.sorts           reflectable = sorts
+Reflectable.checkLiteral    reflectable = checkLiteral
+Reflectable.checkIdentifier reflectable = checkIdentifier

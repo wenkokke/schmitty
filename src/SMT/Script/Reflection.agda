@@ -1,6 +1,6 @@
 open import SMT.Theory
 
-module SMT.Script.Reflection (theory : Theory) where
+module SMT.Script.Reflection (theory : Theory) (reflectable : Reflectable theory) where
 
 open import Category.Monad
 open import Data.Environment as Env using (Env; _∷_; [])
@@ -22,6 +22,7 @@ open import Relation.Nullary.Decidable using (True)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import SMT.Logics
 open Theory theory
+open Reflectable reflectable
 open import SMT.Script.Base baseTheory
 open import SMT.Script.Show theory
 open import SMT.Theories.Raw using (showRawScript)

@@ -2,7 +2,7 @@
 
 open import SMT.Theory
 
-module SMT.Backend.CVC4 (theory : Theory) where
+module SMT.Backend.CVC4 (theory : Theory) (reflectable : Reflectable theory) where
 
 open Theory theory
 
@@ -15,7 +15,7 @@ open import Data.Unit as Unit using (⊤)
 open import Function using (case_of_; const; _$_; _∘_)
 open import Reflection as Rfl using (return; _>>=_; _>>_)
 open import Reflection.External
-open import SMT.Script theory
+open import SMT.Script theory reflectable
 open import Text.Parser.String using (runParser)
 
 private

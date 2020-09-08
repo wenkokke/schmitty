@@ -2,9 +2,10 @@
 
 open import SMT.Theory
 
-module SMT.Backend.Z3 (theory : Theory) where
+module SMT.Backend.Z3 (theory : Theory) (reflectable : Reflectable theory) where
 
 open Theory theory
+open Reflectable reflectable
 
 open import Data.List as List using (List; _∷_; _∷ʳ_; [])
 open import Data.Maybe as Maybe using (Maybe; just; nothing)
@@ -16,7 +17,7 @@ open import Function using (case_of_; const; _$_; _∘_)
 open import Reflection as Rfl using (return; _>>=_; _>>_)
 open import Reflection.External
 open import Text.Parser.String using (runParser)
-open import SMT.Script theory
+open import SMT.Script theory reflectable
 open import SMT.Backend.Base
 
 private

@@ -11,11 +11,11 @@ open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import Text.Parser.String
 open import SMT.Logics
 open import SMT.Theories.Ints as Ints
-open import SMT.Script Ints.theory
+open import SMT.Script Ints.theory Ints.reflectable
 
 module Example₁ where
 
-  open import SMT.Backend.Z3 Ints.theory
+  open import SMT.Backend.Z3 Ints.theory Ints.reflectable
 
   -- |Taken from <http://smtlib.cs.uiowa.edu/examples.shtml>
   --
@@ -46,7 +46,7 @@ module Example₁ where
 
 module Example₂ where
 
-  open import SMT.Backend.Z3 Ints.theory
+  open import SMT.Backend.Z3 Ints.theory Ints.reflectable
 
   Γ : Ctxt
   Γ = INT ∷ INT ∷ []
@@ -101,7 +101,7 @@ module Example₂ where
 
 module Example₃ where
 
-  open import SMT.Backend.CVC4 Ints.theory
+  open import SMT.Backend.CVC4 Ints.theory Ints.reflectable
 
   script : Script [] (INT ∷ INT ∷ []) (MODEL (INT ∷ INT ∷ []) ∷ [])
   script = set-logic QF-LIA
@@ -118,7 +118,7 @@ module Example₃ where
 module Example₄ where
 
   open import Data.Integer using (_+_; _-_; _≤_)
-  open import SMT.Backend.Z3 Ints.theory
+  open import SMT.Backend.Z3 Ints.theory Ints.reflectable
 
   test : (x y : ℤ) → x + y ≡ y + x
   test = solveZ3

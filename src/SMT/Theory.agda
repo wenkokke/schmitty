@@ -60,25 +60,23 @@ record Parsable (baseTheory : BaseTheory) : Set₁ where
     parseSort  : ∀[ Parser Sort ]
     parseValue : (σ : Sort) → ∀[ Parser (Value σ) ]
 
-record Reflectable (baseTheory : BaseTheory) : Set where
-  open BaseTheory baseTheory
-  field
-    sorts           : List Sort
-    checkLiteral    : (σ : Sort) → Rfl.Term → Maybe (Literal σ)
-    checkIdentifier : (σ : Sort) → Rfl.Name → Maybe (Σ[ Σ ∈ Signature σ ] Identifier Σ)
-
 record Theory : Set₁ where
   field
     baseTheory  : BaseTheory
     printable   : Printable   baseTheory
     parsable    : Parsable    baseTheory
-    reflectable : Reflectable baseTheory
 
   open BaseTheory  baseTheory  public
   open Printable   printable   public
   open Parsable    parsable    public
-  open Reflectable reflectable public
 
+
+record Reflectable (theory : Theory) : Set where
+  open Theory theory
+  field
+    sorts           : List Sort
+    checkLiteral    : (σ : Sort) → Rfl.Term → Maybe (Literal σ)
+    checkIdentifier : (σ : Sort) → Rfl.Name → Maybe (Σ[ Σ ∈ Signature σ ] Identifier Σ)
 
 
 -----------------------

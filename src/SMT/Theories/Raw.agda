@@ -37,16 +37,10 @@ rawParsable : Parsable rawBaseTheory
 Parsable.parseSort  rawParsable = ⋆ <$ lexeme "⋆"
 Parsable.parseValue rawParsable = λ _ → fail
 
-rawReflectable : Reflectable rawBaseTheory
-Reflectable.sorts           rawReflectable = ⋆ ∷ []
-Reflectable.checkLiteral    rawReflectable = λ ⋆ x → just x
-Reflectable.checkIdentifier rawReflectable = λ ⋆ n → just (record { ArgTypes = [] } , n)
-
 rawTheory : Theory
 Theory.baseTheory  rawTheory = rawBaseTheory
 Theory.printable   rawTheory = rawPrintable
 Theory.parsable    rawTheory = rawParsable
-Theory.reflectable rawTheory = rawReflectable
 
 
 -- Export basic constructs from SMT.Script.Base, renamed to use 'Raw' whenever
