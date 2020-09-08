@@ -11,7 +11,7 @@ open import SMT.Theory
 open import SMT.Theory.Reflection
 
 postulate
-  because : (solver : String) (A : Set) → A
+  because : ∀ {a} (solver : String) (A : Set a) → A
 
 `because : (solver : String) (A : Rfl.Type) → Rfl.Term
 `because solver A = Rfl.def (quote because) (Rfl.vArg (Rfl.lit (Rfl.string solver)) ∷ Rfl.vArg A ∷ [])
