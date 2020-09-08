@@ -3,9 +3,7 @@
 open import SMT.Theory
 open import SMT.Theory.Reflection
 
-module SMT.Backend.CVC4 (theory : Theory) (reflectable : Reflectable theory) where
-
-open Theory theory
+module SMT.Backend.CVC4 {theory : Theory} (reflectable : Reflectable theory) where
 
 open import Data.List as List using (List; _∷_; [])
 open import Data.Maybe as Maybe using (Maybe; just; nothing)
@@ -16,9 +14,10 @@ open import Data.Unit as Unit using (⊤)
 open import Function using (case_of_; const; _$_; _∘_)
 open import Reflection as Rfl using (return; _>>=_; _>>_)
 open import Reflection.External
-open import SMT.Script theory reflectable
+open import SMT.Script reflectable public
 open import Text.Parser.String using (runParser)
 open import SMT.Backend.Base
+open Theory theory
 
 private
   variable
@@ -53,8 +52,9 @@ macro
   cvc4 : Script [] Γ (ξ ∷ Ξ) → Rfl.Term → Rfl.TC ⊤
   cvc4 scr hole = cvc4TC scr >>= Rfl.unify hole ∘ quoteOutputs
 
-open Solver theory reflectable
-
 macro
   solveCVC4 : Rfl.Term → Rfl.TC ⊤
   solveCVC4 = solve "cvc4" cvc4TC
+    where
+      open Solver reflectable using (solve)
+

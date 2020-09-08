@@ -3,7 +3,7 @@
 open import SMT.Theory
 open import SMT.Theory.Reflection
 
-module SMT.Backend.Z3 (theory : Theory) (reflectable : Reflectable theory) where
+module SMT.Backend.Z3 {theory : Theory} (reflectable : Reflectable theory) where
 
 open Theory theory
 open Reflectable reflectable
@@ -18,7 +18,7 @@ open import Function using (case_of_; const; _$_; _∘_)
 open import Reflection as Rfl using (return; _>>=_; _>>_)
 open import Reflection.External
 open import Text.Parser.String using (runParser)
-open import SMT.Script theory reflectable
+open import SMT.Script reflectable public
 open import SMT.Backend.Base
 
 private
@@ -26,6 +26,7 @@ private
     Γ Γ′ : Ctxt
     ξ : OutputType
     Ξ : OutputCtxt
+
 
 z3TC : Script [] Γ (ξ ∷ Ξ) → Rfl.TC (Outputs (ξ ∷ Ξ))
 z3TC {Γ} {ξ} {Ξ} scr = do
@@ -51,8 +52,9 @@ macro
   z3 : Script [] Γ (ξ ∷ Ξ) → Rfl.Term → Rfl.TC ⊤
   z3 scr hole = z3TC scr >>= Rfl.unify hole ∘ quoteOutputs
 
-open Solver theory reflectable
 
 macro
   solveZ3 : Rfl.Term → Rfl.TC ⊤
   solveZ3 = solve "z3" z3TC
+    where
+      open Solver reflectable using (solve)

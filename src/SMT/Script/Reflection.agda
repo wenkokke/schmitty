@@ -1,7 +1,7 @@
 open import SMT.Theory
 open import SMT.Theory.Reflection
 
-module SMT.Script.Reflection (theory : Theory) (reflectable : Reflectable theory) where
+module SMT.Script.Reflection {theory : Theory} (reflectable : Reflectable theory) where
 
 open import Category.Monad
 open import Data.Environment as Env using (Env; _∷_; [])

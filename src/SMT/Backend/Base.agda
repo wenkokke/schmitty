@@ -10,17 +10,19 @@ open import Reflection as Rfl using (return; _>>=_; _>>_)
 open import SMT.Theory
 open import SMT.Theory.Reflection
 
+
 postulate
   because : ∀ {a} (solver : String) (A : Set a) → A
 
 `because : (solver : String) (A : Rfl.Type) → Rfl.Term
 `because solver A = Rfl.def (quote because) (Rfl.vArg (Rfl.lit (Rfl.string solver)) ∷ Rfl.vArg A ∷ [])
 
-module Solver (theory : Theory) (reflectable : Reflectable theory) where
 
-  open import SMT.Script theory reflectable
+module Solver {theory : Theory} (reflectable : Reflectable theory) where
+
   open Theory theory
   open Reflectable reflectable
+  open import SMT.Script reflectable
 
   private
     variable

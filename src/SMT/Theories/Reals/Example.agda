@@ -8,18 +8,14 @@ open import Data.Product using (_,_)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import Text.Parser.String
 open import SMT.Theories.Reals as Reals
-open import SMT.Script Reals.theory Reals.reflectable
 
 
-module Example₁ where
+module Z3 where
 
-  open import SMT.Backend.Z3 Reals.theory Reals.reflectable
+  open import SMT.Backend.Z3 Reals.reflectable
 
-  Γ : Ctxt
-  Γ = REAL ∷ REAL ∷ []
-
-  script : Script [] Γ (MODEL Γ ∷ [])
-  script = declare-const "x" REAL
+  script₁ : Script [] (REAL ∷ REAL ∷ []) (MODEL (REAL ∷ REAL ∷ []) ∷ [])
+  script₁ = declare-const "x" REAL
          ∷ declare-const "y" REAL
          ∷ assert (app₂ eq (# 0) (app₂ div (# 1) (lit (nat 2))))
          ∷ assert (app₂ gt (# 0) (lit (nat 1)))
@@ -27,20 +23,17 @@ module Example₁ where
          ∷ get-model
          ∷ []
 
-  _ : z3 script ≡ ((sat , 1.5 ∷ 3.0 ∷ []) ∷ [])
+  _ : z3 script₁ ≡ ((sat , 1.5 ∷ 3.0 ∷ []) ∷ [])
   _ = refl
 
 
 
-module Example₂ where
+module CVC4 where
 
-  open import SMT.Backend.CVC4 Reals.theory Reals.reflectable
+  open import SMT.Backend.CVC4 Reals.reflectable
 
-  Γ : Ctxt
-  Γ = REAL ∷ REAL ∷ []
-
-  script : Script [] Γ (MODEL Γ ∷ [])
-  script = declare-const "x" REAL
+  script₁ : Script [] (REAL ∷ REAL ∷ []) (MODEL (REAL ∷ REAL ∷ []) ∷ [])
+  script₁ = declare-const "x" REAL
          ∷ declare-const "y" REAL
          ∷ assert (app₂ eq (# 0) (app₂ div (# 1) (lit (nat 2))))
          ∷ assert (app₂ gt (# 0) (lit (nat 1)))
@@ -48,5 +41,5 @@ module Example₂ where
          ∷ get-model
          ∷ []
 
-  _ : cvc4 script ≡ ((sat , 2.0 ∷ 4.0 ∷ []) ∷ [])
+  _ : cvc4 script₁ ≡ ((sat , 2.0 ∷ 4.0 ∷ []) ∷ [])
   _ = refl
