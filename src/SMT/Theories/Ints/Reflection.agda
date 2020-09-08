@@ -1,6 +1,7 @@
 module SMT.Theories.Ints.Reflection where
 
 
+open import Data.Environment as Env using (_∷_; [])
 open import Data.Integer as Int using (ℤ; +_; -[1+_]) renaming (show to showℤ)
 open import Data.Maybe as Maybe using (Maybe; nothing; just)
 open import Data.Nat.Base as Nat using (ℕ)
@@ -43,43 +44,69 @@ checkLiteral INT      _         = nothing
 -----------------
 
 private
-  pattern `eq  = quote PropEq._≡_
-  pattern `neq = quote PropEq._≢_
+  pattern `eq     = quote PropEq._≡_
+  pattern `neq    = quote PropEq._≢_
   -- NOTE: We're interpreting BOOL to be Set. Unfortunately, that means that `ite`
   --       cannot really be given a sensible interpretation. (Unless, perhaps, we
   --       involve Dec.)
   --
   -- pattern `ite = ?
-  pattern `neg = quote Int.-_
-  pattern `sub = quote Int._-_
-  pattern `add = quote Int._+_
-  pattern `mul = quote Int._*_
+  pattern `neg    = quote Int.-_
+  pattern `sub    = quote Int._-_
+  pattern `add    = quote Int._+_
+  pattern `mul    = quote Int._*_
   -- NOTE: Integer division and modulo are currently not defined in the standard
   --       library, so we don't map them here. Note that division by zero is
   --       allowed in SMT-LIB, so care should be taken.
   --
   -- pattern `div = ?
   -- pattern `mod = ?
-  pattern `abs = quote Int.∣_∣
-  pattern `leq = quote Int._≤_
-  pattern `lt  = quote Int._<_
-  pattern `geq = quote Int._≥_
-  pattern `gt  = quote Int._>_
+  pattern `abs    = quote Int.∣_∣
+  pattern `leq    = quote Int._≤_
+  pattern `lt     = quote Int._<_
+  pattern `geq    = quote Int._≥_
+  pattern `gt     = quote Int._>_
+
+  pattern `zero   = quote Nat.zero
+  pattern `suc    = quote Nat.suc
+
+  -- NOTE: These should eventually use NAT sort, once we implement NAT sort.
+  `zero! : Macro (Op₀ INT)
+  `zero! [] = lit (nat 0)
+
+  `suc! : Macro (Op₁ INT)
+  `suc! (lit (nat x) ∷ []) = lit (nat (Nat.suc x))
+  `suc! (x ∷ [])           = app₂ add (lit (nat 1)) x
+
+  pattern `+_     = quote Int.+_
+  pattern `-[1+_] = quote Int.-[1+_]
+
+  `+!_ : Macro (Op₁ INT)
+  `+! (x ∷ []) = x
+
+  `-[1+_]! : Macro (Op₁ INT)
+  `-[1+ lit (nat x) ∷ [] ]! = lit (int -[1+ x ])
+  `-[1+ lit (int x) ∷ [] ]! = lit (int (Int.- (Int.1ℤ Int.+ x)))
+  `-[1+ x ∷ [] ]!           = app₁ neg (app₂ add (lit (nat 1)) x)
 
 checkIdentifier : (σ : Sort) → Rfl.Name → Maybe (Σ[ Σ ∈ Signature σ ] Macro Σ)
-checkIdentifier BOOL     `eq  = just (Rel INT , app eq)
-checkIdentifier BOOL     `neq = just (Rel INT , app neq)
-checkIdentifier INT      `neg = just (Op₁ INT , app neg)
-checkIdentifier INT      `sub = just (Op₂ INT , app sub)
-checkIdentifier INT      `add = just (Op₂ INT , app add)
-checkIdentifier INT      `mul = just (Op₂ INT , app mul)
-checkIdentifier INT      `abs = just (Op₁ INT , app abs)
-checkIdentifier BOOL     `leq = just (Rel INT , app leq)
-checkIdentifier BOOL     `lt  = just (Rel INT , app lt)
-checkIdentifier BOOL     `geq = just (Rel INT , app geq)
-checkIdentifier BOOL     `gt  = just (Rel INT , app gt)
-checkIdentifier INT       _   = nothing
-checkIdentifier (CORE φ)  x   =
+checkIdentifier INT      `zero   = just (Op₀ INT , `zero!)
+checkIdentifier INT      `suc    = just (Op₁ INT , `suc!)
+checkIdentifier INT      `+_     = just (Op₁ INT , `+!_)
+checkIdentifier INT      `-[1+_] = just (Op₁ INT , `-[1+_]!)
+checkIdentifier BOOL     `eq     = just (Rel INT , app eq)
+checkIdentifier BOOL     `neq    = just (Rel INT , app neq)
+checkIdentifier INT      `neg    = just (Op₁ INT , app neg)
+checkIdentifier INT      `sub    = just (Op₂ INT , app sub)
+checkIdentifier INT      `add    = just (Op₂ INT , app add)
+checkIdentifier INT      `mul    = just (Op₂ INT , app mul)
+checkIdentifier INT      `abs    = just (Op₁ INT , app abs)
+checkIdentifier BOOL     `leq    = just (Rel INT , app leq)
+checkIdentifier BOOL     `lt     = just (Rel INT , app lt)
+checkIdentifier BOOL     `geq    = just (Rel INT , app geq)
+checkIdentifier BOOL     `gt     = just (Rel INT , app gt)
+checkIdentifier INT       _      = nothing
+checkIdentifier (CORE φ)  x      =
   Maybe.map (Prod.map liftCoreSignature (λ i → app (core i))) (checkCoreIdentifier′ φ x)
 
 
