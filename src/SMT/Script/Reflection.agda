@@ -109,11 +109,11 @@ module _ where
   checkRawScript Γ (set-logicᵣ l ∷ᵣ scr) = do
     (Γ′ , Ξ , scr) ← checkRawScript Γ scr
     return $ Γ′ , Ξ , (set-logic l ∷ scr)
-  checkRawScript Γ (declare-constᵣ ⋆ ∷ᵣ scr)
+  checkRawScript Γ (declare-constᵣ x ⋆ ∷ᵣ scr)
     = List.foldr Maybe._<∣>_ nothing
     $ flip List.map sorts $ λ σ → do
       (Γ′ , Ξ , scr) ← checkRawScript (σ ∷ Γ) scr
-      return $ Γ′ , Ξ , (declare-const σ ∷ scr)
+      return $ Γ′ , Ξ , (declare-const x σ ∷ scr)
   checkRawScript Γ (assertᵣ x ∷ᵣ scr) = do
     x ← (checkRawTerm (Vec.toList Γ) BOOL x)
     (Γ′ , Ξ , scr) ← (checkRawScript Γ scr)

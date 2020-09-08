@@ -85,12 +85,16 @@ private
   x ∈-FVSort Sort.lit n   = false
   x ∈-FVSort Sort.unknown = false
 
+private
+  pattern `pos    a = con (quote Int.+_) (vArg a ∷ [])
+  -- pattern `negsuc a = con (quote Int.-[1+_]) (vArg a ∷ [])
 
 mutual
   reflectToRawTerm : (Γ : RawCtxt) (fv : ℕ) → Term → TC (RawTerm Γ ⋆)
   reflectToRawTerm Γ fv (var x []) = varᵣ <$> (reflectToRawVar Γ =<< strengthenVar fv x)
   reflectToRawTerm Γ _  (var _ _)  = typeErrorFmt "Higher-order variable"
   reflectToRawTerm Γ _ t@(lit _)   = return (litᵣ t)
+  reflectToRawTerm Γ _ (`pos t@(lit _)) = return (litᵣ t) -- A bit hacky
   reflectToRawTerm Γ fv (def f ts) = appᵣ {Σ = argTypes ts} f <$> reflectToRawArgs Γ fv ts
   reflectToRawTerm Γ fv (con c ts) = appᵣ {Σ = argTypes ts} c <$> reflectToRawArgs Γ fv ts
   reflectToRawTerm Γ fv (pi (arg _ a) (abs _ b)) = do
@@ -131,11 +135,11 @@ reflectToRawScript : Term → TC (∃[ Γ ] RawScript [] Γ [])
 reflectToRawScript = reflectToRawScript′ [] 0
   where
     reflectToRawScript′ : (Γ : RawCtxt) (fv : ℕ) → Term → TC (∃[ Γ′ ] RawScript Γ Γ′ [])
-    reflectToRawScript′ Γ fv (pi (arg _ a) (abs _ b)) =
+    reflectToRawScript′ Γ fv (pi (arg _ a) (abs x b)) =
       case 0 ∈-FV b of λ where
         true → do
           Γ′ , s ← reflectToRawScript′ (⋆ ∷ Γ) fv b
-          return (Γ′ , declare-constᵣ ⋆ ∷ᵣ s)
+          return (Γ′ , declare-constᵣ x ⋆ ∷ᵣ s)
         false → do
           t ← reflectToRawTerm Γ fv a
           Γ′ , s ← reflectToRawScript′ Γ (suc fv) b

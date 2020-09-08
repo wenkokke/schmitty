@@ -13,6 +13,7 @@ open import Data.Product using (_×_; _,_; proj₁; proj₂)
 open import Data.String as String using (String; _++_)
 open import Data.Sum as Sum using (_⊎_; inj₁; inj₂; [_,_])
 open import Data.Unit as Unit using (⊤)
+open import Data.List.Relation.Unary.All
 open import Function using (case_of_; const; _$_; _∘_)
 open import Reflection as Rfl using (return; _>>=_; _>>_)
 open import Reflection.External
@@ -22,7 +23,7 @@ open import SMT.Backend.Base
 
 private
   variable
-    Γ : Ctxt
+    Γ Γ′ : Ctxt
     ξ : OutputType
     Ξ : OutputCtxt
 
@@ -51,9 +52,19 @@ macro
   z3 : Script [] Γ (ξ ∷ Ξ) → Rfl.Term → Rfl.TC ⊤
   z3 scr hole = z3TC scr >>= Rfl.unify hole ∘ quoteOutputs
 
-typeErrorCounterExample : Model Γ → Rfl.TC ⊤
-typeErrorCounterExample {Γ} m =
-  Rfl.typeErrorFmt "Found counter-example: %t" (quoteModel Γ m)
+private
+  counterExample : VarNames Γ → Model Γ → List Rfl.ErrorPart → List Rfl.ErrorPart
+  counterExample []       []      acc = acc
+  counterExample (x ∷ xs) (v ∷ m) acc =
+    counterExample xs m (Rfl.strErr "  " ∷ Rfl.strErr x ∷ Rfl.strErr " = " ∷ Rfl.termErr (quoteValue _ v) ∷ nl acc)
+    where
+      nl : List Rfl.ErrorPart → List Rfl.ErrorPart
+      nl []  = []
+      nl err = Rfl.strErr "\n" ∷ err
+
+typeErrorCounterExample : Script [] Γ Ξ → Model Γ → Rfl.TC ⊤
+typeErrorCounterExample {Γ} scr m =
+  Rfl.typeErrorFmt "Found counter-example:\n%e" (counterExample (scriptVarNames scr) m [])
 
 macro
   solveZ3 : Rfl.Term → Rfl.TC ⊤
@@ -63,6 +74,6 @@ macro
     let scr′ = scr ◆ get-model ∷ []
     qm ∷ [] ← z3TC scr′
     case qm of λ where
-      (sat     , m) → typeErrorCounterExample m
+      (sat     , m) → typeErrorCounterExample scr′ m
       (unsat   , _) → Rfl.unify hole (`because "z3" goal)
       (unknown , _) → Rfl.typeErrorFmt "Solver returned 'unknown'"

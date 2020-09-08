@@ -31,8 +31,8 @@ module Example₁ where
   -- @
   --
   script : Script [] (INT ∷ INT ∷ []) (SAT ∷ [])
-  script = declare-const INT
-         ∷ declare-const INT
+  script = declare-const "x" INT
+         ∷ declare-const "y" INT
          ∷ assert (app₂ eq
                   (app₂ sub (# 0) (# 1))
                   (app₂ add (app₂ add (# 0) (app₁ neg (# 1))) (lit (nat 1)))
@@ -52,8 +52,8 @@ module Example₂ where
   Γ = INT ∷ INT ∷ []
 
   script : Script [] Γ (MODEL Γ ∷ [])
-  script = declare-const INT
-         ∷ declare-const INT
+  script = declare-const "x" INT
+         ∷ declare-const "y" INT
          ∷ assert (app₂ eq (# 0) (# 1))
          ∷ get-model
          ∷ []
@@ -105,8 +105,8 @@ module Example₃ where
 
   script : Script [] (INT ∷ INT ∷ []) (MODEL (INT ∷ INT ∷ []) ∷ [])
   script = set-logic QF-LIA
-         ∷ declare-const INT
-         ∷ declare-const INT
+         ∷ declare-const "x" INT
+         ∷ declare-const "y" INT
          ∷ assert (app₂ lt (# 0) (app₂ add (# 1) (lit (nat 10))))
          ∷ get-model
          ∷ []
@@ -114,11 +114,10 @@ module Example₃ where
   _ : cvc4 script ≡ ((sat , + 0 ∷ + 0 ∷ []) ∷ [])
   _ = refl
 
-
 module Example₄ where
 
-  open import Data.Integer using (_+_; _-_; _≤_)
+  open import Data.Integer using (_+_; _*_; _-_; _≤_)
   open import SMT.Backend.Z3 Ints.theory Ints.reflectable
 
-  test : (x y : ℤ) → x + y ≡ y + x
-  test = solveZ3
+  _ : (x y : ℤ) → x + y ≡ y + x
+  _ = solveZ3

@@ -248,7 +248,7 @@ module _ where
   showCommandS : Command Γ δΓ δΞ → NameState Γ (δΓ ++ Γ) (String × OutputParsers δΞ)
   showCommandS (set-logic l) = do
     return $ mkSTerm ("set-logic" ∷ showLogic l ∷ []) , []
-  showCommandS (declare-const σ) = do
+  showCommandS (declare-const _ σ) = do
     n ← freshNameS σ
     return $ mkSTerm ("declare-const" ∷ showName n ∷ showSort σ ∷ []) , []
   showCommandS (assert x) = do
