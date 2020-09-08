@@ -80,13 +80,15 @@ The examples are a good place to start reading! You can find them in [`SMT.Theor
 - [ ] Add error reporting to [`Text.Parser.String`][Text.Parser.String].
 - [ ] Add names to `forAll` and `exists`.
 - [ ] Reflect Π- and Σ-types to `forAll` and `exists` in [`SMT.Theories.Raw.Reflection`][SMT.Theories.Raw.Reflection].
-- [ ] Convince @gallais to make [agdarsec][agdarsec] universe-polymorphic.
-- [ ] Parse BOOL values to `Set` instead of `Bool`.
-- [ ] Use @kazkansouh’s [SAT solver][satsolver] to provide *actual* evidence for the Core theory.
-
----
+- [ ] Convince [@gallais][gallais] to make [agdarsec][agdarsec] universe-polymorphic.
+- [ ] Parse `BOOL` values to `Set` instead of `Bool` (known issue).
+- [ ] Use [@kazkansouh][kazkansouh]’s [SAT solver][satsolver] to provide *actual* evidence for the Core theory.
+- [ ] Use [`Data.Rational`][Data.Rational] for Reals theory—using [`Data.Float`][Data.Float] is tremendously unsafe.
+- [ ] Use [`Data.Float`][Data.Float] for a [FloatingPoint][FloatingPoint] theory.
+- [ ] Implement `test` task with *negative* tests.
 
 [Data.Float]: https://agda.github.io/agda-stdlib/Data.Float.html
+[Data.Rational]: https://agda.github.io/agda-stdlib/Data.Rational.html
 [SMT.Theory]: https://wenkokke.github.io/schmitty/SMT.Theory.html
 [SMT.Theories.Core]: https://wenkokke.github.io/schmitty/SMT.Theories.Core.html
 [SMT.Theories.Core.Extensions]: https://wenkokke.github.io/schmitty/SMT.Theories.Core.Extensions.html
@@ -102,6 +104,7 @@ The examples are a good place to start reading! You can find them in [`SMT.Theor
 [SMT.Backend.CVC4]: https://wenkokke.github.io/schmitty/SMT.Backend.CVC4.html
 [Text.Parser.String]: https://wenkokke.github.io/schmitty/Text.Parser.String.html
 [Reflection.External]: https://wenkokke.github.io/schmitty/Reflection.External.html
+[gallais]: https://github.com/gallais
 [kazkansouh]: https://github.com/kazkansouh
 [satsolver]: https://github.com/wenkokke/schmitty/tree/master/extra/Kanso
 [agda]: https://github.com/agda/agda
@@ -110,3 +113,4 @@ The examples are a good place to start reading! You can find them in [`SMT.Theor
 [agda-stdlib-version]: https://github.com/agda/agda-stdlib/pull/1285/commits/af9d1da0f78f2b9cc84e531afc8615d16d9a1cf4
 [agdarsec]: https://github.com/gallais/agdarsec
 [agdarsec-version]: https://github.com/gallais/agdarsec/commit/d91a32e3256ceded84bc0bbf551ab8a710c6092e
+[FloatingPoint]: http://www.philipp.ruemmer.org/publications/smt-fpa.pdf
