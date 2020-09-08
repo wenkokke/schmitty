@@ -25,6 +25,11 @@ coreSorts : List CoreSort
 coreSorts = BOOL ∷ []
 
 
+checkCoreSort : Rfl.Term → Maybe CoreSort
+checkCoreSort (Rfl.agda-sort _) = just BOOL
+checkCoreSort _                 = nothing
+
+
 --------------
 -- Literals --
 --------------
@@ -73,5 +78,6 @@ checkCoreIdentifier φ n = Maybe.map (Prod.map₂ λ {Φ} f args → app f args)
 
 coreReflectable : Reflectable coreTheory
 Reflectable.sorts           coreReflectable = coreSorts
+Reflectable.checkSort       coreReflectable = checkCoreSort
 Reflectable.checkLiteral    coreReflectable = checkCoreLiteral
 Reflectable.checkIdentifier coreReflectable = checkCoreIdentifier

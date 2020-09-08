@@ -9,18 +9,32 @@ open import Data.Maybe as Maybe using (Maybe; just; nothing)
 open import Data.List as List using (List; []; _∷_)
 open import Data.Product as Prod using (_×_; _,_; proj₁; proj₂)
 open import Data.String as String using (String)
-open import Data.Unit as Unit public using () renaming (⊤ to RawSort; tt to ⋆)
 open import Function using (id)
+open import Function.Equivalence using (equivalence)
 import Reflection as Rfl
+open import Reflection.Term using () renaming (_≟_ to _≟-Term_)
 open import Relation.Nullary using (Dec; yes; no)
-open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+import Relation.Nullary.Decidable as Dec
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
 open import SMT.Theory
 open import Text.Parser.String
 
+data RawSort : Set where
+  ⋆    : RawSort
+  TERM : Rfl.Term → RawSort
+
+TERM-injective : ∀ {t t′} → TERM t ≡ TERM t′ → t ≡ t′
+TERM-injective refl = refl
+
+_≟-RawSort_ : (σ σ′ : RawSort) → Dec (σ ≡ σ′)
+⋆      ≟-RawSort ⋆       = yes refl
+⋆      ≟-RawSort TERM _  = no λ()
+TERM x ≟-RawSort ⋆       = no λ()
+TERM t ≟-RawSort TERM t′ = Dec.map (equivalence (cong TERM) TERM-injective) (t ≟-Term t′)
 
 rawBaseTheory : BaseTheory
 BaseTheory.Sort       rawBaseTheory = RawSort
-BaseTheory._≟-Sort_   rawBaseTheory = λ _ _ → yes refl
+BaseTheory._≟-Sort_   rawBaseTheory = _≟-RawSort_
 BaseTheory.BOOL       rawBaseTheory = ⋆
 BaseTheory.Value      rawBaseTheory = λ _ → ⊥
 BaseTheory.Literal    rawBaseTheory = λ _ → Rfl.Literal

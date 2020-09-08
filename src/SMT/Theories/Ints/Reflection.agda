@@ -26,6 +26,11 @@ sorts : List Sort
 sorts = INT ∷ List.map CORE coreSorts
 
 
+checkSort : Rfl.Term → Maybe Sort
+checkSort (Rfl.def (quote ℤ) []) = just INT
+checkSort t                      = Maybe.map CORE (checkCoreSort t)
+
+
 --------------
 -- Literals --
 --------------
@@ -116,5 +121,6 @@ checkIdentifier (CORE φ)  x      =
 
 reflectable : Reflectable theory
 Reflectable.sorts           reflectable = sorts
+Reflectable.checkSort       reflectable = checkSort
 Reflectable.checkLiteral    reflectable = checkLiteral
 Reflectable.checkIdentifier reflectable = checkIdentifier

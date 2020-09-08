@@ -66,10 +66,11 @@ module _ where
   checkRawVar (σ′ ∷ Γ) σ (suc n) = ⦇ extendVar (checkRawVar Γ σ n) ⦈
 
   mutual
-    checkRawTerm : (Γ : Ctxt) (σ : Sort) → RawTerm Γᵣ ⋆ → Maybe (Term Γ σ)
-    checkRawTerm Γ σ (varᵣ n) = do
+    checkRawTerm : (Γ : Ctxt) (σ : Sort) {σᵣ : RawSort} → RawTerm Γᵣ σᵣ → Maybe (Term Γ σ)
+    checkRawTerm Γ σ (appᵣ (quote rawVar) (varᵣ n ∷ [])) = do
       x ← checkRawVar Γ σ (Fin.toℕ (proj₁ n))
       return $ var x
+    checkRawTerm Γ σ (varᵣ n) = nothing -- should be no naked variables
     checkRawTerm Γ σ (litᵣ l) = do
       l ← checkLiteral σ l
       return $ lit l
@@ -77,10 +78,10 @@ module _ where
       (Σ , f) ← checkIdentifier σ f
       args ← checkRawArgs Γ (ArgSorts Σ) args
       return $ f args
-    checkRawTerm Γ σ (forAllᵣ ⋆ x) = do
+    checkRawTerm Γ σ (forAllᵣ σᵣ x) = do
       refl ← Maybe.decToMaybe (σ ≟-Sort BOOL)
       checkRawQ forAll Γ x
-    checkRawTerm Γ σ (existsᵣ ⋆ x) = do
+    checkRawTerm Γ σ (existsᵣ σᵣ x) = do
       refl ← Maybe.decToMaybe (σ ≟-Sort BOOL)
       checkRawQ exists Γ x
 
@@ -110,11 +111,11 @@ module _ where
   checkRawScript Γ (set-logicᵣ l ∷ᵣ scr) = do
     (Γ′ , Ξ , scr) ← checkRawScript Γ scr
     return $ Γ′ , Ξ , (set-logic l ∷ scr)
-  checkRawScript Γ (declare-constᵣ x ⋆ ∷ᵣ scr)
-    = List.foldr Maybe._<∣>_ nothing
-    $ flip List.map sorts $ λ σ → do
-      (Γ′ , Ξ , scr) ← checkRawScript (σ ∷ Γ) scr
-      return $ Γ′ , Ξ , (declare-const x σ ∷ scr)
+  checkRawScript Γ (declare-constᵣ _ ⋆ ∷ _) = nothing -- we never declare constants of type ⋆
+  checkRawScript Γ (declare-constᵣ x (TERM σᵣ) ∷ᵣ scr) = do
+    σ ← checkSort σᵣ
+    Γ′ , Ξ , scr ← checkRawScript (σ ∷ Γ) scr
+    return $ Γ′ , Ξ , (declare-const x σ ∷ scr)
   checkRawScript Γ (assertᵣ x ∷ᵣ scr) = do
     x ← (checkRawTerm (Vec.toList Γ) BOOL x)
     (Γ′ , Ξ , scr) ← (checkRawScript Γ scr)

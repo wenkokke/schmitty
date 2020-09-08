@@ -34,16 +34,16 @@ private
   -- the arguments. Design decision: only keep visible arguments.
   argTypes : List (Arg A) → Signature ⋆
   argTypes []              .ArgSorts = []
-  argTypes (vArg _ ∷ args) .ArgSorts = _ ∷ argTypes args .ArgSorts
+  argTypes (vArg _ ∷ args) .ArgSorts = ⋆ ∷ argTypes args .ArgSorts
   argTypes (_      ∷ args) .ArgSorts =     argTypes args .ArgSorts
 
 
-reflectToRawVar : (Γ : RawCtxt) (n : ℕ) → TC (RawVar Γ)
+reflectToRawVar : (Γ : RawCtxt) (n : ℕ) → TC (∃[ σ ] (Γ ∋ᵣ σ))
 reflectToRawVar []      n       = typeErrorFmt "Variable out of bounds"
-reflectToRawVar (x ∷ Γ) zero    = return (zero , refl)
+reflectToRawVar (x ∷ Γ) zero    = return (_ , zero , refl)
 reflectToRawVar (x ∷ Γ) (suc n) = do
-  i , refl ← reflectToRawVar Γ n
-  return (suc i , refl)
+  σ , i , refl ← reflectToRawVar Γ n
+  return (σ , suc i , refl)
 
 
 strengthenVar : (fv n : ℕ) → TC ℕ
@@ -89,9 +89,15 @@ private
   pattern `pos    a = con (quote Int.+_) (vArg a ∷ [])
   -- pattern `negsuc a = con (quote Int.-[1+_]) (vArg a ∷ [])
 
+-- Dummy name used as a function symbol of type TERM _ → ⋆ to wrap variables.
+rawVar : ⊤
+rawVar = _
+
 mutual
   reflectToRawTerm : (Γ : RawCtxt) (fv : ℕ) → Term → TC (RawTerm Γ ⋆)
-  reflectToRawTerm Γ fv (var x []) = varᵣ <$> (reflectToRawVar Γ =<< strengthenVar fv x)
+  reflectToRawTerm Γ fv (var x []) = do
+    σ , y ← reflectToRawVar Γ =<< strengthenVar fv x
+    return (appᵣ {Σ = record{ArgSorts = σ ∷ []}} (quote rawVar) (varᵣ y ∷ []))
   reflectToRawTerm Γ _  (var _ _)  = typeErrorFmt "Higher-order variable"
   reflectToRawTerm Γ _  (lit l)    = return (litᵣ l)
   reflectToRawTerm Γ fv (def f ts) = appᵣ {Σ = argTypes ts} f <$> reflectToRawArgs Γ fv ts
@@ -137,8 +143,8 @@ reflectToRawScript = reflectToRawScript′ [] 0
     reflectToRawScript′ Γ fv (pi (arg _ a) (abs x b)) =
       case 0 ∈-FV b of λ where
         true → do
-          Γ′ , s ← reflectToRawScript′ (⋆ ∷ Γ) fv b
-          return (Γ′ , declare-constᵣ x ⋆ ∷ᵣ s)
+          Γ′ , s ← reflectToRawScript′ (TERM a ∷ Γ) fv b
+          return (Γ′ , declare-constᵣ x (TERM a) ∷ᵣ s)
         false → do
           t ← reflectToRawTerm Γ fv a
           Γ′ , s ← reflectToRawScript′ Γ (suc fv) b

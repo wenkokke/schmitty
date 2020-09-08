@@ -15,5 +15,6 @@ open import SMT.Script.Base baseTheory
 record Reflectable : Set where
   field
     sorts           : List Sort
+    checkSort       : Rfl.Term → Maybe Sort
     checkLiteral    : (σ : Sort) → Rfl.Literal → Maybe (Literal σ)
     checkIdentifier : (σ : Sort) → Rfl.Name → Maybe (Σ[ Σ ∈ Signature σ ] Macro Σ)
