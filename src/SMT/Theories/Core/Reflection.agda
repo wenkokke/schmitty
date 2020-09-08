@@ -29,14 +29,8 @@ coreSorts = BOOL ∷ []
 -- Literals --
 --------------
 
-private
-  pattern `⊥ = Rfl.con (quote ⊥) []
-  pattern `⊤ = Rfl.con (quote ⊤) []
-
-checkCoreLiteral : (φ : CoreSort) → Rfl.Term → Maybe (CoreLiteral φ)
-checkCoreLiteral BOOL `⊥ = just (bool false)
-checkCoreLiteral BOOL `⊤ = just (bool true)
-checkCoreLiteral _     _ = nothing
+checkCoreLiteral : (φ : CoreSort) → Rfl.Literal → Maybe (CoreLiteral φ)
+checkCoreLiteral _ _ = nothing
 
 
 -----------------
@@ -49,6 +43,8 @@ checkCoreLiteral _     _ = nothing
 --       the module Function.Core.
 --
 private
+  pattern `false   = quote ⊥
+  pattern `true    = quote ⊤
   pattern `not     = quote ¬_
   pattern `implies = quote Morphism
   pattern `and     = quote _×_
@@ -60,6 +56,8 @@ private
 --       arbitrary Macros, since that would require us to *lower* arbitrary
 --       Terms to CoreTerms. With great power comes very little extensibility.
 checkCoreIdentifier′ : (φ : CoreSort) → Rfl.Name → Maybe (Σ[ Φ ∈ Signature φ ] CoreIdentifier Φ)
+checkCoreIdentifier′ BOOL `false   = just (Op₀ BOOL , false)
+checkCoreIdentifier′ BOOL `true    = just (Op₀ BOOL , true)
 checkCoreIdentifier′ BOOL `not     = just (Op₁ BOOL , not)
 checkCoreIdentifier′ BOOL `implies = just (Op₂ BOOL , implies)
 checkCoreIdentifier′ BOOL `and     = just (Op₂ BOOL , and)

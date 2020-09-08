@@ -134,8 +134,6 @@ data Literal : Sort → Set where
   nat  : ℕ → Literal INT
   int  : ℤ → Literal INT
 
-open Literals Sort CORE Literal core public
-
 showLiteral : Literal σ → String
 showLiteral (core x) = showCoreLiteral x
 showLiteral (nat  x) = showℕ x

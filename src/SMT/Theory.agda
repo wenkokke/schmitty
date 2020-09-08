@@ -26,6 +26,9 @@ module _ {Sort : Set} where
   _↦_ : (σs : List Sort) (σ : Sort) → Signature σ
   Σ ↦ _ = record { ArgSorts = Σ }
 
+  Op₀ : (σ : Sort) → Signature σ
+  Op₀ σ = [] ↦ σ
+
   Op₁ : (σ : Sort) → Signature σ
   Op₁ σ = σ ∷ [] ↦ σ
 

@@ -31,19 +31,6 @@ module Sorts
   liftCoreSignature Φ = record { ArgSorts = List.map CORE (ArgSorts Φ) }
 
 
-module Literals
-  (Sort : Set)
-  (CORE : CoreSort → Sort)
-  (Literal : Sort → Set)
-  (coreLiteral : ∀ {φ} → CoreLiteral φ → Literal (CORE φ))
-  where
-
-  open Sorts Sort CORE
-
-  bool : Bool → Literal BOOL
-  bool b = coreLiteral (Core.bool b)
-
-
 module Identifiers
   (Sort : Set)
   (CORE : CoreSort → Sort)
@@ -52,6 +39,12 @@ module Identifiers
   where
 
   open Sorts Sort CORE
+
+  true : Identifier (Op₀ BOOL)
+  true = coreIdentifier Core.true
+
+  false : Identifier (Op₀ BOOL)
+  false = coreIdentifier Core.false
 
   not : Identifier (Op₁ BOOL)
   not = coreIdentifier Core.not

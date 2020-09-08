@@ -30,15 +30,11 @@ sorts = INT ∷ List.map CORE coreSorts
 --------------
 
 private
-  pattern `nat    n = Rfl.lit (Rfl.nat n)
-  pattern `+_     n = Rfl.con (quote +_) (Rfl.vArg (`nat n) ∷ [])
-  pattern `-[1+_] n = Rfl.con (quote -[1+_]) (Rfl.vArg (`nat n) ∷ [])
+  pattern `nat    n = Rfl.nat n
 
-checkLiteral : (σ : Sort) → Rfl.Term → Maybe (Literal σ)
+checkLiteral : (σ : Sort) → Rfl.Literal → Maybe (Literal σ)
 checkLiteral (CORE φ) x         = Maybe.map core (checkCoreLiteral φ x)
 checkLiteral INT      (`nat n)  = just (nat n)
-checkLiteral INT      (`+ n)    = just (int (+ n))
-checkLiteral INT      `-[1+ n ] = just (int -[1+ n ])
 checkLiteral INT      _         = nothing
 
 

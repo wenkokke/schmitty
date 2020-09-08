@@ -70,11 +70,9 @@ quoteCoreValue BOOL = quoteBool
 --------------
 
 data CoreLiteral : CoreSort → Set where
-  bool : Bool → CoreLiteral BOOL
 
 showCoreLiteral : CoreLiteral φ → String
-showCoreLiteral (bool false) = "false"
-showCoreLiteral (bool true)  = "true"
+showCoreLiteral ()
 
 
 -----------------
@@ -82,6 +80,8 @@ showCoreLiteral (bool true)  = "true"
 -----------------
 
 data CoreIdentifier : (Φ : Signature φ) → Set where
+  false   : CoreIdentifier (Op₀ BOOL)
+  true    : CoreIdentifier (Op₀ BOOL)
   not     : CoreIdentifier (Op₁ BOOL)
   implies : CoreIdentifier (Op₂ BOOL)
   and     : CoreIdentifier (Op₂ BOOL)
@@ -89,6 +89,8 @@ data CoreIdentifier : (Φ : Signature φ) → Set where
   xor     : CoreIdentifier (Op₂ BOOL)
 
 showCoreIdentifier : CoreIdentifier Φ → String
+showCoreIdentifier false   = "false"
+showCoreIdentifier true    = "true"
 showCoreIdentifier not     = "not"
 showCoreIdentifier implies = "=>"
 showCoreIdentifier and     = "and"

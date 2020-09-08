@@ -23,14 +23,14 @@ BaseTheory.Sort       rawBaseTheory = RawSort
 BaseTheory._≟-Sort_   rawBaseTheory = λ _ _ → yes refl
 BaseTheory.BOOL       rawBaseTheory = ⋆
 BaseTheory.Value      rawBaseTheory = λ _ → ⊥
-BaseTheory.Literal    rawBaseTheory = λ _ → Rfl.Term
+BaseTheory.Literal    rawBaseTheory = λ _ → Rfl.Literal
 BaseTheory.Identifier rawBaseTheory = λ _ → Rfl.Name
 BaseTheory.quoteSort  rawBaseTheory = λ _ → Rfl.con (quote ⋆) []
 BaseTheory.quoteValue rawBaseTheory = λ _ → ⊥-elim
 
 rawPrintable : Printable rawBaseTheory
 Printable.showSort       rawPrintable = λ _ → "⋆"
-Printable.showLiteral    rawPrintable = Rfl.showTerm
+Printable.showLiteral    rawPrintable = Rfl.showLiteral
 Printable.showIdentifier rawPrintable = Rfl.showName
 
 rawParsable : Parsable rawBaseTheory

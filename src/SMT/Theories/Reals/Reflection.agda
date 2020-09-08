@@ -36,9 +36,9 @@ sorts = REAL ∷ List.map CORE coreSorts
 --------------
 
 private
-  pattern `float  f = Rfl.lit (Rfl.float f)
+  pattern `float  f = Rfl.float f
 
-checkLiteral : (σ : Sort) → Rfl.Term → Maybe (Literal σ)
+checkLiteral : (σ : Sort) → Rfl.Literal → Maybe (Literal σ)
 checkLiteral (CORE φ) x          = Maybe.map core (checkCoreLiteral φ x)
 checkLiteral REAL     (`float f) = just (float f)
 checkLiteral REAL     _          = nothing

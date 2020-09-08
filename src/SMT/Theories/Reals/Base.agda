@@ -143,8 +143,6 @@ data Literal : Sort → Set where
   nat   : ℕ → Literal REAL
   float : Float → Literal REAL
 
-open Literals Sort CORE Literal core public
-
 showFloat : Float → String
 showFloat x =
   if x Float.<ᵇ 0.0
