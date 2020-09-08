@@ -17,6 +17,7 @@ open import Reflection as Rfl using (return; _>>=_; _>>_)
 open import Reflection.External
 open import SMT.Script theory reflectable
 open import Text.Parser.String using (runParser)
+open import SMT.Backend.Base
 
 private
   variable
@@ -24,7 +25,7 @@ private
     ξ : OutputType
     Ξ : OutputCtxt
 
-cvc4TC : Script [] Γ (ξ ∷ Ξ) → Rfl.TC Rfl.Term
+cvc4TC : Script [] Γ (ξ ∷ Ξ) → Rfl.TC (Outputs (ξ ∷ Ξ))
 cvc4TC {Γ} {ξ} {Ξ} scr = do
 
   -- Print the SMT-LIB script and build the output parser.
@@ -41,12 +42,18 @@ cvc4TC {Γ} {ξ} {Ξ} scr = do
                 ; input = scr
                 }
 
-  -- Run the Z3 command and parse the output.
-  stdout ← runCmdTC cvc4Cmd
+  -- Run the CVC4 command and parse the output.
+  result exitCode stdout stderr ← unsafeRunCmdTC cvc4Cmd
   case runParser parseOutputs stdout of λ where
     (inj₁ parserr) → parseError stdout parserr
-    (inj₂ outputs) → return $ quoteOutputs outputs
+    (inj₂ outputs) → return outputs
 
 macro
   cvc4 : Script [] Γ (ξ ∷ Ξ) → Rfl.Term → Rfl.TC ⊤
-  cvc4 scr hole = cvc4TC scr >>= Rfl.unify hole
+  cvc4 scr hole = cvc4TC scr >>= Rfl.unify hole ∘ quoteOutputs
+
+open Solver theory reflectable
+
+macro
+  solveCVC4 : Rfl.Term → Rfl.TC ⊤
+  solveCVC4 = solve "cvc4" cvc4TC
