@@ -25,7 +25,7 @@ open Theory theory
 open Reflectable reflectable
 open import SMT.Script.Base baseTheory
 open import SMT.Script.Show theory
-open import SMT.Theories.Raw using (showRawScript)
+open import SMT.Theories.Raw as Raw using (showRawScript)
 
 private
   variable

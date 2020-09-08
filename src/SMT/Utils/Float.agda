@@ -72,8 +72,8 @@ module _ where
       parseFloat′ Exponent        cs  = do z ← parseInt cs; return $ [] , [] , z
 
   -- TODO: does not deal with negative numbers
-  simpleShow : Float → String
-  simpleShow x = case parseFloat (String.toList (Float.show x)) of λ where
+  showPosFloat : Float → String
+  showPosFloat x = case parseFloat (String.toList (Float.show x)) of λ where
                 nothing                   → "impossible"
                 (just (n , f ,    + e  )) → moveDotRight e n f
                 (just (n , f , -[1+ e ])) → moveDotLeft (suc e) n f
