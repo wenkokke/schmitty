@@ -8,6 +8,7 @@ open import Data.Unit using (⊤)
 open import Function using (case_of_; const; _$_; _∘_)
 open import Reflection as Rfl using (return; _>>=_; _>>_)
 open import SMT.Theory
+open import SMT.Theory.Reflection
 
 postulate
   because : (solver : String) (A : Set) → A

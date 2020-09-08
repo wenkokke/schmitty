@@ -137,11 +137,14 @@ module _ where
 
   pModelError : ∀[ Parser ⊤ ]
   pModelError = _ <$ withSpaces (parens (
-    box (lexeme "error" &> box (between (lexeme "\"") (box (lexeme "\"")) (
-      box (lexeme "line" &> box (decimalℕ <& box (lexeme "column" &>
-        box (decimalℕ <& box (lexeme ":" &> box (lexeme "model is not available")))))))))))
+    box (lexeme "error" &> box (between (char '"') (box (char '"')) (box (list⁺ (anyCharBut '"')))))))
 
+  -- Z3 error message:
   _ : pModelError accepts "(error \"line 5 column 10: model is not available\")"
+  _ = _
+
+  -- CVC4 error message:
+  _ : pModelError accepts "(error \"Cannot get the current model unless immediately preceded by SAT/INVALID or UNKNOWN response.\")"
   _ = _
 
   -- |Construct a model parser from a variable parser.
