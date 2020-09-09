@@ -52,8 +52,8 @@ Okay, I know that wasn’t a particularly hard problem, but I was in a rush. S
 
 Wait, we can get models? Cool! We could use that to get counter-examples, if you try to prove something that *isn't* true! We, uh… We do:
 ```agda
-_ : ∀ (x y : ℤ) → x - y ≤ x + y → x ≡ y
-_ = solveZ3
+woops : ∀ (x y : ℤ) → x - y ≤ x + y → x ≡ y
+woops = solveZ3
 
 -- > Found counter-example:
 --     x = + 1
@@ -63,9 +63,9 @@ _ = solveZ3
 --   (x y : ℤ) → x - y ≤ x + y → x ≡ y
 ```
 
-If you’d like to work with Schmitty, a good place to start are the examples. Right now, Schmitty supports three theories—[Core][SMT.Theories.Core], [Ints][SMT.Theories.Ints], and [Reals][SMT.Theories.Reals]—and two backends—[Z3][SMT.Backend.Z3], and [CVC4][SMT.Backend.CVC4]. If you’re missing your favourite theory or solver, your contribution is more than welcome!
+Right now, Schmitty supports three theories—[Core][SMT.Theories.Core], [Ints][SMT.Theories.Ints], and [Reals][SMT.Theories.Reals]—and two backends—[Z3][SMT.Backend.Z3], and [CVC4][SMT.Backend.CVC4]. If you’re missing your favourite theory or solver, your contribution is more than welcome!
 
-The examples are a good place to start reading! You can find them in [`SMT.Theories.Core.Example`][SMT.Theories.Core.Example], [`SMT.Theories.Ints.Example`][SMT.Theories.Ints.Example], [`SMT.Theories.Reals.Example`][SMT.Theories.Reals.Example]!
+If you’d like to work with Schmitty, a good place to start are the examples. You can find them in [`SMT.Theories.Core.Example`][SMT.Theories.Core.Example], [`SMT.Theories.Ints.Example`][SMT.Theories.Ints.Example], [`SMT.Theories.Reals.Example`][SMT.Theories.Reals.Example]!
 
 # Installation
 
