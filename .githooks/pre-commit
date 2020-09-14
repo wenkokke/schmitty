@@ -1,7 +1,3 @@
 #!/bin/sh
 
-# Check if all source compiles
-make test
-
-# Update listings
 make listings && git add index.agda docs
