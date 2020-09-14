@@ -1,12 +1,12 @@
 module SMT.Theories.Ints.Reflection where
 
 
-open import Data.Environment as Env using (_∷_; [])
 open import Data.Integer as Int using (ℤ; +_; -[1+_]) renaming (show to showℤ)
 open import Data.Maybe as Maybe using (Maybe; nothing; just)
 open import Data.Nat.Base as Nat using (ℕ)
 open import Data.Nat.Show renaming (show to showℕ)
 open import Data.List as List using (List; _∷_; [])
+open import Data.List.Relation.Unary.All as All using (All; _∷_; [])
 open import Data.Product as Prod using (Σ-syntax; _,_)
 import Reflection as Rfl
 open import Relation.Binary.PropositionalEquality as PropEq using (_≡_; refl)

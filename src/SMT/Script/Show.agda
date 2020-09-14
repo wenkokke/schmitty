@@ -8,6 +8,7 @@ open import Data.Char as Char using (Char)
 open import Data.Environment as Env using (Env; _∷_; [])
 open import Data.Fin as Fin using (Fin; suc; zero)
 open import Data.List as List using (List; _∷_; []; _++_; length)
+open import Data.List.Relation.Unary.All as All using (All; _∷_; [])
 open import Data.List.NonEmpty as List⁺ using (List⁺; _∷_)
 open import Data.Maybe as Maybe using (Maybe; just; nothing)
 import Data.Maybe.Categorical as MaybeCat
@@ -65,6 +66,9 @@ module _ where
   OutputParser ξ = ∀[ Parser (Output ξ) ]
 
   -- |Mapping from output contexts to parser types.
+  --
+  -- TODO: Replace use of Env with All.
+  --
   OutputParsers : OutputCtxt → Set
   OutputParsers Ξ = Env (λ ξ _Ξ → OutputParser ξ) Ξ
 

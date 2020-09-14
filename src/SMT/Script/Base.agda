@@ -59,7 +59,7 @@ mutual
     exists : ∀ (σ : Sort) (x : Term (σ ∷ Γ) BOOL) → Term Γ BOOL
 
   Args : (Γ Δ : Ctxt) → Set
-  Args Γ = Env (λ σ _Δ → Term Γ σ)
+  Args Γ Δ = All (λ σ → Term Γ σ) Δ
 
 Macro : (Σ : Signature σ) → Set
 Macro {σ} Σ = ∀ {Γ} → Args Γ (ArgSorts Σ) → Term Γ σ
@@ -224,38 +224,46 @@ quoteSat unsat   = Rfl.con (quote unsat) []
 quoteSat unknown = Rfl.con (quote unknown) []
 
 -- |Quote a model.
-quoteModel : (Γ : Ctxt) → Model Γ → Rfl.Term
-quoteModel [] [] =
+quoteModel : {Γ : Ctxt} → Model Γ → Rfl.Term
+quoteModel [] =
   Rfl.con (quote Model.[]) []
-quoteModel (σ ∷ Γ) (v ∷ vs) =
+quoteModel {σ ∷ Γ} (v ∷ vs) =
   Rfl.con (quote Model._∷_)
     $ Rfl.hArg Rfl.unknown
     ∷ Rfl.hArg (quoteSort σ)
     ∷ Rfl.vArg (quoteValue σ v)
-    ∷ Rfl.vArg (quoteModel Γ vs) ∷ []
+    ∷ Rfl.vArg (quoteModel {Γ} vs) ∷ []
 
 -- |Quote a qualified model.
-quoteQualifiedModel : (Γ : Ctxt) → QualifiedModel Γ → Rfl.Term
-quoteQualifiedModel Γ (s@sat , m) =
+quoteQualifiedModel : {Γ : Ctxt} → QualifiedModel Γ → Rfl.Term
+quoteQualifiedModel {Γ} (s@sat , m) =
   Rfl.con (quote Prod._,_)
     $ Rfl.vArg (quoteSat s)
-    ∷ Rfl.vArg (quoteModel Γ m)
+    ∷ Rfl.vArg (quoteModel {Γ} m)
     ∷ []
-quoteQualifiedModel Γ (s@unsat , m) =
-  Rfl.con (quote Prod._,_)
-    $ Rfl.vArg (quoteSat s)
-    ∷ Rfl.vArg (Rfl.con (quote Unit.tt) [])
-    ∷ []
-quoteQualifiedModel Γ (s@unknown , m) =
+quoteQualifiedModel {Γ} (s@unsat , m) =
   Rfl.con (quote Prod._,_)
     $ Rfl.vArg (quoteSat s)
     ∷ Rfl.vArg (Rfl.con (quote Unit.tt) [])
     ∷ []
+quoteQualifiedModel {Γ} (s@unknown , m) =
+  Rfl.con (quote Prod._,_)
+    $ Rfl.vArg (quoteSat s)
+    ∷ Rfl.vArg (Rfl.con (quote Unit.tt) [])
+    ∷ []
+
+ValueInterps : Ctxt → Set
+ValueInterps = All (λ _ → Rfl.Term)
+
+-- |Quote a model as a list of values, applying interpValue.
+quoteInterpValues : {Γ : Ctxt} → Model Γ → ValueInterps Γ
+quoteInterpValues {[]}    []       = []
+quoteInterpValues {σ ∷ Γ} (v ∷ vs) = interpValue (quoteValue σ v) ∷ quoteInterpValues {Γ} vs
 
 -- |Quote a result.
 quoteOutput : Output ξ → Rfl.Term
 quoteOutput {SAT}     = quoteSat
-quoteOutput {MODEL Γ} = quoteQualifiedModel Γ
+quoteOutput {MODEL Γ} = quoteQualifiedModel {Γ}
 
 -- |Quote a list of results.
 quoteOutputs : Outputs Ξ → Rfl.Term

@@ -7,6 +7,7 @@ open import Category.Monad
 open import Data.Environment as Env using (Env; _∷_; [])
 open import Data.Fin as Fin using (Fin; suc; zero)
 open import Data.List as List using (List; _∷_; []; _++_; length)
+open import Data.List.Relation.Unary.All using (All; _∷_; [])
 open import Data.Maybe as Maybe using (Maybe; just; nothing)
 import Data.Maybe.Categorical as MaybeCat
 open import Data.Nat as Nat using (ℕ; suc; zero)

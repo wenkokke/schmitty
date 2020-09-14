@@ -29,37 +29,40 @@ module Solver {theory : Theory} (reflectable : Reflectable theory) where
       Γ : Ctxt
       Ξ : OutputCtxt
 
-    piApply′ : Rfl.Term → List Rfl.Term → Rfl.Term
-    piApply′ t [] = t
-    piApply′ (Rfl.pi (Rfl.arg _ a) (Rfl.abs x b)) (v ∷ args) =
-      Rfl.def (quote Function._$′_)
-              ( Rfl.hArg Rfl.unknown
-              ∷ Rfl.hArg a
-              ∷ Rfl.hArg Rfl.unknown
-              ∷ Rfl.hArg Rfl.unknown
-              ∷ Rfl.vArg (Rfl.lam Rfl.visible (Rfl.abs x (piApply′ b args)))
-              ∷ Rfl.vArg v
-              ∷ [])
-    piApply′ t _ = t -- impossible?
+    -- Instantiate the arguments to a Π-type with the values in a Model.
+    --
+    -- NOTE: We assume all declare-consts are up front, which is what we return
+    --       from reflectToRawScript. Possibly, the output of quoteInterpValues
+    --       needs to be reversed.
+    --
+    piApply : Rfl.Term → ValueInterps Γ → Rfl.Term
+    piApply goal vs = piApply′ goal vs
+      where
+        piApply′ : Rfl.Term → ValueInterps Γ → Rfl.Term
+        piApply′ t [] = t
+        piApply′ (Rfl.pi (Rfl.arg _ a) (Rfl.abs x b)) (v ∷ args) =
+          Rfl.def (quote Function._$′_)
+                  $ Rfl.hArg Rfl.unknown
+                  ∷ Rfl.hArg a
+                  ∷ Rfl.hArg Rfl.unknown
+                  ∷ Rfl.hArg Rfl.unknown
+                  ∷ Rfl.vArg (Rfl.lam Rfl.visible (Rfl.abs x (piApply′ b args)))
+                  ∷ Rfl.vArg v
+                  ∷ []
+        piApply′ t _ = t -- impossible?
 
-    modelToQuotedList : Model Γ → List Rfl.Term → List Rfl.Term
-    modelToQuotedList [] acc = acc
-    modelToQuotedList (v ∷ m) acc = modelToQuotedList m (quoteValue _ v ∷ acc)
-
-    -- Assume all declare-consts are up front (this is what we parse in reflectToRawScript).
-    piApply : Rfl.Term → Model Γ → Rfl.Term
-    piApply goal m = piApply′ goal (modelToQuotedList m [])
-
-  private
-    counterExample : VarNames Γ → Model Γ → List Rfl.ErrorPart → List Rfl.ErrorPart
-    counterExample []       []      acc = acc
-    counterExample (x ∷ xs) (v ∷ m) acc =
-      counterExample xs m (Rfl.strErr "  " ∷ Rfl.strErr x ∷ Rfl.strErr " = " ∷ Rfl.termErr (quoteValue _ v) ∷ Rfl.strErr "\n" ∷ acc)
+    counterExampleFmt : VarNames Γ → ValueInterps Γ → List Rfl.ErrorPart → List Rfl.ErrorPart
+    counterExampleFmt []       []      acc = acc
+    counterExampleFmt (x ∷ xs) (v ∷ m) acc =
+      counterExampleFmt xs m $
+        Rfl.strErr "  " ∷ Rfl.strErr x ∷ Rfl.strErr " = " ∷ Rfl.termErr v ∷ Rfl.strErr "\n" ∷ acc
 
   typeErrorCounterExample : Rfl.Term → Script [] Γ Ξ → Model Γ → Rfl.TC ⊤
-  typeErrorCounterExample {Γ} goal scr m = do
-    inst-goal ← Rfl.normalise (piApply goal m)
-    Rfl.typeErrorFmt "Found counter-example:\n%erefuting %t" (counterExample (scriptVarNames scr) m []) inst-goal
+  typeErrorCounterExample {Γ} goal scr vs = do
+    let `vs = quoteInterpValues vs
+    instGoal ← Rfl.normalise (piApply goal `vs)
+    Rfl.typeErrorFmt "Found counter-example:\n%erefuting %t"
+      (counterExampleFmt (scriptVarNames scr) `vs []) instGoal
 
   solve : String → (∀ {Γ ξ Ξ} → Script [] Γ (ξ ∷ Ξ) → Rfl.TC (Outputs (ξ ∷ Ξ))) → Rfl.Term → Rfl.TC ⊤
   solve name solver hole = do

@@ -100,10 +100,10 @@ parseValue (CORE φ) = parseCoreValue φ
 parseValue REAL     = parseRat
 
 _ : parseValue BOOL parses "true"
-_ = ! true
+_ = ! UNIT
 
 _ : parseValue BOOL parses "false"
-_ = ! false
+_ = ! EMPTY
 
 _ : parseValue BOOL rejects "kitty"
 _ = _
@@ -215,6 +215,7 @@ BaseTheory.Literal      baseTheory = Literal
 BaseTheory.Identifier   baseTheory = Identifier
 BaseTheory.quoteSort    baseTheory = quoteSort
 BaseTheory.quoteValue   baseTheory = quoteValue
+BaseTheory.interpValue  baseTheory = interpCoreValue
 
 printable : Printable baseTheory
 Printable.showSort       printable = showSort

@@ -2,10 +2,10 @@ module SMT.Theories.Raw.Reflection where
 
 open import Category.Monad
 open import Data.Bool as Bool using (Bool; true; false; _∨_)
-open import Data.Environment
 open import Data.Fin as Fin using (Fin; suc; zero)
 open import Data.Integer as Int using (ℤ; +_; -[1+_])
 open import Data.List as List using (List; _∷_; []; length)
+open import Data.List.Relation.Unary.All using (All; _∷_; [])
 open import Data.List.NonEmpty as List⁺ using (List⁺; _∷_)
 open import Data.Nat as Nat using (ℕ; zero; suc; _∸_)
 open import Data.Product as Prod using (∃-syntax; _×_; _,_; proj₁; proj₂)

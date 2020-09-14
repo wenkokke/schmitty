@@ -50,5 +50,5 @@ script₃ = declare-const "b" BOOL
        ∷ get-model
        ∷ []
 
-_ : z3 script₃ ≡ (sat , true ∷ []) ∷ []
+_ : z3 script₃ ≡ (sat , UNIT ∷ []) ∷ []
 _ = refl

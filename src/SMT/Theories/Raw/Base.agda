@@ -33,14 +33,15 @@ TERM x ≟-RawSort ⋆       = no λ()
 TERM t ≟-RawSort TERM t′ = Dec.map (equivalence (cong TERM) TERM-injective) (t ≟-Term t′)
 
 rawBaseTheory : BaseTheory
-BaseTheory.Sort       rawBaseTheory = RawSort
-BaseTheory._≟-Sort_   rawBaseTheory = _≟-RawSort_
-BaseTheory.BOOL       rawBaseTheory = ⋆
-BaseTheory.Value      rawBaseTheory = λ _ → ⊥
-BaseTheory.Literal    rawBaseTheory = λ _ → Rfl.Literal
-BaseTheory.Identifier rawBaseTheory = λ _ → Rfl.Name
-BaseTheory.quoteSort  rawBaseTheory = λ _ → Rfl.con (quote ⋆) []
-BaseTheory.quoteValue rawBaseTheory = λ _ → ⊥-elim
+BaseTheory.Sort        rawBaseTheory = RawSort
+BaseTheory._≟-Sort_    rawBaseTheory = _≟-RawSort_
+BaseTheory.BOOL        rawBaseTheory = ⋆
+BaseTheory.Value       rawBaseTheory = λ _ → ⊥
+BaseTheory.Literal     rawBaseTheory = λ _ → Rfl.Literal
+BaseTheory.Identifier  rawBaseTheory = λ _ → Rfl.Name
+BaseTheory.quoteSort   rawBaseTheory = λ _ → Rfl.con (quote ⋆) []
+BaseTheory.quoteValue  rawBaseTheory = λ _ → ⊥-elim
+BaseTheory.interpValue rawBaseTheory = λ t → t
 
 rawPrintable : Printable rawBaseTheory
 Printable.showSort       rawPrintable = λ _ → "⋆"

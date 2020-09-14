@@ -41,14 +41,27 @@ module _ {Sort : Set} where
 
 record BaseTheory : Set₁ where
   field
-    Sort         : Set
-    _≟-Sort_     : (σ σ′ : Sort) → Dec (σ ≡ σ′)
-    BOOL         : Sort
-    Value        : Sort → Set
-    Literal      : Sort → Set
-    Identifier   : {σ : Sort} → Signature σ → Set
-    quoteSort    : Sort → Rfl.Term
-    quoteValue   : (σ : Sort) → Value σ → Rfl.Term
+    Sort          : Set
+    _≟-Sort_      : (σ σ′ : Sort) → Dec (σ ≡ σ′)
+    BOOL          : Sort
+    Literal       : Sort → Set
+    Identifier    : {σ : Sort} → Signature σ → Set
+    quoteSort     : Sort → Rfl.Term
+
+    -- The Value family encodes which Agda map interprets the values returned as
+    -- part of a model:
+    --
+    --   * If the Agda equivalent is in Set₀, Value should return the type
+    --     directly, and interpValue should be the identity function.
+    --
+    --   * If the Agda equivalent is *not* in Set₀, Value should return a
+    --     universe encoding of the possible return values, and interpValue
+    --     should map the elements of that universe encoding to their intended
+    --     interpretation.
+    --
+    Value       : Sort → Set
+    quoteValue  : (σ : Sort) → Value σ → Rfl.Term
+    interpValue : Rfl.Term → Rfl.Term
 
 record Printable (baseTheory : BaseTheory) : Set where
   open BaseTheory baseTheory
