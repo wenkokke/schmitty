@@ -78,7 +78,6 @@ If you’d like to work with Schmitty, a good place to start are the examples. 
 - [ ] Upstream: merge [`Reflection.External`][Reflection.External] into [agda-stdlib][agda-stdlib];
 - [ ] Upstream: merge [`Text.Parser.String`][Text.Parser.String] into [agdarsec][agdarsec];
 - [ ] Issue: add names to `forAll` and `exists`, similar to `declare-const` (easy);
-- [ ] Issue: parse `BOOL` values to `Set` instead of `Bool` using [agdarsec][agdarsec]’s new Large parsers (easy);
 - [ ] Issue: reflect Π- and Σ-types to `forAll` and `exists` in [`SMT.Theories.Raw.Reflection`][SMT.Theories.Raw.Reflection] (easy);
 - [ ] Add error reporting to the parser (easy);
 - [ ] Add backends for other SMT-LIB compliant solvers (easy);
