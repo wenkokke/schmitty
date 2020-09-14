@@ -93,7 +93,7 @@ If you’d like to work with Schmitty, a good place to start are the examples. 
 - [ ] Add theory of arrays linked to an axiomatisation of Haskell arrays (moderate);
 - [ ] Add support for [combined theories][CombinedTheories] (moderate);
 - [ ] Add support for [logic declarations][LogicDeclarations] (moderate);
-- [ ] Add proof reconstruction for SAT using [@kazkansouh][kazkansouh]’s [Kanso.Boolean.SatSolver][SatSolver] (moderate);
+- [ ] Add proof reconstruction for SAT using [`Kanso.Boolean.SatSolver`][SatSolver] (moderate);
 - [ ] Add proof reconstruction for [Z3 proofs][Z3Proofs] (cf. [*Proof Reconstruction for Z3 in Isabelle/HOL*][IsabelleHol]) (hard).
 
 [Data.Float]: https://agda.github.io/agda-stdlib/Data.Float.html
