@@ -94,7 +94,7 @@ If you’d like to work with Schmitty, a good place to start are the examples. 
 - [ ] Enhancement: add support for [combined theories][CombinedTheories] (moderate);
 - [ ] Enhancement: add support for [logic declarations][LogicDeclarations] (moderate);
 - [ ] Enhancement: add proof reconstruction for SAT using [@kazkansouh][kazkansouh]’s [Kanso.Boolean.SatSolver][SatSolver] (moderate);
-- [ ] Enhancement: add proof reconstruction for [Z3 proofs](http://ceur-ws.org/Vol-418/paper10.pdf) (cf. [*Proof Reconstruction for Z3 in Isabelle/HOL*][IsabelleHol]) (hard).
+- [ ] Enhancement: add proof reconstruction for [Z3 proofs][Z3Proofs] (cf. [*Proof Reconstruction for Z3 in Isabelle/HOL*][IsabelleHol]) (hard).
 
 [Data.Float]: https://agda.github.io/agda-stdlib/Data.Float.html
 [Data.Rational]: https://agda.github.io/agda-stdlib/Data.Rational.html
@@ -127,3 +127,4 @@ If you’d like to work with Schmitty, a good place to start are the examples. 
 [SatSolver]: https://github.com/wenkokke/schmitty/blob/master/extra/Kanso/Boolean/SatSolver.agda
 [CombinedTheories]: http://smtlib.cs.uiowa.edu/papers/smt-lib-reference-v2.6-r2017-07-18.pdf#subsection.5.4.1
 [LogicDeclarations]: http://smtlib.cs.uiowa.edu/papers/smt-lib-reference-v2.6-r2017-07-18.pdf#subsection.5.5.1
+[Z3Proofs]: http://ceur-ws.org/Vol-418/paper10.pdf
