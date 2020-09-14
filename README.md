@@ -75,17 +75,26 @@ If you’d like to work with Schmitty, a good place to start are the examples. 
 
 # Roadmap
 
-- [ ] Merge [`Reflection.External`][Reflection.External] into [agda-stdlib][agda-stdlib].
-- [ ] Merge [`Text.Parser.String`][Text.Parser.String] into [agdarsec][agdarsec].
-- [ ] Add error reporting to [`Text.Parser.String`][Text.Parser.String].
-- [ ] Add names to `forAll` and `exists`.
-- [ ] Reflect Π- and Σ-types to `forAll` and `exists` in [`SMT.Theories.Raw.Reflection`][SMT.Theories.Raw.Reflection].
-- [ ] Convince [@gallais][gallais] to make [agdarsec][agdarsec] universe-polymorphic.
-- [ ] Parse `BOOL` values to `Set` instead of `Bool` (known issue).
-- [ ] Use [@kazkansouh][kazkansouh]’s [SAT solver][satsolver] to provide *actual* evidence for the Core theory.
-- [ ] Use [`Data.Rational`][Data.Rational] for Reals theory—using [`Data.Float`][Data.Float] is tremendously unsafe.
-- [ ] Use [`Data.Float`][Data.Float] for a [FloatingPoint][FloatingPoint] theory.
-- [ ] Implement `test` task with *negative* tests.
+- [ ] Upstream: merge [`Reflection.External`][Reflection.External] into [agda-stdlib][agda-stdlib];
+- [ ] Upstream: merge [`Text.Parser.String`][Text.Parser.String] into [agdarsec][agdarsec];
+- [ ] Issue: add names to `forAll` and `exists`, similar to `declare-const` (easy);
+- [ ] Issue: parse `BOOL` values to `Set` instead of `Bool` using [agdarsec][agdarsec]’s new Large parsers (easy);
+- [ ] Issue: reflect Π- and Σ-types to `forAll` and `exists` in [`SMT.Theories.Raw.Reflection`][SMT.Theories.Raw.Reflection] (easy);
+- [ ] Enhancement: parser with error reporting (see [`Text.Parser.String`][Text.Parser.String]);
+- [ ] Enhancement: add backends for other SMT-LIB compliant solvers (easy);
+- [ ] Enhancement: add a testing framework which supports negative tests (easy);
+- [ ] Enhancement: add theory of real arithmetic linked to Agda rational numbers (easy);
+- [ ] Enhancement: add theory of floating-point numbers linked to Agda floats (easy);
+- [ ] Enhancement: add theory of strings linked to Agda strings (easy);
+- [ ] Enhancement: add theory of sequences linked to Agda lists (moderate);
+- [ ] Enhancement: add theory of uninterpreted functions and constants linked to Agda names (moderate);
+- [ ] Enhancement: add theory of regular expressions linked to [[https://github.com/gallais/aGdaREP | gallais/aGdaREP]] (moderate);
+- [ ] Enhancement: add theory of algebraic datatypes linked to Agda datatypes (moderate);
+- [ ] Enhancement: add theory of arrays linked to an axiomatisation of Haskell arrays (moderate);
+- [ ] Enhancement: add support for [combined theories][CombinedTheories] (moderate);
+- [ ] Enhancement: add support for [logic declarations][LogicDeclarations] (moderate);
+- [ ] Enhancement: add proof reconstruction for SAT using [@kazkansouh][kazkansouh]’s [Kanso.Boolean.SatSolver][SatSolver] (moderate);
+- [ ] Enhancement: add proof reconstruction for [Z3 proofs](http://ceur-ws.org/Vol-418/paper10.pdf) (cf. [*Proof Reconstruction for Z3 in Isabelle/HOL*][IsabelleHol]) (hard).
 
 [Data.Float]: https://agda.github.io/agda-stdlib/Data.Float.html
 [Data.Rational]: https://agda.github.io/agda-stdlib/Data.Rational.html
@@ -114,3 +123,7 @@ If you’d like to work with Schmitty, a good place to start are the examples. 
 [agdarsec]: https://github.com/gallais/agdarsec
 [agdarsec-version]: https://github.com/gallais/agdarsec/commit/d91a32e3256ceded84bc0bbf551ab8a710c6092e
 [FloatingPoint]: http://www.philipp.ruemmer.org/publications/smt-fpa.pdf
+[IsabelleHol]: http://www21.in.tum.de/~boehmes/proofrec.pdf
+[SatSolver]: https://github.com/wenkokke/schmitty/blob/master/extra/Kanso/Boolean/SatSolver.agda
+[CombinedTheories]: http://smtlib.cs.uiowa.edu/papers/smt-lib-reference-v2.6-r2017-07-18.pdf#subsection.5.4.1
+[LogicDeclarations]: http://smtlib.cs.uiowa.edu/papers/smt-lib-reference-v2.6-r2017-07-18.pdf#subsection.5.5.1
