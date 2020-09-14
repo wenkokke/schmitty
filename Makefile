@@ -1,11 +1,10 @@
-AGDA_FILES := $(shell find . -type f -and -path './src/*' -and -name '*.agda')
-AGDAI_FILES := $(subst .agda,.agdai,$(AGDA_FILES))
-HTML_FILES := $(addsuffix .html,$(subst ./src/,./docs/,$(basename $(AGDA_FILES))))
-AGDA_MODULES := $(subst /,.,$(subst ./src/,,$(basename $(AGDA_FILES))))
-
+SOURCES := $(shell find . -type f -and -path './src/*' -and -name '*.agda')
+OBJECTS := $(subst .agda,.agdai,$(SOURCES))
+DOCS := $(addsuffix .html,$(subst ./src/,./docs/,$(basename $(SOURCES))))
+TESTS_FAIL := $(shell find . -type f -and -path './test/Fail/*' -and -name '*.agda')
+TESTS_SUCCEED := $(shell find . -type f -and -path './test/Succeed/*' -and -name '*.agda')
 
 default: listings
-
 
 ########################
 # Initialise Git hooks #
@@ -35,20 +34,31 @@ docs/index.html: index.agda
 	@agda -i. -isrc index.agda --html --html-dir=docs
 
 .PHONY: listings
-listings: $(HTML_FILES)
+listings: $(DOCS)
 
 define HTML_template
 $(1): docs/index.html
 endef
-$(foreach html_file,$(HTML_FILES),$(eval $(call HTML_template,$(html_file))))
+$(foreach html_file,$(DOCS),$(eval $(call HTML_template,$(html_file))))
 
 
 #######################
 # Generate index.agda #
 #######################
 
-INDEX_AGDA := "module index where\n\n"
-$(foreach agda_module,$(AGDA_MODULES),$(eval INDEX_AGDA := $(INDEX_AGDA)"import $(agda_module)\n"))
+LIBRARY_MODULES := $(subst /,.,$(subst ./src/,,$(basename $(SOURCES))))
 
-index.agda: $(AGDA_FILES)
+TESTS_SUCCEED_MODULES := $(subst /,.,$(subst ./test/,,$(basename $(TESTS_SUCCEED))))
+
+INDEX_AGDA := "module index where\n"
+INDEX_AGDA := $(INDEX_AGDA)"\n"
+INDEX_AGDA := $(INDEX_AGDA)"-- * Library\n"
+INDEX_AGDA := $(INDEX_AGDA)"\n"
+$(foreach module_name,$(LIBRARY_MODULES),$(eval INDEX_AGDA := $(INDEX_AGDA)"import $(module_name)\n"))
+INDEX_AGDA := $(INDEX_AGDA)"\n"
+INDEX_AGDA := $(INDEX_AGDA)"-- * Tests\n"
+INDEX_AGDA := $(INDEX_AGDA)"\n"
+$(foreach module_name,$(TESTS_SUCCEED_MODULES),$(eval INDEX_AGDA := $(INDEX_AGDA)"import $(module_name)\n"))
+
+index.agda: $(SOURCES)
 	@echo $(INDEX_AGDA) > index.agda

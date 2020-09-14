@@ -65,8 +65,6 @@ woops = solveZ3
 
 Right now, Schmitty supports three theories—[Core][SMT.Theories.Core], [Ints][SMT.Theories.Ints], and [Reals][SMT.Theories.Reals]—and two backends—[Z3][SMT.Backend.Z3], and [CVC4][SMT.Backend.CVC4]. If you’re missing your favourite theory or solver, your contribution is more than welcome!
 
-If you’d like to work with Schmitty, a good place to start are the examples. You can find them in [`SMT.Theories.Core.Example`][SMT.Theories.Core.Example], [`SMT.Theories.Ints.Example`][SMT.Theories.Ints.Example], [`SMT.Theories.Reals.Example`][SMT.Theories.Reals.Example]!
-
 # Installation
 
 - [Agda][agda] ([>= 2.6.2-0f4538][agda-version])
@@ -100,11 +98,8 @@ If you’d like to work with Schmitty, a good place to start are the examples. 
 [SMT.Theory]: https://wenkokke.github.io/schmitty/SMT.Theory.html
 [SMT.Theories.Core]: https://wenkokke.github.io/schmitty/SMT.Theories.Core.html
 [SMT.Theories.Core.Extensions]: https://wenkokke.github.io/schmitty/SMT.Theories.Core.Extensions.html
-[SMT.Theories.Core.Example]: https://wenkokke.github.io/schmitty/SMT.Theories.Core.Example.html
 [SMT.Theories.Ints]: https://wenkokke.github.io/schmitty/SMT.Theories.Ints.html
-[SMT.Theories.Ints.Example]: https://wenkokke.github.io/schmitty/SMT.Theories.Ints.Example.html
 [SMT.Theories.Reals]: https://wenkokke.github.io/schmitty/SMT.Theories.Reals.html
-[SMT.Theories.Reals.Example]: https://wenkokke.github.io/schmitty/SMT.Theories.Reals.Example.html
 [SMT.Theories.Raw.Reflection]: https://wenkokke.github.io/schmitty/SMT.Theories.Raw.Reflection.html
 [SMT.Script]: https://wenkokke.github.io/schmitty/SMT.Script.html
 [SMT.Logics]: https://wenkokke.github.io/schmitty/SMT.Logics.html

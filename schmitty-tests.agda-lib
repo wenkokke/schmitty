@@ -1,0 +1,3 @@
+name: schmitty-tests
+include: test
+depend: standard-library agdarsec schmitty
