@@ -8,6 +8,7 @@ open import Data.List as List using (List; _∷_; []; length)
 open import Data.List.Relation.Unary.All using (All; _∷_; [])
 open import Data.List.NonEmpty as List⁺ using (List⁺; _∷_)
 open import Data.Nat as Nat using (ℕ; zero; suc; _∸_)
+import Data.Nat.Literals as NatLits using (number)
 open import Data.Product as Prod using (∃-syntax; _×_; _,_; proj₁; proj₂)
 open import Data.Unit as Unit using (⊤)
 open import Function
@@ -19,6 +20,11 @@ open import Relation.Nullary using (¬_; Dec; yes; no)
 open import Relation.Nullary.Decidable using (isYes)
 open import SMT.Theory
 open import SMT.Theories.Raw.Base
+
+open import Agda.Builtin.FromNat
+open import Agda.Builtin.FromNeg
+
+instance _ = NatLits.number
 
 private
   open module TCMonad {ℓ} = Category.Monad.RawMonad {ℓ} TC.monad renaming (_⊛_ to _<*>_)
@@ -85,38 +91,45 @@ private
   x ∈-FVSort Sort.lit n   = false
   x ∈-FVSort Sort.unknown = false
 
-private
-  pattern `pos    a = con (quote Int.+_) (vArg a ∷ [])
-  -- pattern `negsuc a = con (quote Int.-[1+_]) (vArg a ∷ [])
-
 -- Dummy name used as a function symbol of type TERM _ → ⋆ to wrap variables.
 rawVar : ⊤
 rawVar = _
 
+private
+  pattern `fromNat = quote Number.fromNat
+  pattern `fromNeg = quote Negative.fromNeg
+
 mutual
-  reflectToRawTerm : (Γ : RawCtxt) (fv : ℕ) → Term → TC (RawTerm Γ ⋆)
-  reflectToRawTerm Γ fv (var x []) = do
+  -- |To avoid having to deal with overloaded literals in the different theories (the dictionaries
+  --  are hard to deal with), we normalise any calls to fromNat and fromNeg.  To convince the
+  --  termination checker that this is fine there's a fuel parameter limiting how many nested
+  --  normalisations we are allowed to do. Overloading will not create any nested calls to fromNat
+  --  or fromNeg so it's enough to provide 1 fuel.
+  reflectToRawTerm : (fuel : ℕ) (Γ : RawCtxt) (fv : ℕ) → Term → TC (RawTerm Γ ⋆)
+  reflectToRawTerm fuel Γ fv (var x []) = do
     σ , y ← reflectToRawVar Γ =<< strengthenVar fv x
     return (appᵣ {Σ = record{ArgSorts = σ ∷ []}} (quote rawVar) (varᵣ y ∷ []))
-  reflectToRawTerm Γ _  (var _ _)  = typeErrorFmt "Higher-order variable"
-  reflectToRawTerm Γ _  (lit l)    = return (litᵣ l)
-  reflectToRawTerm Γ fv (def f ts) = appᵣ {Σ = argTypes ts} f <$> reflectToRawArgs Γ fv ts
-  reflectToRawTerm Γ fv (con c ts) = appᵣ {Σ = argTypes ts} c <$> reflectToRawArgs Γ fv ts
-  reflectToRawTerm Γ fv (pi (arg _ a) (abs _ b)) = do
-    a ← reflectToRawTerm Γ fv a
-    b ← reflectToRawTerm Γ (suc fv) b
+  reflectToRawTerm fuel Γ _  (var _ _)  = typeErrorFmt "Higher-order variable"
+  reflectToRawTerm fuel Γ _  (lit l)    = return (litᵣ l)
+  reflectToRawTerm (suc fuel) Γ fv t@(def `fromNat _) = reflectToRawTerm fuel Γ fv =<< normalise t
+  reflectToRawTerm (suc fuel) Γ fv t@(def `fromNeg _) = reflectToRawTerm fuel Γ fv =<< normalise t
+  reflectToRawTerm fuel Γ fv (def f ts) = appᵣ {Σ = argTypes ts} f <$> reflectToRawArgs fuel Γ fv ts
+  reflectToRawTerm fuel Γ fv (con c ts) = appᵣ {Σ = argTypes ts} c <$> reflectToRawArgs fuel Γ fv ts
+  reflectToRawTerm fuel Γ fv (pi (arg _ a) (abs _ b)) = do
+    a ← reflectToRawTerm fuel Γ fv a
+    b ← reflectToRawTerm fuel Γ (suc fv) b
     return (appᵣ {Σ = record {ArgSorts = ⋆ ∷ ⋆ ∷ []}} (quote Morphism) (a ∷ b ∷ []))
-  reflectToRawTerm Γ fv (meta x _) = blockOnMeta x
-  reflectToRawTerm Γ fv t = typeErrorFmt "reflectToRawTerm failed"
+  reflectToRawTerm fuel Γ fv (meta x _) = blockOnMeta x
+  reflectToRawTerm fuel Γ fv t = typeErrorFmt "reflectToRawTerm failed"
 
-  reflectToRawArgs : ∀ Γ (fv : ℕ) (ts : List (Arg Term)) → TC (RawArgs Γ (ArgSorts (argTypes ts)))
-  reflectToRawArgs Γ fv [] = return []
-  reflectToRawArgs Γ fv (vArg t ∷ ts) = ⦇ reflectToRawTerm Γ fv t ∷ reflectToRawArgs Γ fv ts ⦈
-  reflectToRawArgs Γ fv (hArg _ ∷ ts) = reflectToRawArgs Γ fv ts
-  reflectToRawArgs Γ fv (iArg _ ∷ ts) = reflectToRawArgs Γ fv ts
-  reflectToRawArgs Γ fv (arg (arg-info visible   irrelevant) _ ∷ ts) = reflectToRawArgs Γ fv ts
-  reflectToRawArgs Γ fv (arg (arg-info hidden    irrelevant) t ∷ ts) = reflectToRawArgs Γ fv ts
-  reflectToRawArgs Γ fv (arg (arg-info instance′ irrelevant) t ∷ ts) = reflectToRawArgs Γ fv ts
+  reflectToRawArgs : ∀ (fuel : ℕ) Γ (fv : ℕ) (ts : List (Arg Term)) → TC (RawArgs Γ (ArgSorts (argTypes ts)))
+  reflectToRawArgs fuel Γ fv [] = return []
+  reflectToRawArgs fuel Γ fv (vArg t ∷ ts) = ⦇ reflectToRawTerm fuel Γ fv t ∷ reflectToRawArgs fuel Γ fv ts ⦈
+  reflectToRawArgs fuel Γ fv (hArg _ ∷ ts) = reflectToRawArgs fuel Γ fv ts
+  reflectToRawArgs fuel Γ fv (iArg _ ∷ ts) = reflectToRawArgs fuel Γ fv ts
+  reflectToRawArgs fuel Γ fv (arg (arg-info visible   irrelevant) _ ∷ ts) = reflectToRawArgs fuel Γ fv ts
+  reflectToRawArgs fuel Γ fv (arg (arg-info hidden    irrelevant) t ∷ ts) = reflectToRawArgs fuel Γ fv ts
+  reflectToRawArgs fuel Γ fv (arg (arg-info instance′ irrelevant) t ∷ ts) = reflectToRawArgs fuel Γ fv ts
 
 
 -- |Decode a reflected Agda type to a raw SMT-LIB script.
@@ -146,9 +159,9 @@ reflectToRawScript = reflectToRawScript′ [] 0
           Γ′ , s ← reflectToRawScript′ (TERM a ∷ Γ) fv b
           return (Γ′ , declare-constᵣ x (TERM a) ∷ᵣ s)
         false → do
-          t ← reflectToRawTerm Γ fv a
+          t ← reflectToRawTerm 1 Γ fv a
           Γ′ , s ← reflectToRawScript′ Γ (suc fv) b
           return (Γ′ , assertᵣ t ∷ᵣ s)
     reflectToRawScript′ Γ fv t = do
-      t ← reflectToRawTerm Γ fv t
+      t ← reflectToRawTerm 1 Γ fv t
       return (Γ , assertᵣ (appᵣ (quote ¬_) (t ∷ [])) ∷ᵣ []ᵣ)
