@@ -2,6 +2,8 @@ open import SMT.Theory
 
 module SMT.Script.Show (theory : Theory) where
 
+open Theory theory
+
 open import Category.Monad
 open import Codata.Musical.Stream as Stream using (Stream)
 open import Data.Char as Char using (Char)
@@ -25,8 +27,6 @@ import Reflection as Rfl
 open import Relation.Nullary using (Dec; yes; no)
 open import Relation.Nullary.Decidable using (True)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
-open import SMT.Logics
-open Theory theory
 open import SMT.Script.Base baseTheory
 open import SMT.Script.Names baseTheory
 
@@ -138,18 +138,9 @@ module _ where
     checkMM [] = just []
     checkMM (vs ∷ env) = Maybe.zipWith _∷_ (fromSingleton vs) (checkMM env)
 
-
   pModelError : ∀[ Parser ⊤ ]
   pModelError = _ <$ withSpaces (parens (
     box (lexeme "error" &> box (between (char '"') (box (char '"')) (box (list⁺ (anyCharBut '"')))))))
-
-  -- Z3 error message:
-  _ : pModelError accepts "(error \"line 5 column 10: model is not available\")"
-  _ = _
-
-  -- CVC4 error message:
-  _ : pModelError accepts "(error \"Cannot get the current model unless immediately preceded by SAT/INVALID or UNKNOWN response.\")"
-  _ = _
 
   -- |Construct a model parser from a variable parser.
   mkModelParser : ∀[ Parser (Var Γ) ] → ∀[ Parser (QualifiedModel Γ) ]
@@ -254,7 +245,7 @@ module _ where
   -- |Show a command as an S-expression, and build up an environment of output parsers.
   showCommandS : Command Γ δΓ δΞ → NameState Γ (δΓ ++ Γ) (String × OutputParsers δΞ)
   showCommandS (set-logic l) = do
-    return $ mkSTerm ("set-logic" ∷ showLogic l ∷ []) , []
+    return $ mkSTerm ("set-logic" ∷ l ∷ []) , []
   showCommandS (declare-const _ σ) = do
     n ← freshNameS σ
     return $ mkSTerm ("declare-const" ∷ showName n ∷ showSort σ ∷ []) , []

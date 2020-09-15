@@ -1,7 +1,6 @@
 module index where
 
 -- * Library
-
 import SMT.Script
 import SMT.Theory.Reflection
 import SMT.Theories.Core.Extensions
@@ -26,20 +25,14 @@ import SMT.Script.Names
 import SMT.Script.Show
 import SMT.Script.Base
 import SMT.Script.Reflection
-import SMT.Logics
-import SMT.Logics.Properties
 import Text.Parser.String
 import Data.Environment
 import Reflection.External
 
 -- * Tests
-
-import Succeed.Z3.Core.Script3
-import Succeed.Z3.Core.Script2
-import Succeed.Z3.Core.Script1
-import Succeed.Z3.Reals.Float.Script1
-import Succeed.Z3.Ints.OutputParser1
-import Succeed.Z3.Ints.Reflection2
-import Succeed.Z3.Ints.Reflection1
-import Succeed.Z3.Ints.Script1
+import Test_Scripts_Z3_RealsAsFloat
+import Test_Scripts_Z3_Ints
+import Test_Scripts_Z3_Core
+import Test_Reflection_Z3_Ints
+import Test_OutputParser_Ints
 

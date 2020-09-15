@@ -1,6 +1,6 @@
 {-# OPTIONS --allow-exec #-}
 
-module Succeed.Z3.Ints.Reflection1 where
+module Test_Reflection_Z3_Ints where
 
 open import Data.Integer using (ℤ; _+_)
 open import Data.List using (List; _∷_; [])

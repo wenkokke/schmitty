@@ -1,6 +1,10 @@
+---------------------------------------------------------
+-- Test handwritten scripts for Reals.As.Float with Z3 --
+---------------------------------------------------------
+
 {-# OPTIONS --allow-exec #-}
 
-module Succeed.Z3.Reals.Float.Script1 where
+module Test_Scripts_Z3_RealsAsFloat where
 
 open import Data.Integer using (+_)
 open import Data.List using (List; _∷_; [])

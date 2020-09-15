@@ -2,32 +2,29 @@ open import SMT.Theory
 
 module SMT.Script.Names (baseTheory : BaseTheory) where
 
-open import Data.Fin as Fin using (Fin)
-open import Data.List as List using (List; _∷_; []; _++_)
-open import Data.List.NonEmpty as List⁺ using (List⁺; _∷_)
-open import Data.Product as Prod using (∃; ∃-syntax; _,_)
-open import Relation.Nullary using (Dec; yes; no)
-open import Relation.Nullary.Decidable using (True)
-open import Relation.Binary.PropositionalEquality using (_≡_; refl)
-open import SMT.Logics
-open import Data.Environment as Env using (Env; _∷_; [])
-
 open import Category.Monad
 open import Category.Monad.State as StateCat using (RawIMonadState; IStateT)
 open import Codata.Musical.Stream as Stream using (Stream)
 open import Data.Char as Char using (Char)
+open import Data.Environment as Env using (Env; _∷_; [])
+open import Data.Fin as Fin using (Fin)
+open import Data.List as List using (List; _∷_; []; _++_)
+open import Data.List.Relation.Unary.All as All using (All; _∷_; [])
+open import Data.List.NonEmpty as List⁺ using (List⁺; _∷_)
 open import Data.Maybe as Maybe using (Maybe; just; nothing)
 open import Data.Nat as Nat using (ℕ)
 open import Data.Nat.Show renaming (show to showℕ)
-open import Data.Product as Product using (_×_; _,_; -,_; proj₁; proj₂)
+open import Data.Product as Prod using (∃; ∃-syntax; _×_; _,_; -,_; proj₁; proj₂)
 open import Data.String as String using (String)
 open import Data.Unit as Unit using (⊤)
 open import Data.Vec as Vec using (Vec)
 open import Function using (const; id; _∘_; _$_)
 import Function.Identity.Categorical as Identity
 open import Text.Parser.String as P hiding (_>>=_)
+open import Relation.Nullary using (Dec; yes; no)
+open import Relation.Nullary.Decidable using (True)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import Reflection using (con; vArg)
-
 open import SMT.Script.Base baseTheory
 
 open BaseTheory baseTheory
@@ -48,7 +45,7 @@ showName = String.fromList ∘ List⁺.toList
 -- |Name environments, i.e., lists where the types of the elements
 --  are determined by a type-level list.
 NameEnv : Ctxt → Set
-NameEnv = Env (λ _σ _Γ → Name)
+NameEnv = Env (λ _ _ → Name)
 
 -- |Name states, i.e., an environment of names, one for every
 --  variable in the context Γ, and a supply  of fresh names.

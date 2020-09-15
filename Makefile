@@ -48,17 +48,14 @@ $(foreach html_file,$(DOCS),$(eval $(call HTML_template,$(html_file))))
 
 LIBRARY_MODULES := $(subst /,.,$(subst ./src/,,$(basename $(SOURCES))))
 
-TESTS_SUCCEED_MODULES := $(subst /,.,$(subst ./test/,,$(basename $(TESTS_SUCCEED))))
+TESTS_SUCCEED_MODULES := $(subst /,.,$(subst ./test/Succeed/,,$(basename $(TESTS_SUCCEED))))
 
 INDEX_AGDA := "module index where\n"
-INDEX_AGDA := $(INDEX_AGDA)"\n"
-INDEX_AGDA := $(INDEX_AGDA)"-- * Library\n"
-INDEX_AGDA := $(INDEX_AGDA)"\n"
+INDEX_AGDA := $(INDEX_AGDA)"\n-- * Library\n"
 $(foreach module_name,$(LIBRARY_MODULES),$(eval INDEX_AGDA := $(INDEX_AGDA)"import $(module_name)\n"))
-INDEX_AGDA := $(INDEX_AGDA)"\n"
-INDEX_AGDA := $(INDEX_AGDA)"-- * Tests\n"
-INDEX_AGDA := $(INDEX_AGDA)"\n"
+INDEX_AGDA := $(INDEX_AGDA)"\n-- * Tests\n"
 $(foreach module_name,$(TESTS_SUCCEED_MODULES),$(eval INDEX_AGDA := $(INDEX_AGDA)"import $(module_name)\n"))
 
+.PHONY: index.agda
 index.agda: $(SOURCES)
 	@echo $(INDEX_AGDA) > index.agda

@@ -16,7 +16,6 @@ open import Function using (_$_; _∘_; id)
 open import Relation.Nullary using (Dec; yes; no)
 open import Relation.Nullary.Decidable using (True; toWitness)
 open import Relation.Binary.PropositionalEquality as Eq using (_≡_; refl)
-open import SMT.Logics
 open import Data.Environment as Env using (Env; _∷_; [])
 import Reflection as Rfl
 open import Text.Parser.String using (ParseErrorMsg; no-parse; ambiguous-parse)
@@ -277,6 +276,9 @@ quoteOutputs (r ∷ rs) =
 ----------------------
 -- SMT-LIB Commands --
 ----------------------
+
+Logic : Set
+Logic = String
 
 -- |SMT-LIB commands.
 --

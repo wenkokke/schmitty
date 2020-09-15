@@ -1,6 +1,10 @@
+-----------------------------------------------
+-- Test handwritten scripts for Ints with Z3 --
+-----------------------------------------------
+
 {-# OPTIONS --allow-exec #-}
 
-module Succeed.Z3.Ints.Script1 where
+module Test_Scripts_Z3_Ints where
 
 open import Data.List using (List; _∷_; [])
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
