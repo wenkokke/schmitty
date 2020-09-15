@@ -1,11 +1,11 @@
 module SMT.Backend.Base where
 
 open import Data.List as List using (List; _∷_; [])
-open import Data.List.Relation.Unary.All using (All; _∷_; [])
+open import Data.List.Relation.Unary.All as All using (All; _∷_; [])
 open import Data.Product using (_×_; _,_; proj₁; proj₂)
 open import Data.String as String using (String)
 open import Data.Unit using (⊤)
-open import Function using (case_of_; const; _$_; _∘_)
+open import Function using (case_of_; const; _$_; _∘_; flip)
 open import Reflection as Rfl using (return; _>>=_; _>>_)
 open import SMT.Theory
 
@@ -34,10 +34,10 @@ module Solver {theory : Theory} (reflectable : Reflectable theory) where
     --       from reflectToRawScript. Possibly, the output of quoteInterpValues
     --       needs to be reversed.
     --
-    piApply : Rfl.Term → ValueInterps Γ → Rfl.Term
+    piApply : Rfl.Term → List Rfl.Term → Rfl.Term
     piApply goal vs = piApply′ goal vs
       where
-        piApply′ : Rfl.Term → ValueInterps Γ → Rfl.Term
+        piApply′ : Rfl.Term → List Rfl.Term → Rfl.Term
         piApply′ t [] = t
         piApply′ (Rfl.pi (Rfl.arg _ a) (Rfl.abs x b)) (v ∷ args) =
           Rfl.def (quote Function._$′_)
@@ -45,7 +45,7 @@ module Solver {theory : Theory} (reflectable : Reflectable theory) where
                   ∷ Rfl.hArg a
                   ∷ Rfl.hArg Rfl.unknown
                   ∷ Rfl.hArg Rfl.unknown
-                  ∷ Rfl.vArg (Rfl.lam Rfl.visible (Rfl.abs x (piApply′ b args)))
+                  ∷ Rfl.vArg (Rfl.lam Rfl.visible (Rfl.abs x (piApply b args)))
                   ∷ Rfl.vArg v
                   ∷ []
         piApply′ t _ = t -- impossible?
@@ -59,7 +59,7 @@ module Solver {theory : Theory} (reflectable : Reflectable theory) where
   typeErrorCounterExample : Rfl.Term → Script [] Γ Ξ → Model Γ → Rfl.TC ⊤
   typeErrorCounterExample {Γ} goal scr vs = do
     let `vs = quoteInterpValues vs
-    instGoal ← Rfl.normalise (piApply goal `vs)
+    instGoal ← Rfl.normalise (piApply goal (List.reverse ∘ List.map proj₂ ∘ All.toList $ `vs))
     Rfl.typeErrorFmt "Found counter-example:\n%erefuting %t"
       (counterExampleFmt (scriptVarNames scr) `vs []) instGoal
 
