@@ -1,11 +1,12 @@
-open import SMT.Theory
+open import SMT.Theory.Base
 
-module SMT.Theory.Reflection (theory : Theory) where
+module SMT.Theory.Reflectable (theory : Theory) where
 
 
 open Theory theory
-open import Level
-open import Data.List as List using (List; _∷_; [])
+
+import Level
+open import Data.List as List using (List)
 open import Data.Maybe as Maybe using (Maybe)
 open import Data.Product as Prod using (Σ-syntax)
 import Reflection as Rfl

@@ -1,7 +1,7 @@
 -- This module contains the definition of the 'Raw' theory, which is intended to
 -- be targeted by a translation from reflected Agda syntax. It re-exports the
 -- basic definitions from SMT.Script.Base, the type names prefixed with 'Raw'.
-module SMT.Theories.Raw.Base where
+module SMT.Theory.Raw.Base where
 
 open import Data.Empty as Empty using (⊥; ⊥-elim)
 open import Data.Environment as Env using (Env; []; _∷_)
@@ -16,7 +16,7 @@ open import Reflection.Term using () renaming (_≟_ to _≟-Term_)
 open import Relation.Nullary using (Dec; yes; no)
 import Relation.Nullary.Decidable as Dec
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
-open import SMT.Theory
+open import SMT.Theory.Base
 open import Text.Parser.String
 
 data RawSort : Set where

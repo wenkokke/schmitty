@@ -1,4 +1,4 @@
-module SMT.Theories.Raw.Reflection where
+module SMT.Theory.Raw.Reflection where
 
 open import Category.Monad
 open import Data.Bool as Bool using (Bool; true; false; _∨_)
@@ -18,7 +18,7 @@ import Reflection.TypeChecking.Monad.Categorical as TC
 open import Relation.Nullary using (¬_; Dec; yes; no)
 open import Relation.Nullary.Decidable using (isYes)
 open import SMT.Theory
-open import SMT.Theories.Raw.Base
+open import SMT.Theory.Raw.Base
 
 private
   open module TCMonad {ℓ} = Category.Monad.RawMonad {ℓ} TC.monad renaming (_⊛_ to _<*>_)

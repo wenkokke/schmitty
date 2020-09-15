@@ -1,4 +1,4 @@
-open import SMT.Theory
+open import SMT.Theory.Base
 
 module SMT.Script.Show (theory : Theory) where
 

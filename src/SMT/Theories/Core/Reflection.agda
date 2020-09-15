@@ -11,8 +11,6 @@ open import Function using (Morphism)
 import Reflection as Rfl
 open import Relation.Nullary using (¬_)
 open import SMT.Theory
-open import SMT.Theory.Reflection
-open import SMT.Theories.Raw as Raw
 open import SMT.Theories.Core.Base as Core
 open import SMT.Script.Base Core.coreBaseTheory renaming ( Macro to CoreMacro )
 

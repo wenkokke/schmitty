@@ -1,7 +1,6 @@
 {-# OPTIONS --allow-exec #-}
 
 open import SMT.Theory
-open import SMT.Theory.Reflection
 
 module SMT.Backend.Z3 {theory : Theory} (reflectable : Reflectable theory) where
 

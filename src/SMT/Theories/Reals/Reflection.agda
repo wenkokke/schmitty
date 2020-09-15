@@ -15,7 +15,6 @@ import Reflection as Rfl
 import Relation.Nullary.Decidable as Dec
 open import Relation.Binary.PropositionalEquality as Eq using (_≡_; refl; cong)
 open import SMT.Theory
-open import SMT.Theory.Reflection
 open import SMT.Theories.Core as Core hiding (BOOL)
 open import SMT.Theories.Core.Extensions
 open import SMT.Theories.Reals.Base as Reals

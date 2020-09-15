@@ -1,5 +1,4 @@
 open import SMT.Theory
-open import SMT.Theory.Reflection
 
 module SMT.Script.Reflection {theory : Theory} (reflectable : Reflectable theory) where
 
@@ -27,7 +26,6 @@ open import Relation.Nullary.Decidable using (True)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import SMT.Script.Base baseTheory
 open import SMT.Script.Show theory
-open import SMT.Theories.Raw as Raw using (showRawScript)
 
 private
   variable
@@ -47,7 +45,7 @@ private
 --       exponential.
 module _ where
 
-  open import SMT.Theories.Raw
+  open import SMT.Theory.Raw.Reflection
 
   private
     monadPlusMaybe = MaybeCat.monadPlus {Level.zero}
@@ -130,7 +128,7 @@ module _ where
 
 module _ where
 
-  open import SMT.Theories.Raw.Reflection
+  open import SMT.Theory.Raw.Reflection
   import Reflection.TypeChecking.Monad.Categorical as TC
 
   private

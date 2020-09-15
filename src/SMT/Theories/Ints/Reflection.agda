@@ -11,7 +11,6 @@ open import Data.Product as Prod using (Σ-syntax; _,_)
 import Reflection as Rfl
 open import Relation.Binary.PropositionalEquality as PropEq using (_≡_; refl)
 open import SMT.Theory
-open import SMT.Theory.Reflection
 open import SMT.Theories.Core as Core hiding (BOOL)
 open import SMT.Theories.Core.Extensions
 open import SMT.Theories.Ints.Base as Ints

@@ -2,20 +2,20 @@ module index where
 
 -- * Library
 import SMT.Script
-import SMT.Theory.Reflection
+import SMT.Theory.Reflectable
+import SMT.Theory.Base
+import SMT.Theory.Raw.Base
+import SMT.Theory.Raw.Reflection
 import SMT.Theories.Core.Extensions
 import SMT.Theories.Core.Base
 import SMT.Theories.Core.Reflection
 import SMT.Theories.Reals.Base
 import SMT.Theories.Reals.Reflection
-import SMT.Theories.Raw
 import SMT.Theories.Reals
 import SMT.Theories.Core
 import SMT.Theories.Ints
 import SMT.Theories.Ints.Base
 import SMT.Theories.Ints.Reflection
-import SMT.Theories.Raw.Base
-import SMT.Theories.Raw.Reflection
 import SMT.Utils.Float
 import SMT.Backend.Z3
 import SMT.Backend.CVC4

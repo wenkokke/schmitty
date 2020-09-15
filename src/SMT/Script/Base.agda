@@ -1,6 +1,8 @@
-open import SMT.Theory
+open import SMT.Theory.Base
 
 module SMT.Script.Base (baseTheory : BaseTheory) where
+
+open BaseTheory baseTheory
 
 open import Data.Fin as Fin using (Fin; zero; suc)
 open import Data.List as List using (List; _∷_; []; _++_; _ʳ++_)
@@ -19,9 +21,6 @@ open import Relation.Binary.PropositionalEquality as Eq using (_≡_; refl)
 open import Data.Environment as Env using (Env; _∷_; [])
 import Reflection as Rfl
 open import Text.Parser.String using (ParseErrorMsg; no-parse; ambiguous-parse)
-
-open BaseTheory baseTheory
-
 
 -------------------
 -- SMT-LIB Terms --

@@ -10,7 +10,6 @@ import Reflection as Rfl
 open import Relation.Nullary using (Dec; yes; no)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import SMT.Theory
-open import SMT.Theories.Raw as Raw
 open import Text.Parser.String
 
 
