@@ -91,7 +91,7 @@ private
   x ∈-FVSort Sort.lit n   = false
   x ∈-FVSort Sort.unknown = false
 
--- Dummy name used as a function symbol of type TERM _ → ⋆ to wrap variables.
+-- Placeholder name used as a function symbol of type TERM _ → ⋆ to wrap variables.
 rawVar : ⊤
 rawVar = _
 
