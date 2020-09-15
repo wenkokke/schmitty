@@ -53,8 +53,8 @@ mutual
     var    : ∀ {σ} (x : Γ ∋ σ) → Term Γ σ
     lit    : ∀ {σ} (l : Literal σ) → Term Γ σ
     app    : ∀ {σ} {Σ : Signature σ} (x : Identifier Σ) (xs : Args Γ (ArgSorts Σ)) → Term Γ σ
-    forAll : ∀ (σ : Sort) (x : Term (σ ∷ Γ) BOOL) → Term Γ BOOL
-    exists : ∀ (σ : Sort) (x : Term (σ ∷ Γ) BOOL) → Term Γ BOOL
+    forAll : ∀ (n : String) (σ : Sort) (x : Term (σ ∷ Γ) BOOL) → Term Γ BOOL
+    exists : ∀ (n : String) (σ : Sort) (x : Term (σ ∷ Γ) BOOL) → Term Γ BOOL
 
   Args : (Γ Δ : Ctxt) → Set
   Args Γ Δ = All (λ σ → Term Γ σ) Δ
@@ -84,11 +84,11 @@ extendRename r (suc i , p) = extendVar (r (i , p))
 
 mutual
   renameTerm : Rename Γ Γ′ → Term Γ σ → Term Γ′ σ
-  renameTerm r (var i)      = var (r i)
-  renameTerm r (lit l)      = lit l
-  renameTerm r (app x xs)   = app x (renameArgs r xs)
-  renameTerm r (forAll σ x) = forAll σ (renameTerm (extendRename r) x)
-  renameTerm r (exists σ x) = exists σ (renameTerm (extendRename r) x)
+  renameTerm r (var i)        = var (r i)
+  renameTerm r (lit l)        = lit l
+  renameTerm r (app x xs)     = app x (renameArgs r xs)
+  renameTerm r (forAll n σ x) = forAll n σ (renameTerm (extendRename r) x)
+  renameTerm r (exists n σ x) = exists n σ (renameTerm (extendRename r) x)
 
   renameArgs : Rename Γ Γ′ → Args Γ Δ → Args Γ′ Δ
   renameArgs r [] = []
@@ -290,7 +290,7 @@ Logic = String
 --
 data Command (Γ : Ctxt) : (δΓ : Ctxt) (δΞ : OutputCtxt) → Set where
   set-logic     : (l : Logic) → Command Γ [] []
-  declare-const : (x : String) (σ : Sort) → Command Γ (σ ∷ []) []
+  declare-const : (n : String) (σ : Sort) → Command Γ (σ ∷ []) []
   assert        : Term Γ BOOL → Command Γ [] []
   check-sat     : Command Γ [] (SAT ∷ [])
   get-model     : Command Γ [] (MODEL Γ ∷ [])

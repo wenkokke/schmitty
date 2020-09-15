@@ -191,13 +191,13 @@ module _ where
   open RawIMonadState monadStateNameState
     using (return; _>>=_; _>>_; put; get; modify)
 
-  freshNameS : (σ : Sort) → NameState Γ (σ ∷ Γ) Name
-  freshNameS σ = do
+  freshNameS : (n : String) (σ : Sort) → NameState Γ (σ ∷ Γ) Name
+  freshNameS n σ = do
     (ns , vps) ← get
-    let (n , ns) = freshName σ ns
-    let vps = ((Fin.zero , refl) <$ withSpaces (exacts n)) ∷ vps
+    let (n′ , ns) = freshName n σ ns
+    let vps = ((Fin.zero , refl) <$ withSpaces (exacts n′)) ∷ vps
     put (ns , vps)
-    return n
+    return n′
 
   dropNameS : NameState (σ ∷ Γ) Γ ⊤
   dropNameS = do
@@ -226,16 +226,16 @@ module _ where
       let x = showIdentifier x
       xs ← showArgsS xs
       return $ mkSTerm (x ∷ xs)
-    showTermS (forAll σ x) = do
-      n ← freshNameS σ
+    showTermS (forAll n σ x) = do
+      n′ ← freshNameS n σ
       x ← showTermS x
       dropNameS
-      return $ mkSTerm ("forall" ∷ mkSTerm (mkSTerm (showName n ∷ showSort σ ∷ []) ∷ []) ∷ x ∷ [])
-    showTermS (exists σ x) = do
-      n ← freshNameS σ
+      return $ mkSTerm ("forall" ∷ mkSTerm (mkSTerm (showName n′ ∷ showSort σ ∷ []) ∷ []) ∷ x ∷ [])
+    showTermS (exists n σ x) = do
+      n′ ← freshNameS n σ
       x ← showTermS x
       dropNameS
-      return $ mkSTerm ("exists" ∷ mkSTerm (mkSTerm (showName n ∷ showSort σ ∷ []) ∷ []) ∷ x ∷ [])
+      return $ mkSTerm ("exists" ∷ mkSTerm (mkSTerm (showName n′ ∷ showSort σ ∷ []) ∷ []) ∷ x ∷ [])
 
     showArgsS : Args Γ Δ → NameState Γ Γ (List String)
     showArgsS []       = return []
@@ -246,9 +246,9 @@ module _ where
   showCommandS : Command Γ δΓ δΞ → NameState Γ (δΓ ++ Γ) (String × OutputParsers δΞ)
   showCommandS (set-logic l) = do
     return $ mkSTerm ("set-logic" ∷ l ∷ []) , []
-  showCommandS (declare-const _ σ) = do
-    n ← freshNameS σ
-    return $ mkSTerm ("declare-const" ∷ showName n ∷ showSort σ ∷ []) , []
+  showCommandS (declare-const n σ) = do
+    n′ ← freshNameS n σ
+    return $ mkSTerm ("declare-const" ∷ showName n′ ∷ showSort σ ∷ []) , []
   showCommandS (assert x) = do
     x ← showTermS x
     return $ mkSTerm ("assert" ∷ x ∷ []) , []

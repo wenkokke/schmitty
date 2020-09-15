@@ -38,8 +38,8 @@ _ = refl
 -- |Pierce's law.
 pierce : Script [] [] (SAT ∷ [])
 pierce = assert
-       ( forAll BOOL
-       $ forAll BOOL
+       ( forAll "p" BOOL
+       $ forAll "q" BOOL
        $ app₂ implies (app₂ implies (app₂ implies (# 1) (# 0)) (# 1)) (# 1)
        )
        ∷ check-sat

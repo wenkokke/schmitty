@@ -12,7 +12,7 @@ open import Data.Environment as Env using (Env; _∷_; [])
 open import Data.Fin as Fin using (Fin)
 open import Data.List as List using (List; _∷_; []; _++_)
 open import Data.List.Relation.Unary.All as All using (All; _∷_; [])
-open import Data.List.NonEmpty as List⁺ using (List⁺; _∷_)
+open import Data.List.NonEmpty as List⁺ using (List⁺; _∷_; _++⁺_)
 open import Data.Maybe as Maybe using (Maybe; just; nothing)
 open import Data.Nat as Nat using (ℕ)
 open import Data.Nat.Show renaming (show to showℕ)
@@ -62,12 +62,12 @@ record Names (Γ : Ctxt) : Set where
 open Names -- bring `nameEnv` and `nameSupply` in scope
 
 -- |Add a fresh name to the front of the name environment.
-freshName : (σ : Sort) → Names Γ → Name × Names (σ ∷ Γ)
-freshName {Γ} σ ns = n , ns′
+freshName : (n : String) (σ : Sort) → Names Γ → Name × Names (σ ∷ Γ)
+freshName {Γ} n σ ns = n′ , ns′
   where
-    n = Stream.head (nameSupply ns)
+    n′ = String.toList n ++⁺ Stream.head (nameSupply ns)
     ns′ : Names (σ ∷ Γ)
-    nameEnv    ns′ = n ∷ nameEnv ns
+    nameEnv    ns′ = n′ ∷ nameEnv ns
     nameSupply ns′ = Stream.tail (nameSupply ns)
 
 -- |Remove first name from the name environment.
@@ -78,4 +78,4 @@ nameSupply (dropName names) = nameSupply names
 -- |A name state for the empty context, which supplies the names x0, x1, x2, ...
 x′es : Names []
 nameEnv    x′es = []
-nameSupply x′es = Stream.map (λ n → 'x' ∷ String.toList (showℕ n)) (Stream.iterate ℕ.suc 0)
+nameSupply x′es = Stream.map (λ n → '_' ∷ String.toList (showℕ n)) (Stream.iterate ℕ.suc 0)

@@ -77,12 +77,12 @@ module _ where
       (Σ , f) ← checkIdentifier σ f
       args ← checkRawArgs Γ (ArgSorts Σ) args
       return $ f args
-    checkRawTerm Γ σ (forAllᵣ σᵣ x) = do
+    checkRawTerm Γ σ (forAllᵣ n σᵣ x) = do
       refl ← Maybe.decToMaybe (σ ≟-Sort BOOL)
-      checkRawQ forAll Γ x
-    checkRawTerm Γ σ (existsᵣ σᵣ x) = do
+      checkRawQ (forAll n) Γ x
+    checkRawTerm Γ σ (existsᵣ n σᵣ x) = do
       refl ← Maybe.decToMaybe (σ ≟-Sort BOOL)
-      checkRawQ exists Γ x
+      checkRawQ (exists n) Γ x
 
     checkRawQ : (q : ∀ {Γ} σ → Term (σ ∷ Γ) BOOL → Term Γ BOOL) (Γ : Ctxt) → RawTerm Γᵣ ⋆ → Maybe (Term Γ BOOL)
     checkRawQ q Γ x
@@ -111,10 +111,10 @@ module _ where
     (Γ′ , Ξ , scr) ← checkRawScript Γ scr
     return $ Γ′ , Ξ , (set-logic l ∷ scr)
   checkRawScript Γ (declare-constᵣ _ ⋆ ∷ _) = nothing -- we never declare constants of type ⋆
-  checkRawScript Γ (declare-constᵣ x (TERM σᵣ) ∷ᵣ scr) = do
+  checkRawScript Γ (declare-constᵣ n (TERM σᵣ) ∷ᵣ scr) = do
     σ ← checkSort σᵣ
     Γ′ , Ξ , scr ← checkRawScript (σ ∷ Γ) scr
-    return $ Γ′ , Ξ , (declare-const x σ ∷ scr)
+    return $ Γ′ , Ξ , (declare-const n σ ∷ scr)
   checkRawScript Γ (assertᵣ x ∷ᵣ scr) = do
     x ← (checkRawTerm (Vec.toList Γ) BOOL x)
     (Γ′ , Ξ , scr) ← (checkRawScript Γ scr)

@@ -1,5 +1,5 @@
 AGDA ?= agda
-SHELL := bash
+SHELL := sh
 SOURCES := $(shell find . -type f -and -path './src/*' -and -name '*.agda')
 OBJECTS := $(SOURCES:.agda=.agdai)
 MODULES := $(subst /,.,$(subst ./src/,,$(basename $(SOURCES))))
@@ -21,11 +21,8 @@ init:
 # Generate index.agda #
 #######################
 
-INDEX_AGDA := "module index where\n"
-$(foreach module_name,$(LIBRARY_MODULES),$(eval INDEX_AGDA := $(INDEX_AGDA)"import $(module_name)\n"))
-
 index.agda: $(SOURCES)
-	@echo $(INDEX_AGDA) > index.agda
+	@echo "module index where\n$(foreach module_name,$(MODULES),\nimport $(module_name))" > index.agda
 
 
 ##################

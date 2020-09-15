@@ -28,23 +28,23 @@ script = declare-const "x" INT
 pVar : ∀[ Parser (Var (INT ∷ INT ∷ [])) ]
 pVar = getVarParser script
 
-_ : pVar parses "x0"
+_ : pVar parses "x_0"
 _ = ! INT , suc zero , refl
 
-_ : pVar parses "x1"
+_ : pVar parses "y_1"
 _ = ! INT , zero , refl
 
-_ : pVar rejects "x2"
+_ : pVar rejects "x_2"
 _ = _
 
 
 pDefn : ∀[ Parser (Defn (INT ∷ INT ∷ [])) ]
 pDefn = mkDefnParser pVar
 
-_ : pDefn parses "(define-fun x0 () Int 0)"
+_ : pDefn parses "(define-fun x_0 () Int 0)"
 _ = ! INT , (suc zero , refl) , + 0
 
-_ : pDefn parses "(define-fun x1 () Int (- 1))"
+_ : pDefn parses "(define-fun y_1 () Int (- 1))"
 _ = ! INT , (zero , refl) , -[1+ 0 ]
 
 
@@ -52,7 +52,7 @@ pDefns : ∀[ Parser (List⁺ (Defn (INT ∷ INT ∷ [])))]
 pDefns = mkDefnsParser pVar
 
 _ : pDefns parses
-    "(model (define-fun x1 () Int 0) (define-fun x0 () Int 0))"
+    "(model (define-fun y_1 () Int 0) (define-fun x_0 () Int 0))"
 _ = ! ((INT , (zero , refl) , + 0) ∷ (INT , (suc zero , refl) , + 0) ∷ [])
 
 
@@ -60,7 +60,7 @@ pModel : ∀[ Parser (QualifiedModel (INT ∷ INT ∷ [])) ]
 pModel = mkModelParser pVar
 
 _ : pModel parses
-    "sat (model (define-fun x1 () Int 0) (define-fun x0 () Int 0))"
+    "sat (model (define-fun y_1 () Int 0) (define-fun x_0 () Int 0))"
 _ = ! sat , + 0 ∷ + 0 ∷ []
 
 _ : pModel parses

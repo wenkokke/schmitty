@@ -79,7 +79,6 @@ Right now, Schmitty supports three theories—[Core][SMT.Theories.Core], [Ints][
 - [ ] Issue: reflect Π- and Σ-types to `forAll` and `exists` in [`SMT.Theories.Raw.Reflection`][SMT.Theories.Raw.Reflection] (easy);
 - [ ] Add error reporting to the parser (easy);
 - [ ] Add backends for other SMT-LIB compliant solvers (easy);
-- [ ] Add a testing framework which supports negative tests (easy);
 - [ ] Add theory of real arithmetic linked to Agda rational numbers (easy);
 - [ ] Add theory of floating-point numbers linked to Agda floats (easy);
 - [ ] Add theory of strings linked to Agda strings (easy);
