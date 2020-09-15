@@ -83,7 +83,7 @@ test: \
 
 docs/index.html: index.agda
 	@echo "Generating listings..."
-	@$(AGDA) -i. -isrc index.agda --html --html-dir=docs
+	@$(AGDA) -v0 -i. -isrc index.agda --html --html-dir=docs
 
 .PHONY: listings
 listings: $(DOCS)
