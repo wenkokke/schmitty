@@ -1,3 +1,0 @@
-name: schmitty-tests
-include: test/Succeed test/Fail
-depend: standard-library agdarsec schmitty

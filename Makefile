@@ -1,8 +1,10 @@
+AGDA ?= agda
+SHELL := bash
 SOURCES := $(shell find . -type f -and -path './src/*' -and -name '*.agda')
-OBJECTS := $(subst .agda,.agdai,$(SOURCES))
-DOCS := $(addsuffix .html,$(subst ./src/,./docs/,$(basename $(SOURCES))))
-TESTS_FAIL := $(shell find . -type f -and -path './test/Fail/*' -and -name '*.agda')
-TESTS_SUCCEED := $(shell find . -type f -and -path './test/Succeed/*' -and -name '*.agda')
+OBJECTS := $(SOURCES:.agda=.agdai)
+MODULES := $(subst /,.,$(subst ./src/,,$(basename $(SOURCES))))
+DOCS := $(addprefix ./docs/,$(addsuffix .html,$(MODULES)))
+
 
 default: listings
 
@@ -15,14 +17,64 @@ init:
 	git config core.hooksPath .githooks
 
 
-#####################
-# Typecheck library #
-#####################
+#######################
+# Generate index.agda #
+#######################
+
+INDEX_AGDA := "module index where\n"
+$(foreach module_name,$(LIBRARY_MODULES),$(eval INDEX_AGDA := $(INDEX_AGDA)"import $(module_name)\n"))
+
+index.agda: $(SOURCES)
+	@echo $(INDEX_AGDA) > index.agda
+
+
+##################
+# Positive tests #
+##################
+
+TEST_SUCCEED_SOURCES := $(shell find . -type f -and -path './test/Succeed/*' -and -name '*.agda')
+TEST_SUCCEED_OBJECTS := $(TEST_SUCCEED_SOURCES:.agda=.agdai)
+
+test/Succeed/%.agdai: test/Succeed/%.agda
+	@echo "Checking $(notdir $(basename $<))..."
+	@$(AGDA) -v0 -isrc -itest/Succeed "$<"
+
+.PHONY: test-succeed
+test-succeed: $(TEST_SUCCEED_OBJECTS)
+
+
+##################
+# Negative tests #
+##################
+
+TEST_FAIL_SOURCES := $(shell find . -type f -and -path './test/Fail/*' -and -name '*.agda')
+TEST_FAIL_OBJECTS := $(TEST_FAIL_SOURCES:.agda=.agdai)
+
+# TODO: Failing tests don't generate *.agdai files,
+#       so effectively these are .PHONY tasks.
+test/Fail/%.agdai: test/Fail/%.agda test/Fail/%.err
+	@echo "Checking $(notdir $(basename $<))..."
+	@$(AGDA) -v0 -isrc -itest/Fail "$<" \
+		| tail -n +2 \
+		| diff --suppress-common-lines "$(<:.agda=.err)" -
+
+.PHONY: test-fail
+test-fail: $(TEST_FAIL_OBJECTS)
+
+
+#############
+# All Tests #
+#############
+
+index.agdai: index.agda
+	@echo "Checking schmitty..."
+	@$(AGDA) -i. -isrc index.agda
 
 .PHONY: test
-test: index.agda
-	@echo "Checking schmitty..."
-	@agda -i. -isrc index.agda
+test: \
+	index.agdai \
+	$(TEST_SUCCEED_OBJECTS) \
+	$(TEST_FAIL_OBJECTS)
 
 
 #####################
@@ -31,7 +83,7 @@ test: index.agda
 
 docs/index.html: index.agda
 	@echo "Generating listings..."
-	@agda -i. -isrc index.agda --html --html-dir=docs
+	@$(AGDA) -i. -isrc index.agda --html --html-dir=docs
 
 .PHONY: listings
 listings: $(DOCS)
@@ -41,21 +93,3 @@ $(1): docs/index.html
 endef
 $(foreach html_file,$(DOCS),$(eval $(call HTML_template,$(html_file))))
 
-
-#######################
-# Generate index.agda #
-#######################
-
-LIBRARY_MODULES := $(subst /,.,$(subst ./src/,,$(basename $(SOURCES))))
-
-TESTS_SUCCEED_MODULES := $(subst /,.,$(subst ./test/Succeed/,,$(basename $(TESTS_SUCCEED))))
-
-INDEX_AGDA := "module index where\n"
-INDEX_AGDA := $(INDEX_AGDA)"\n-- * Library\n"
-$(foreach module_name,$(LIBRARY_MODULES),$(eval INDEX_AGDA := $(INDEX_AGDA)"import $(module_name)\n"))
-INDEX_AGDA := $(INDEX_AGDA)"\n-- * Tests\n"
-$(foreach module_name,$(TESTS_SUCCEED_MODULES),$(eval INDEX_AGDA := $(INDEX_AGDA)"import $(module_name)\n"))
-
-.PHONY: index.agda
-index.agda: $(SOURCES)
-	@echo $(INDEX_AGDA) > index.agda

@@ -1,6 +1,4 @@
 module index where
-
--- * Library
 import SMT.Script
 import SMT.Theory.Reflectable
 import SMT.Theory.Base
@@ -28,11 +26,4 @@ import SMT.Script.Reflection
 import Text.Parser.String
 import Data.Environment
 import Reflection.External
-
--- * Tests
-import Test_Scripts_Z3_RealsAsFloat
-import Test_Scripts_Z3_Ints
-import Test_Scripts_Z3_Core
-import Test_Reflection_Z3_Ints
-import Test_OutputParser_Ints
 
