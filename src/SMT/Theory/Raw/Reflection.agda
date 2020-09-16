@@ -9,7 +9,8 @@ open import Data.List.Relation.Unary.All using (All; _∷_; [])
 open import Data.List.NonEmpty as List⁺ using (List⁺; _∷_)
 open import Data.Nat as Nat using (ℕ; zero; suc; _∸_)
 import Data.Nat.Literals as NatLits using (number)
-open import Data.Product as Prod using (∃-syntax; _×_; _,_; proj₁; proj₂)
+open import Data.Product as Prod using (Σ; ∃; Σ-syntax; ∃-syntax; _×_; _,_; proj₁; proj₂)
+open import Data.String using (String)
 open import Data.Unit as Unit using (⊤)
 open import Function
 open import Level using (Level)
@@ -99,6 +100,11 @@ private
   pattern `fromNat = quote Number.fromNat
   pattern `fromNeg = quote Negative.fromNeg
 
+  pattern `Σ  a b = def (quote Σ)        (_ ∷ _ ∷ vArg a ∷ vArg b ∷ [])
+  pattern `Σˢ a b = def (quote Σ-syntax) (_ ∷ _ ∷ vArg a ∷ vArg b ∷ [])
+  pattern `∃  a b = def (quote ∃)        (_ ∷ _ ∷ hArg a ∷ vArg b ∷ [])
+  pattern `∃ˢ a b = def (quote ∃-syntax) (_ ∷ _ ∷ hArg a ∷ vArg b ∷ [])
+
 mutual
   -- |To avoid having to deal with overloaded literals in the different theories (the dictionaries
   --  are hard to deal with), we normalise any calls to fromNat and fromNeg.  To convince the
@@ -113,14 +119,26 @@ mutual
   reflectToRawTerm fuel Γ _  (lit l)    = return (litᵣ l)
   reflectToRawTerm (suc fuel) Γ fv t@(def `fromNat _) = reflectToRawTerm fuel Γ fv =<< normalise t
   reflectToRawTerm (suc fuel) Γ fv t@(def `fromNeg _) = reflectToRawTerm fuel Γ fv =<< normalise t
+  reflectToRawTerm fuel Γ fv (`Σ  a (lam _ (abs x b))) = reflectExist fuel Γ fv x a b
+  reflectToRawTerm fuel Γ fv (`Σˢ a (lam _ (abs x b))) = reflectExist fuel Γ fv x a b
+  reflectToRawTerm fuel Γ fv (`∃  a (lam _ (abs x b))) = reflectExist fuel Γ fv x a b
+  reflectToRawTerm fuel Γ fv (`∃ˢ a (lam _ (abs x b))) = reflectExist fuel Γ fv x a b
   reflectToRawTerm fuel Γ fv (def f ts) = appᵣ {Σ = argTypes ts} f <$> reflectToRawArgs fuel Γ fv ts
   reflectToRawTerm fuel Γ fv (con c ts) = appᵣ {Σ = argTypes ts} c <$> reflectToRawArgs fuel Γ fv ts
-  reflectToRawTerm fuel Γ fv (pi (arg _ a) (abs _ b)) = do
-    a ← reflectToRawTerm fuel Γ fv a
-    b ← reflectToRawTerm fuel Γ (suc fv) b
-    return (appᵣ {Σ = record {ArgSorts = ⋆ ∷ ⋆ ∷ []}} (quote Morphism) (a ∷ b ∷ []))
+  reflectToRawTerm fuel Γ fv (pi (arg _ a) (abs x b)) = do
+    case 0 ∈-FV b of λ where
+      true  →
+        forAllᵣ x (TERM a) <$> reflectToRawTerm fuel (TERM a ∷ Γ) fv b
+      false → do
+        a ← reflectToRawTerm fuel Γ fv a
+        b ← reflectToRawTerm fuel Γ (suc fv) b
+        return (appᵣ {Σ = record {ArgSorts = ⋆ ∷ ⋆ ∷ []}} (quote Morphism) (a ∷ b ∷ []))
   reflectToRawTerm fuel Γ fv (meta x _) = blockOnMeta x
   reflectToRawTerm fuel Γ fv t = typeErrorFmt "reflectToRawTerm failed"
+
+  reflectExist : (fuel : ℕ) (Γ : RawCtxt) (fv : ℕ) → String → Term → Term → TC (RawTerm Γ ⋆)
+  reflectExist fuel Γ fv x a b =
+    existsᵣ x (TERM a) <$> reflectToRawTerm fuel (TERM a ∷ Γ) fv b
 
   reflectToRawArgs : ∀ (fuel : ℕ) Γ (fv : ℕ) (ts : List (Arg Term)) → TC (RawArgs Γ (ArgSorts (argTypes ts)))
   reflectToRawArgs fuel Γ fv [] = return []

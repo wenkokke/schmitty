@@ -1,0 +1,10 @@
+Found counter-example:
+  n = + 1
+refuting Data.Product.Σ ℤ
+         (λ m →
+            Data.Integer.sign m Data.Integer.◃
+            (Data.Integer.∣ m ∣ Agda.Builtin.Nat.+
+             (Data.Integer.∣ m ∣ Agda.Builtin.Nat.+ 0))
+            ≡ + 1)
+when checking that the expression unquote solveZ3 has type
+(n : ℤ) → ∃-syntax (λ m → + 2 * m ≡ n)
