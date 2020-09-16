@@ -1,5 +1,4 @@
 # Schmitty the Solver
-
 ```agda
 {-# OPTIONS --allow-exec #-}
 
@@ -75,7 +74,8 @@ Right now, Schmitty supports three theories—[Core][SMT.Theories.Core], [Ints][
 
 - [ ] Upstream: merge [`Reflection.External`][Reflection.External] into [agda-stdlib][agda-stdlib];
 - [ ] Upstream: merge [`Text.Parser.String`][Text.Parser.String] into [agdarsec][agdarsec];
-- [ ] Issue: reflect Π- and Σ-types to `forAll` and `exists` in [`SMT.Theories.Raw.Reflection`][SMT.Theories.Raw.Reflection] (easy);
+- [ ] Issue: handle η-contracted codomains for Σ-types (easy);
+- [ ] Issue: only normalise closed subterms in error messages (moderate);
 - [ ] Add error reporting to the parser (easy);
 - [ ] Add backends for other SMT-LIB compliant solvers (easy);
 - [ ] Add theory of real arithmetic linked to Agda rational numbers (easy);
