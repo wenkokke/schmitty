@@ -9,6 +9,7 @@ import Data.Nat.Show as Nat using (show)
 open import Data.List as List using (List; []; _∷_)
 open import Data.Product as Prod using (Σ-syntax; _×_; _,_)
 open import Data.String as String using (String)
+open import Function using (id)
 open import Function.Equivalence using (equivalence)
 open import Relation.Nullary using (Dec; yes; no)
 import Reflection as Rfl
@@ -96,12 +97,20 @@ checkIdentifier (CORE φ)  x   =
   Maybe.map (Prod.map liftCoreSignature (λ i → app (core i))) (checkCoreIdentifier′ φ x)
 
 
+-----------------------
+-- Proof computation --
+-----------------------
+
+proofComputation : ∀ {Γ} → Term Γ BOOL → Rfl.Name
+proofComputation _ = quote id
+
 ---------------
 -- Instances --
 ---------------
 
 reflectable : Reflectable theory
-Reflectable.sorts           reflectable = sorts
-Reflectable.checkSort       reflectable = checkSort
-Reflectable.checkLiteral    reflectable = checkLiteral
-Reflectable.checkIdentifier reflectable = checkIdentifier
+Reflectable.sorts            reflectable = sorts
+Reflectable.checkSort        reflectable = checkSort
+Reflectable.checkLiteral     reflectable = checkLiteral
+Reflectable.checkIdentifier  reflectable = checkIdentifier
+Reflectable.proofComputation reflectable = proofComputation

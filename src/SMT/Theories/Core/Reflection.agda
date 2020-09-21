@@ -70,12 +70,23 @@ checkCoreIdentifier′ BOOL  _       = nothing
 checkCoreIdentifier : (φ : CoreSort) → Rfl.Name → Maybe (Σ[ Φ ∈ Signature φ ] CoreMacro Φ)
 checkCoreIdentifier φ n = Maybe.map (Prod.map₂ λ {Φ} f args → app f args) (checkCoreIdentifier′ φ n)
 
+
+-----------------------
+-- Proof computation --
+-----------------------
+
+-- There are no interesting proof computations for the core theory.
+coreProofComputation : ∀ {Γ} → Term Γ BOOL → Rfl.Name
+coreProofComputation _ = quote Function.id
+
+
 ---------------
 -- Instances --
 ---------------
 
 coreReflectable : Reflectable coreTheory
-Reflectable.sorts           coreReflectable = coreSorts
-Reflectable.checkSort       coreReflectable = checkCoreSort
-Reflectable.checkLiteral    coreReflectable = checkCoreLiteral
-Reflectable.checkIdentifier coreReflectable = checkCoreIdentifier
+Reflectable.sorts            coreReflectable = coreSorts
+Reflectable.checkSort        coreReflectable = checkCoreSort
+Reflectable.checkLiteral     coreReflectable = checkCoreLiteral
+Reflectable.checkIdentifier  coreReflectable = checkCoreIdentifier
+Reflectable.proofComputation coreReflectable = coreProofComputation

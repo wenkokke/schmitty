@@ -25,7 +25,7 @@ module Solver {theory : Theory} (reflectable : Reflectable theory) where
 
   private
     variable
-      Γ : Ctxt
+      Γ Γ′ : Ctxt
       Ξ : OutputCtxt
 
     -- Instantiate the arguments to a Π-type with the values in a Model.
@@ -63,6 +63,17 @@ module Solver {theory : Theory} (reflectable : Reflectable theory) where
     Rfl.typeErrorFmt "Found counter-example:\n%erefuting %t"
       (counterExampleFmt (scriptVarNames scr) `vs []) instGoal
 
+  buildProof′ : String → Script Γ Γ′ Ξ → Rfl.Term
+  buildProof′ name (assert t ∷ []) = Rfl.def (proofComputation t) (Rfl.vArg (`because name Rfl.unknown) ∷ [])
+  buildProof′ name (_ ∷ scr)       = buildProof′ name scr
+  buildProof′ name []              = `because name Rfl.unknown
+
+  buildProof : String → Script [] Γ [] → Rfl.Term → Rfl.Term
+  buildProof name scr (Rfl.pi (Rfl.arg (Rfl.arg-info h _) a) (Rfl.abs x b)) =
+    let x′ = case x of λ where "_" → "H"; _   → x
+    in Rfl.lam h $ Rfl.abs x′ $ buildProof name scr b
+  buildProof name scr goal = buildProof′ name scr
+
   solve : String → (∀ {Γ ξ Ξ} → Script [] Γ (ξ ∷ Ξ) → Rfl.TC (Outputs (ξ ∷ Ξ))) → Rfl.Term → Rfl.TC ⊤
   solve name solver hole = do
     goal ← Rfl.inferType hole
@@ -71,5 +82,5 @@ module Solver {theory : Theory} (reflectable : Reflectable theory) where
     qm ∷ [] ← solver scr′
     case qm of λ where
       (sat     , m) → typeErrorCounterExample goal scr′ m
-      (unsat   , _) → Rfl.unify hole (`because name goal)
+      (unsat   , _) → Rfl.unify hole (buildProof name scr goal)
       (unknown , _) → Rfl.typeErrorFmt "Solver returned 'unknown'"

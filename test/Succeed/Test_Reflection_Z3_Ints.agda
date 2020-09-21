@@ -2,11 +2,12 @@
 
 module Test_Reflection_Z3_Ints where
 
-open import Data.Integer using (ℤ; _+_; _-_; _*_; _>_; _<_; _≥_)
+open import Data.Integer using (ℤ; _+_; _-_; _*_; _>_; _<_; _≥_; _≤_; +<+)
+open import Data.Nat using (s≤s; z≤n)
 open import Data.List using (List; _∷_; [])
 open import Data.Unit using () -- constructor instance
 open import Data.Product using (Σ; Σ-syntax; ∃; ∃-syntax; _,_)
-open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl)
 open import SMT.Theories.Ints as Ints
 open import SMT.Backend.Z3 Ints.reflectable
 
@@ -36,6 +37,20 @@ _ = solveZ3
 _ : ∃ λ z → ∀ n → z * n ≡ 0
 _ = solveZ3
 
--- Fails because it gets eta contracted to ∃ (_>_ n)
--- _ : ∀ n → ∃[ m ] (n > m)
+-- Fails because it gets eta contracted to ∃ (_<_ n)
+-- _ : ∀ n → ∃[ m ] (n < m)
 -- _ = solveZ3
+
+-- Test proof computations
+
+compute₁ : (x y : ℤ) → x ≤ y → x ≥ y → x ≡ y
+compute₁ = solveZ3
+
+check-compute₁ : (H : 5 ≤ 5) → compute₁ 5 5 H H ≡ refl
+check-compute₁ _ = refl
+
+compute₂ : (x : ℤ) → x ≢ 0 → x * x > 0
+compute₂ = solveZ3
+
+check-compute₂ : (H : 2 ≢ 0) → compute₂ 2 H ≡ +<+ (s≤s z≤n)
+check-compute₂ _ = refl
