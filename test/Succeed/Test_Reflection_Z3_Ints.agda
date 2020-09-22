@@ -5,7 +5,7 @@ module Test_Reflection_Z3_Ints where
 open import Data.Integer using (ℤ; _+_; _-_; _*_; _>_; _<_; _≥_)
 open import Data.List using (List; _∷_; [])
 open import Data.Unit using () -- constructor instance
-open import Data.Product using (Σ; Σ-syntax; ∃; ∃-syntax; _,_)
+open import Data.Product using (Σ; Σ-syntax; ∃; ∃-syntax; _,_; _×_)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import SMT.Theories.Ints as Ints
 open import SMT.Backend.Z3 Ints.reflectable
@@ -36,6 +36,6 @@ _ = solveZ3
 _ : ∃ λ z → ∀ n → z * n ≡ 0
 _ = solveZ3
 
--- Fails because it gets eta contracted to ∃ (_>_ n)
--- _ : ∀ n → ∃[ m ] (n > m)
--- _ = solveZ3
+-- Gets eta contracted to ∃ (_>_ n), so reflectToRawTerm needs to do some work.
+t : ∀ n → ∃[ m ] (n > m)
+t = solveZ3
