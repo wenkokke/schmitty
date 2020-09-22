@@ -26,4 +26,6 @@ import SMT.Script.Base
 import SMT.Script.Reflection 
 import Text.Parser.String 
 import Data.Environment 
-import Reflection.External
+import Reflection.Traversal 
+import Reflection.External 
+import Reflection.DeBruijn
