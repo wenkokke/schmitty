@@ -62,6 +62,7 @@ mutual
 Macro : (Σ : Signature σ) → Set
 Macro {σ} Σ = ∀ {Γ} → Args Γ (ArgSorts Σ) → Term Γ σ
 
+pattern app₀ f       = app f []
 pattern app₁ f x     = app f (x ∷ [])
 pattern app₂ f x y   = app f (x ∷ y ∷ [])
 pattern app₃ f x y z = app f (x ∷ y ∷ z ∷ [])
