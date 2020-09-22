@@ -74,7 +74,8 @@ Right now, Schmitty supports three theories—[Core][SMT.Theories.Core], [Ints][
 
 - [ ] Upstream: merge [`Reflection.External`][Reflection.External] into [agda-stdlib][agda-stdlib];
 - [ ] Upstream: merge [`Text.Parser.String`][Text.Parser.String] into [agdarsec][agdarsec];
-- [ ] Issue: handle η-contracted codomains for Σ-types (easy);
+- [ ] Upstream: merge [`Reflection.Traversal`][Reflection.Traversal] into [agda-stdlib][agda-stdlib];
+- [ ] Upstream: merge [`Reflection.DeBruijn`][Reflection.DeBruijn] into [agda-stdlib][agda-stdlib];
 - [ ] Issue: only normalise closed subterms in error messages (moderate);
 - [ ] Add error reporting to the parser (easy);
 - [ ] Add backends for other SMT-LIB compliant solvers (easy);
@@ -105,6 +106,8 @@ Right now, Schmitty supports three theories—[Core][SMT.Theories.Core], [Ints][
 [SMT.Backend.CVC4]: https://wenkokke.github.io/schmitty/SMT.Backend.CVC4.html
 [Text.Parser.String]: https://wenkokke.github.io/schmitty/Text.Parser.String.html
 [Reflection.External]: https://wenkokke.github.io/schmitty/Reflection.External.html
+[Reflection.Traversal]: https://wenkokke.github.io/schmitty/Reflection.Traversal.html
+[Reflection.DeBruijn]: https://wenkokke.github.io/schmitty/Reflection.DeBruijn.html
 [gallais]: https://github.com/gallais
 [kazkansouh]: https://github.com/kazkansouh
 [satsolver]: https://github.com/wenkokke/schmitty/tree/master/extra/Kanso

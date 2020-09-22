@@ -1,10 +1,10 @@
 module SMT.Theory.Raw.Reflection where
 
 open import Category.Monad
-open import Data.Bool as Bool using (Bool; true; false; _∨_)
+open import Data.Bool as Bool using (Bool; true; false)
 open import Data.Fin as Fin using (Fin; suc; zero)
 open import Data.Integer as Int using (ℤ; +_; -[1+_])
-open import Data.List as List using (List; _∷_; []; length)
+open import Data.List as List using (List; _∷_; [])
 open import Data.List.Relation.Unary.All using (All; _∷_; [])
 open import Data.List.NonEmpty as List⁺ using (List⁺; _∷_)
 open import Data.Nat as Nat using (ℕ; zero; suc; _∸_)
@@ -17,6 +17,7 @@ open import Level using (Level)
 open import Relation.Binary.PropositionalEquality as PropEq using (_≡_; refl)
 open import Reflection as Rfl hiding (return; _>>=_)
 import Reflection.TypeChecking.Monad.Categorical as TC
+open import Reflection.DeBruijn using (η-expand; _∈FV_)
 open import Relation.Nullary using (¬_; Dec; yes; no)
 open import Relation.Nullary.Decidable using (isYes)
 open import SMT.Theory
@@ -59,39 +60,6 @@ strengthenVar fv n =
     (yes _) → typeErrorFmt "Dependent quantification in term"
     (no _)  → return (n ∸ fv)
 
-
-private
-  _∈-FVArgs_    : ℕ → List (Arg Term) → Bool
-  _∈-FVClauses_ : ℕ → List Clause → Bool
-  _∈-FVClause_  : ℕ → Clause → Bool
-  _∈-FVSort_    : ℕ → Sort → Bool
-
-  _∈-FV_ : ℕ → Term → Bool
-  x ∈-FV var y args             = isYes (x Nat.≟ y) ∨ x ∈-FVArgs args
-  x ∈-FV con _ args             = x ∈-FVArgs args
-  x ∈-FV def _ args             = x ∈-FVArgs args
-  x ∈-FV lam _ (abs _ t)        = suc x ∈-FV t
-  x ∈-FV pat-lam cs args        = x ∈-FVClauses cs ∨ x ∈-FVArgs args
-  x ∈-FV pi (arg _ a) (abs _ b) = x ∈-FV a ∨ suc x ∈-FV b
-  x ∈-FV agda-sort s            = x ∈-FVSort s
-  x ∈-FV lit l                  = false
-  x ∈-FV meta _ args            = x ∈-FVArgs args
-  x ∈-FV unknown                = false
-
-  _ ∈-FVArgs []             = false
-  x ∈-FVArgs (arg _ t ∷ ts) = x ∈-FV t ∨ x ∈-FVArgs ts
-
-  x ∈-FVClauses []       = false
-  x ∈-FVClauses (c ∷ cs) = x ∈-FVClause c ∨ x ∈-FVClauses cs
-
-  -- Ignores types of bound variables
-  x ∈-FVClause Clause.clause        tel ps t = (x Nat.+ length tel) ∈-FV t
-  x ∈-FVClause Clause.absurd-clause tel ps   = false
-
-  x ∈-FVSort Sort.set t   = x ∈-FV t
-  x ∈-FVSort Sort.lit n   = false
-  x ∈-FVSort Sort.unknown = false
-
 -- Placeholder name used as a function symbol of type TERM _ → ⋆ to wrap variables.
 rawVar : ⊤
 rawVar = _
@@ -110,39 +78,46 @@ mutual
   --  are hard to deal with), we normalise any calls to fromNat and fromNeg.  To convince the
   --  termination checker that this is fine there's a fuel parameter limiting how many nested
   --  normalisations we are allowed to do. Overloading will not create any nested calls to fromNat
-  --  or fromNeg so it's enough to provide 1 fuel.
-  reflectToRawTerm : (fuel : ℕ) (Γ : RawCtxt) (fv : ℕ) → Term → TC (RawTerm Γ ⋆)
-  reflectToRawTerm fuel Γ fv (var x []) = do
+  --  or fromNeg so it's enough to provide 1 fuel for this.
+  --  However we also use the fuel when eta-expanding the predicate in existentials, and since these
+  --  can be arbitrarily nested we need a reasonable amount of fuel.
+  reflectToRawTerm : (Γ : RawCtxt) (fv : ℕ) → Term → TC (RawTerm Γ ⋆)
+  reflectToRawTerm = reflectToRawTerm′ 1000
+
+  reflectToRawTerm′ : (fuel : ℕ) (Γ : RawCtxt) (fv : ℕ) → Term → TC (RawTerm Γ ⋆)
+  reflectToRawTerm′ fuel Γ fv (var x []) = do
     σ , y ← reflectToRawVar Γ =<< strengthenVar fv x
     return (appᵣ {Σ = record{ArgSorts = σ ∷ []}} (quote rawVar) (varᵣ y ∷ []))
-  reflectToRawTerm fuel Γ _  (var _ _)  = typeErrorFmt "Higher-order variable"
-  reflectToRawTerm fuel Γ _  (lit l)    = return (litᵣ l)
-  reflectToRawTerm (suc fuel) Γ fv t@(def `fromNat _) = reflectToRawTerm fuel Γ fv =<< normalise t
-  reflectToRawTerm (suc fuel) Γ fv t@(def `fromNeg _) = reflectToRawTerm fuel Γ fv =<< normalise t
-  reflectToRawTerm fuel Γ fv (`Σ  a (lam _ (abs x b))) = reflectExist fuel Γ fv x a b
-  reflectToRawTerm fuel Γ fv (`Σˢ a (lam _ (abs x b))) = reflectExist fuel Γ fv x a b
-  reflectToRawTerm fuel Γ fv (`∃  a (lam _ (abs x b))) = reflectExist fuel Γ fv x a b
-  reflectToRawTerm fuel Γ fv (`∃ˢ a (lam _ (abs x b))) = reflectExist fuel Γ fv x a b
-  reflectToRawTerm fuel Γ fv (def f ts) = appᵣ {Σ = argTypes ts} f <$> reflectToRawArgs fuel Γ fv ts
-  reflectToRawTerm fuel Γ fv (con c ts) = appᵣ {Σ = argTypes ts} c <$> reflectToRawArgs fuel Γ fv ts
-  reflectToRawTerm fuel Γ fv (pi (arg _ a) (abs x b)) = do
-    case 0 ∈-FV b of λ where
+  reflectToRawTerm′ fuel Γ _  (var _ _)  = typeErrorFmt "Higher-order variable"
+  reflectToRawTerm′ fuel Γ _  (lit l)    = return (litᵣ l)
+  reflectToRawTerm′ (suc fuel) Γ fv t@(def `fromNat _) = reflectToRawTerm′ fuel Γ fv =<< normalise t
+  reflectToRawTerm′ (suc fuel) Γ fv t@(def `fromNeg _) = reflectToRawTerm′ fuel Γ fv =<< normalise t
+  reflectToRawTerm′ (suc fuel) Γ fv (`Σ  a b) = reflectExist fuel Γ fv a b
+  reflectToRawTerm′ (suc fuel) Γ fv (`Σˢ a b) = reflectExist fuel Γ fv a b
+  reflectToRawTerm′ (suc fuel) Γ fv (`∃  a b) = reflectExist fuel Γ fv a b
+  reflectToRawTerm′ (suc fuel) Γ fv (`∃ˢ a b) = reflectExist fuel Γ fv a b
+  reflectToRawTerm′ fuel Γ fv (def f ts) = appᵣ {Σ = argTypes ts} f <$> reflectToRawArgs fuel Γ fv ts
+  reflectToRawTerm′ fuel Γ fv (con c ts) = appᵣ {Σ = argTypes ts} c <$> reflectToRawArgs fuel Γ fv ts
+  reflectToRawTerm′ fuel Γ fv (pi (arg _ a) (abs x b)) = do
+    case 0 ∈FV b of λ where
       true  →
-        forAllᵣ x (TERM a) <$> reflectToRawTerm fuel (TERM a ∷ Γ) fv b
+        forAllᵣ x (TERM a) <$> reflectToRawTerm′ fuel (TERM a ∷ Γ) fv b
       false → do
-        a ← reflectToRawTerm fuel Γ fv a
-        b ← reflectToRawTerm fuel Γ (suc fv) b
+        a ← reflectToRawTerm′ fuel Γ fv a
+        b ← reflectToRawTerm′ fuel Γ (suc fv) b
         return (appᵣ {Σ = record {ArgSorts = ⋆ ∷ ⋆ ∷ []}} (quote Morphism) (a ∷ b ∷ []))
-  reflectToRawTerm fuel Γ fv (meta x _) = blockOnMeta x
-  reflectToRawTerm fuel Γ fv t = typeErrorFmt "reflectToRawTerm failed"
+  reflectToRawTerm′ fuel Γ fv (meta x _) = blockOnMeta x
+  reflectToRawTerm′ fuel Γ fv t = typeErrorFmt "reflectToRawTerm′ failed"
 
-  reflectExist : (fuel : ℕ) (Γ : RawCtxt) (fv : ℕ) → String → Term → Term → TC (RawTerm Γ ⋆)
-  reflectExist fuel Γ fv x a b =
-    existsᵣ x (TERM a) <$> reflectToRawTerm fuel (TERM a ∷ Γ) fv b
+  reflectExist : (fuel : ℕ) (Γ : RawCtxt) (fv : ℕ) → Term → Term → TC (RawTerm Γ ⋆)
+  reflectExist fuel Γ fv a b = do
+    lam _ (abs x b) ← return $ η-expand visible b
+      where _ → typeErrorFmt "reflectedToRawTerm′ failed to η-expand existential predicate"
+    existsᵣ x (TERM a) <$> reflectToRawTerm′ fuel (TERM a ∷ Γ) fv b
 
   reflectToRawArgs : ∀ (fuel : ℕ) Γ (fv : ℕ) (ts : List (Arg Term)) → TC (RawArgs Γ (ArgSorts (argTypes ts)))
   reflectToRawArgs fuel Γ fv [] = return []
-  reflectToRawArgs fuel Γ fv (vArg t ∷ ts) = ⦇ reflectToRawTerm fuel Γ fv t ∷ reflectToRawArgs fuel Γ fv ts ⦈
+  reflectToRawArgs fuel Γ fv (vArg t ∷ ts) = ⦇ reflectToRawTerm′ fuel Γ fv t ∷ reflectToRawArgs fuel Γ fv ts ⦈
   reflectToRawArgs fuel Γ fv (hArg _ ∷ ts) = reflectToRawArgs fuel Γ fv ts
   reflectToRawArgs fuel Γ fv (iArg _ ∷ ts) = reflectToRawArgs fuel Γ fv ts
   reflectToRawArgs fuel Γ fv (arg (arg-info visible   irrelevant) _ ∷ ts) = reflectToRawArgs fuel Γ fv ts
@@ -172,14 +147,14 @@ reflectToRawScript = reflectToRawScript′ [] 0
   where
     reflectToRawScript′ : (Γ : RawCtxt) (fv : ℕ) → Term → TC (∃[ Γ′ ] RawScript Γ Γ′ [])
     reflectToRawScript′ Γ fv (pi (arg _ a) (abs x b)) =
-      case 0 ∈-FV b of λ where
+      case 0 ∈FV b of λ where
         true → do
           Γ′ , s ← reflectToRawScript′ (TERM a ∷ Γ) fv b
           return (Γ′ , declare-constᵣ x (TERM a) ∷ᵣ s)
         false → do
-          t ← reflectToRawTerm 1 Γ fv a
+          t ← reflectToRawTerm Γ fv a
           Γ′ , s ← reflectToRawScript′ Γ (suc fv) b
           return (Γ′ , assertᵣ t ∷ᵣ s)
     reflectToRawScript′ Γ fv t = do
-      t ← reflectToRawTerm 1 Γ fv t
+      t ← reflectToRawTerm Γ fv t
       return (Γ , assertᵣ (appᵣ (quote ¬_) (t ∷ [])) ∷ᵣ []ᵣ)
