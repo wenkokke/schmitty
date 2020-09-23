@@ -222,6 +222,8 @@ module _ where
       return $ showName n
     showTermS (lit l) = do
       return $ showLiteral l
+    showTermS (app x []) = do
+      return $ showIdentifier x
     showTermS (app x xs) = do
       let x = showIdentifier x
       xs ← showArgsS xs
