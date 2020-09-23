@@ -13,12 +13,15 @@ import Data.Maybe.Categorical as MaybeCat
 open import Data.Nat as Nat using (ℕ)
 import Data.Nat.Properties as Nat
 open import Data.Product as Prod using (_×_; _,_)
-open import Data.String as String using (String; _<+>_)
+open import Data.String as String using (String; _<+>_; length; toVec)
 open import Data.Sum as Sum using (_⊎_; inj₁; inj₂)
 open import Data.Subset -- instances
 open import Data.Unit as Unit using (⊤; tt)
+open import Data.Unit.Polymorphic using () renaming (⊤ to ⊤ₚ)
 open import Data.Vec as Vec using (Vec)
-open import Function using (id; const; _∘_; _∘′_; _$_; case_of_)
+open import Function.Base using (id; const; _∘_; _∘′_; _$_; case_of_)
+open import Function.Reasoning
+open import Level using (Lift; lift; 0ℓ)
 open import Induction.Nat.Strong as Box using (□_) public
 open import Relation.Nullary using (Dec; yes; no)
 open import Relation.Nullary.Decidable using (True; ⌊_⌋)
@@ -27,6 +30,7 @@ open import Relation.Binary.PropositionalEquality.Decidable --instances
 
 open import Data.Subset public
 
+open import Level.Bounded as Bounded using ([_])
 import Text.Parser.Monad as ParserMonad
 open import Text.Parser.Types as Parser using (_^_,_)
 import Text.Parser.Position as Position
@@ -46,58 +50,51 @@ private
 private
   -- |The success type, specialised to strings.
   Success : (A : Set) (n : ℕ) → Set
-  Success A n = Parser.Success (Vec Char) A n
+  Success A n = Parser.Success (Bounded.Vec [ Char ]) [ A ] n
 
   -- |Check if a Success were, in fact, a success.
   runSuccess : Success A n → Maybe A
-  runSuccess s =
-    if ⌊ Parser.Success.size s Nat.≟ 0 ⌋ then just (Parser.Success.value s) else nothing
+  runSuccess s = if ⌊ Parser.Success.size s Nat.≟ 0 ⌋
+    then just (Bounded.lower (Parser.Success.value s))
+    else nothing
 
 
 private
   -- |The result type, specialised to carry no error information or annotations.
   Result : (A : Set) → Set
-  Result A = ParserMonad.Result ⊤ (A × Position.Position × List ⊥)
+  Result A = ParserMonad.Result ⊤ₚ (A × Lift 0ℓ (Position.Position × List ⊥))
 
   -- |Discard errors, and return only the results.
-  runResult : Result A → List A
-  runResult = ParserMonad.result (const []) (const []) ((_∷ []) ∘ Prod.proj₁)
+  discardErrors : Result A → List A
+  discardErrors = ParserMonad.result (const []) (const []) ((_∷ []) ∘ Prod.proj₁)
 
-private
-  fromSingleton : List A → ParseErrorMsg ⊎ A
-  fromSingleton []          = inj₁ no-parse
-  fromSingleton (v ∷ [])    = inj₂ v
-  fromSingleton (_ ∷ _ ∷ _) = inj₁ ambiguous-parse
+  -- |Discard "successful" parses that didn't consume all the input.
+  discardIncompleteParses : List (Success A n) → List A
+  discardIncompleteParses = Maybe.maybe id [] ∘ ListCat.TraversableM.mapM MaybeCat.monad runSuccess
+
+  -- |Discard outcomes that did not result in a unique successful parse. 
+  discardNonUniqueParses : List A → ParseErrorMsg ⊎ A
+  discardNonUniqueParses []          = inj₁ no-parse
+  discardNonUniqueParses (v ∷ [])    = inj₂ v
+  discardNonUniqueParses (_ ∷ _ ∷ _) = inj₁ ambiguous-parse
 
 
 -- |The parser type, specialised to strings.
 Parser : (A : Set) (n : ℕ) → Set
-Parser = Parser.Parser ParserMonad.Agdarsec′.chars
+Parser A = Parser.Parser ParserMonad.Agdarsec′.chars [ A ]
 
 -- |Run a parser, and return a list of results.
 runParser : ∀[ Parser A ] → String → ParseErrorMsg ⊎ A
-runParser {A} p str
-
-  -- Return the single parse, or an error:
-  = fromSingleton
-
-  -- Discard all "successful" parses which didn't consume all input:
-  $ Maybe.maybe id [] ∘ mapM runSuccess
-
-  -- Discard all errors, and return only the "successful" parses:
-  $ runResult
-
-  -- Run the parser:
-  $ (λ input -> Parser.runParser p (Nat.n≤1+n _) input (Position.start , []))
-
-  -- Convert the input from a String to a length-indexed Vector:
-  $ Vec.fromList (String.toList str)
+runParser {A} p str =
+     str                      ∶ String
+  |> runParser′               ∶ Result (Success A (length str))
+  |> discardErrors            ∶ List (Success A (length str))
+  |> discardIncompleteParses  ∶ List A
+  |> discardNonUniqueParses   ∶ ParseErrorMsg ⊎ A
   where
-    -- Import mapM instance for List/Maybe
-    mapM : ∀ {A B} → (A → Maybe B) → List A → Maybe (List B)
-    mapM = ListCat.TraversableM.mapM MaybeCat.monad
-
-
+    runParser′ : (input : String) → Result (Success A (length input))
+    runParser′ input = Parser.runParser p (Nat.n≤1+n _)
+      (lift (toVec input)) (lift (Position.start , []))
 
 ---------------------------------------------------------------
 -- Export the basic parser combinators with simplified types --
@@ -344,5 +341,3 @@ p rejects str = testHelper p str (const ⊤) (const ⊥)
 -- |Example use of `_rejects_`.
 _ : decimalℕ rejects "-10"
 _ = _
-
-
