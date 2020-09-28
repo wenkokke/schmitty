@@ -67,8 +67,8 @@ Right now, Schmitty supports three theories—[Core][SMT.Theories.Core], [Ints][
 # Installation
 
 - [Agda][agda] ([>= 2.6.2-0f4538][agda-version])
-- [agda-stdlib][agda-stdlib] ([>= experimental-af9d1d][agda-stdlib-version])
-- [agdarsec][agdarsec] ([>= master-d91a32][agdarsec-version])
+- [agda-stdlib][agda-stdlib] ([>= experimental-9c5615][agda-stdlib-version])
+- [agdarsec][agdarsec] ([>= master-b26230][agdarsec-version])
 
 # Roadmap
 
@@ -114,9 +114,9 @@ Right now, Schmitty supports three theories—[Core][SMT.Theories.Core], [Ints][
 [agda]: https://github.com/agda/agda
 [agda-version]: https://github.com/agda/agda/commit/0f4538c8dcd175b92acd577ca0bdca232f5cd17f
 [agda-stdlib]: https://github.com/agda/agda-stdlib
-[agda-stdlib-version]: https://github.com/agda/agda-stdlib/pull/1285/commits/af9d1da0f78f2b9cc84e531afc8615d16d9a1cf4
+[agda-stdlib-version]: https://github.com/agda/agda-stdlib/pull/1285/commits/9c56155ffdc1930b6c33caa38ef384ab8cc2dba1
 [agdarsec]: https://github.com/gallais/agdarsec
-[agdarsec-version]: https://github.com/gallais/agdarsec/commit/d91a32e3256ceded84bc0bbf551ab8a710c6092e
+[agdarsec-version]: https://github.com/gallais/agdarsec/commit/b26230ab714cddc23f1fe242d8a80abbf3b43d4f
 [FloatingPoint]: http://www.philipp.ruemmer.org/publications/smt-fpa.pdf
 [IsabelleHol]: http://www21.in.tum.de/~boehmes/proofrec.pdf
 [SatSolver]: https://github.com/wenkokke/schmitty/blob/master/extra/Kanso/Boolean/SatSolver.agda
