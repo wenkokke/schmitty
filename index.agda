@@ -26,4 +26,8 @@ import SMT.Script.Base
 import SMT.Script.Reflection 
 import Text.Parser.String 
 import Data.Environment 
+import Reflection.Universe 
+import Reflection.Annotated.Free 
+import Reflection.Normalise 
+import Reflection.Annotated 
 import Reflection.External

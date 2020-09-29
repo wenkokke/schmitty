@@ -7,6 +7,7 @@ open import Data.String as String using (String)
 open import Data.Unit using (⊤)
 open import Function using (case_of_; const; _$_; _∘_; flip)
 open import Reflection as Rfl using (return; _>>=_; _>>_)
+open import Reflection.Normalise using (normaliseClosed)
 open import SMT.Theory
 
 
@@ -57,9 +58,10 @@ module Solver {theory : Theory} (reflectable : Reflectable theory) where
         Rfl.strErr "  " ∷ Rfl.strErr x ∷ Rfl.strErr " = " ∷ Rfl.termErr v ∷ Rfl.strErr "\n" ∷ acc
 
   typeErrorCounterExample : Rfl.Term → Script [] Γ Ξ → Model Γ → Rfl.TC ⊤
-  typeErrorCounterExample {Γ} goal scr vs = do
+  typeErrorCounterExample goal scr vs = do
     let `vs = quoteInterpValues vs
-    instGoal ← Rfl.normalise (piApply goal (List.reverse ∘ List.map proj₂ ∘ All.toList $ `vs))
+    instGoal₀ ← Rfl.reduce (piApply goal (List.reverse ∘ List.map proj₂ ∘ All.toList $ `vs))
+    instGoal ← normaliseClosed instGoal₀
     Rfl.typeErrorFmt "Found counter-example:\n%erefuting %t"
       (counterExampleFmt (scriptVarNames scr) `vs []) instGoal
 

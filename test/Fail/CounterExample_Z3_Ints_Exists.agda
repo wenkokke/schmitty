@@ -11,5 +11,5 @@ open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import SMT.Theories.Ints as Ints
 open import SMT.Backend.Z3 Ints.reflectable
 
-_ : ∀ n → ∃[ m ] (+ 2 * m ≡ n)
+_ : ∀ n → ∃[ m ] (+ 2 * m ≡ n * n)
 _ = solveZ3
