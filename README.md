@@ -76,6 +76,9 @@ Right now, Schmitty supports three theories—[Core][SMT.Theories.Core], [Ints][
 - [ ] Upstream: merge [`Text.Parser.String`][Text.Parser.String] into [agdarsec][agdarsec];
 - [ ] Upstream: merge [`Reflection.Traversal`][Reflection.Traversal] into [agda-stdlib][agda-stdlib];
 - [ ] Upstream: merge [`Reflection.DeBruijn`][Reflection.DeBruijn] into [agda-stdlib][agda-stdlib];
+- [ ] Upstream: merge [`Reflection.Universe`][Reflection.Universe] into [agda-stdlib][agda-stdlib];
+- [ ] Upstream: merge [`Reflection.Annotated`][Reflection.Annotated] into [agda-stdlib][agda-stdlib];
+- [ ] Upstream: merge [`Reflection.Annotated.Free`][Reflection.Annotated.Free] into [agda-stdlib][agda-stdlib];
 - [ ] Issue: only normalise closed subterms in error messages (moderate);
 - [ ] Add error reporting to the parser (easy);
 - [ ] Add backends for other SMT-LIB compliant solvers (easy);
@@ -108,6 +111,9 @@ Right now, Schmitty supports three theories—[Core][SMT.Theories.Core], [Ints][
 [Reflection.External]: https://wenkokke.github.io/schmitty/Reflection.External.html
 [Reflection.Traversal]: https://wenkokke.github.io/schmitty/Reflection.Traversal.html
 [Reflection.DeBruijn]: https://wenkokke.github.io/schmitty/Reflection.DeBruijn.html
+[Reflection.Universe]: https://wenkokke.github.io/schmitty/Reflection.Universe.html
+[Reflection.Annotated]: https://wenkokke.github.io/schmitty/Reflection.Annotated.html
+[Reflection.Annotated.Free]: https://wenkokke.github.io/schmitty/Reflection.Annotated.Free.html
 [gallais]: https://github.com/gallais
 [kazkansouh]: https://github.com/kazkansouh
 [satsolver]: https://github.com/wenkokke/schmitty/tree/master/extra/Kanso
