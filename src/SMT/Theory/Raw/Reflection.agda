@@ -53,12 +53,19 @@ reflectToRawVar (x ∷ Γ) (suc n) = do
   σ , i , refl ← reflectToRawVar Γ n
   return (σ , suc i , refl)
 
+-- | Keep track of which variables are allowed to be used by a script and which are not.
+--   Non-dependent functions are translated to implication, but they still bring a variable
+--   into scope in the reflected syntax. This will be marked "not allowed" for the script.
+AllowedVars = List Bool
 
-strengthenVar : (fv n : ℕ) → TC ℕ
-strengthenVar fv n =
-  case n Nat.<? fv of λ where
-    (yes _) → typeErrorFmt "Dependent quantification in term"
-    (no _)  → return (n ∸ fv)
+-- | If Γ ⊢ x, then |Γ| ⊢ strengthenVar x, where |Γ| is the restriction of Γ to
+--   only the allowed variables. Fails if x is not an allowed variable.
+strengthenVar : (fv : AllowedVars) (n : ℕ) → TC ℕ
+strengthenVar []            _       = typeErrorFmt "Free variable in goal"
+strengthenVar (true  ∷ _)   0       = return 0
+strengthenVar (false ∷ _)   0       = typeErrorFmt "Dependent quantification in term"
+strengthenVar (false ∷ fvs) (suc n) = strengthenVar fvs n
+strengthenVar (true  ∷ fvs) (suc n) = suc <$> strengthenVar fvs n
 
 -- Placeholder name used as a function symbol of type TERM _ → ⋆ to wrap variables.
 rawVar : ⊤
@@ -81,10 +88,10 @@ mutual
   --  or fromNeg so it's enough to provide 1 fuel for this.
   --  However we also use the fuel when eta-expanding the predicate in existentials, and since these
   --  can be arbitrarily nested we need a reasonable amount of fuel.
-  reflectToRawTerm : (Γ : RawCtxt) (fv : ℕ) → Term → TC (RawTerm Γ ⋆)
+  reflectToRawTerm : (Γ : RawCtxt) (fv : AllowedVars) → Term → TC (RawTerm Γ ⋆)
   reflectToRawTerm = reflectToRawTerm′ 1000
 
-  reflectToRawTerm′ : (fuel : ℕ) (Γ : RawCtxt) (fv : ℕ) → Term → TC (RawTerm Γ ⋆)
+  reflectToRawTerm′ : (fuel : ℕ) (Γ : RawCtxt) (fv : AllowedVars) → Term → TC (RawTerm Γ ⋆)
   reflectToRawTerm′ fuel Γ fv (var x []) = do
     σ , y ← reflectToRawVar Γ =<< strengthenVar fv x
     return (appᵣ {Σ = record{ArgSorts = σ ∷ []}} (quote rawVar) (varᵣ y ∷ []))
@@ -98,24 +105,24 @@ mutual
   reflectToRawTerm′ (suc fuel) Γ fv (`∃ˢ a b) = reflectExist fuel Γ fv a b
   reflectToRawTerm′ fuel Γ fv (def f ts) = appᵣ {Σ = argTypes ts} f <$> reflectToRawArgs fuel Γ fv ts
   reflectToRawTerm′ fuel Γ fv (con c ts) = appᵣ {Σ = argTypes ts} c <$> reflectToRawArgs fuel Γ fv ts
-  reflectToRawTerm′ fuel Γ fv (pi (arg _ a) (abs x b)) = do
+  reflectToRawTerm′ fuel Γ fv (pi dom@(arg _ a) (abs x b)) = do
     case 0 ∈FV b of λ where
       true  →
-        forAllᵣ x (TERM a) <$> reflectToRawTerm′ fuel (TERM a ∷ Γ) fv b
+        forAllᵣ x (TERM a) <$> extendContext dom (reflectToRawTerm′ fuel (TERM a ∷ Γ) (true ∷ fv) b)
       false → do
         a ← reflectToRawTerm′ fuel Γ fv a
-        b ← reflectToRawTerm′ fuel Γ (suc fv) b
+        b ← extendContext dom (reflectToRawTerm′ fuel Γ (false ∷ fv) b)
         return (appᵣ {Σ = record {ArgSorts = ⋆ ∷ ⋆ ∷ []}} (quote Morphism) (a ∷ b ∷ []))
   reflectToRawTerm′ fuel Γ fv (meta x _) = blockOnMeta x
   reflectToRawTerm′ fuel Γ fv t = typeErrorFmt "reflectToRawTerm′ failed"
 
-  reflectExist : (fuel : ℕ) (Γ : RawCtxt) (fv : ℕ) → Term → Term → TC (RawTerm Γ ⋆)
+  reflectExist : (fuel : ℕ) (Γ : RawCtxt) (fv : AllowedVars) → Term → Term → TC (RawTerm Γ ⋆)
   reflectExist fuel Γ fv a b = do
     lam _ (abs x b) ← return $ η-expand visible b
       where _ → typeErrorFmt "reflectedToRawTerm′ failed to η-expand existential predicate"
-    existsᵣ x (TERM a) <$> reflectToRawTerm′ fuel (TERM a ∷ Γ) fv b
+    existsᵣ x (TERM a) <$> extendContext (vArg a) (reflectToRawTerm′ fuel (TERM a ∷ Γ) (true ∷ fv) b)
 
-  reflectToRawArgs : ∀ (fuel : ℕ) Γ (fv : ℕ) (ts : List (Arg Term)) → TC (RawArgs Γ (ArgSorts (argTypes ts)))
+  reflectToRawArgs : ∀ (fuel : ℕ) Γ (fv : AllowedVars) (ts : List (Arg Term)) → TC (RawArgs Γ (ArgSorts (argTypes ts)))
   reflectToRawArgs fuel Γ fv [] = return []
   reflectToRawArgs fuel Γ fv (vArg t ∷ ts) = ⦇ reflectToRawTerm′ fuel Γ fv t ∷ reflectToRawArgs fuel Γ fv ts ⦈
   reflectToRawArgs fuel Γ fv (hArg _ ∷ ts) = reflectToRawArgs fuel Γ fv ts
@@ -123,7 +130,6 @@ mutual
   reflectToRawArgs fuel Γ fv (arg (arg-info visible   irrelevant) _ ∷ ts) = reflectToRawArgs fuel Γ fv ts
   reflectToRawArgs fuel Γ fv (arg (arg-info hidden    irrelevant) t ∷ ts) = reflectToRawArgs fuel Γ fv ts
   reflectToRawArgs fuel Γ fv (arg (arg-info instance′ irrelevant) t ∷ ts) = reflectToRawArgs fuel Γ fv ts
-
 
 -- |Decode a reflected Agda type to a raw SMT-LIB script.
 --
@@ -143,17 +149,17 @@ mutual
 --  for this type, then we have a counter-example for the original type.
 --
 reflectToRawScript : Term → TC (∃[ Γ ] RawScript [] Γ [])
-reflectToRawScript = reflectToRawScript′ [] 0
+reflectToRawScript = reflectToRawScript′ [] []
   where
-    reflectToRawScript′ : (Γ : RawCtxt) (fv : ℕ) → Term → TC (∃[ Γ′ ] RawScript Γ Γ′ [])
-    reflectToRawScript′ Γ fv (pi (arg _ a) (abs x b)) =
+    reflectToRawScript′ : (Γ : RawCtxt) (fv : AllowedVars) → Term → TC (∃[ Γ′ ] RawScript Γ Γ′ [])
+    reflectToRawScript′ Γ fv (pi dom@(arg _ a) (abs x b)) =
       case 0 ∈FV b of λ where
         true → do
-          Γ′ , s ← reflectToRawScript′ (TERM a ∷ Γ) fv b
+          Γ′ , s ← extendContext dom $ reflectToRawScript′ (TERM a ∷ Γ) (true ∷ fv) b
           return (Γ′ , declare-constᵣ x (TERM a) ∷ᵣ s)
         false → do
           t ← reflectToRawTerm Γ fv a
-          Γ′ , s ← reflectToRawScript′ Γ (suc fv) b
+          Γ′ , s ← extendContext dom $ reflectToRawScript′ Γ (false ∷ fv) b
           return (Γ′ , assertᵣ t ∷ᵣ s)
     reflectToRawScript′ Γ fv t = do
       t ← reflectToRawTerm Γ fv t
