@@ -105,13 +105,13 @@ mutual
   reflectToRawTerm′ (suc fuel) Γ fv (`∃ˢ a b) = reflectExist fuel Γ fv a b
   reflectToRawTerm′ fuel Γ fv (def f ts) = appᵣ {Σ = argTypes ts} f <$> reflectToRawArgs fuel Γ fv ts
   reflectToRawTerm′ fuel Γ fv (con c ts) = appᵣ {Σ = argTypes ts} c <$> reflectToRawArgs fuel Γ fv ts
-  reflectToRawTerm′ fuel Γ fv (pi (arg _ a) (abs x b)) = do
+  reflectToRawTerm′ fuel Γ fv (pi dom@(arg _ a) (abs x b)) = do
     case 0 ∈FV b of λ where
       true  →
-        forAllᵣ x (TERM a) <$> reflectToRawTerm′ fuel (TERM a ∷ Γ) (true ∷ fv) b
+        forAllᵣ x (TERM a) <$> extendContext dom (reflectToRawTerm′ fuel (TERM a ∷ Γ) (true ∷ fv) b)
       false → do
         a ← reflectToRawTerm′ fuel Γ fv a
-        b ← reflectToRawTerm′ fuel Γ (false ∷ fv) b
+        b ← extendContext dom (reflectToRawTerm′ fuel Γ (false ∷ fv) b)
         return (appᵣ {Σ = record {ArgSorts = ⋆ ∷ ⋆ ∷ []}} (quote Morphism) (a ∷ b ∷ []))
   reflectToRawTerm′ fuel Γ fv (meta x _) = blockOnMeta x
   reflectToRawTerm′ fuel Γ fv t = typeErrorFmt "reflectToRawTerm′ failed"
@@ -120,7 +120,7 @@ mutual
   reflectExist fuel Γ fv a b = do
     lam _ (abs x b) ← return $ η-expand visible b
       where _ → typeErrorFmt "reflectedToRawTerm′ failed to η-expand existential predicate"
-    existsᵣ x (TERM a) <$> reflectToRawTerm′ fuel (TERM a ∷ Γ) (true ∷ fv) b
+    existsᵣ x (TERM a) <$> extendContext (vArg a) (reflectToRawTerm′ fuel (TERM a ∷ Γ) (true ∷ fv) b)
 
   reflectToRawArgs : ∀ (fuel : ℕ) Γ (fv : AllowedVars) (ts : List (Arg Term)) → TC (RawArgs Γ (ArgSorts (argTypes ts)))
   reflectToRawArgs fuel Γ fv [] = return []
@@ -152,14 +152,14 @@ reflectToRawScript : Term → TC (∃[ Γ ] RawScript [] Γ [])
 reflectToRawScript = reflectToRawScript′ [] []
   where
     reflectToRawScript′ : (Γ : RawCtxt) (fv : AllowedVars) → Term → TC (∃[ Γ′ ] RawScript Γ Γ′ [])
-    reflectToRawScript′ Γ fv (pi (arg _ a) (abs x b)) =
+    reflectToRawScript′ Γ fv (pi dom@(arg _ a) (abs x b)) =
       case 0 ∈FV b of λ where
         true → do
-          Γ′ , s ← reflectToRawScript′ (TERM a ∷ Γ) (true ∷ fv) b
+          Γ′ , s ← extendContext dom $ reflectToRawScript′ (TERM a ∷ Γ) (true ∷ fv) b
           return (Γ′ , declare-constᵣ x (TERM a) ∷ᵣ s)
         false → do
           t ← reflectToRawTerm Γ fv a
-          Γ′ , s ← reflectToRawScript′ Γ (false ∷ fv) b
+          Γ′ , s ← extendContext dom $ reflectToRawScript′ Γ (false ∷ fv) b
           return (Γ′ , assertᵣ t ∷ᵣ s)
     reflectToRawScript′ Γ fv t = do
       t ← reflectToRawTerm Γ fv t
