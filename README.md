@@ -70,6 +70,7 @@ Right now, Schmitty supports three theories—[Core][SMT.Theories.Core], [Ints][
 - [agda-stdlib][agda-stdlib] ([>= experimental-9c5615][agda-stdlib-version])
 - [agdarsec][agdarsec] ([>= master-b26230][agdarsec-version])
 
+Note that the path to `z3` must be added to the list of trusted executables in Agda. See  [manual.](https://agda.readthedocs.io/en/latest/language/reflection.html?highlight=trusted#system-calls)
 # Roadmap
 
 - [ ] Upstream: merge [`Reflection.External`][Reflection.External] into [agda-stdlib][agda-stdlib];
