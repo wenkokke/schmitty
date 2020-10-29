@@ -67,19 +67,13 @@ Right now, Schmitty supports three theories—[Core][SMT.Theories.Core], [Ints][
 # Installation
 
 - [Agda][agda] ([>= 2.6.2-0f4538][agda-version])
-- [agda-stdlib][agda-stdlib] ([>= experimental-9c5615][agda-stdlib-version])
+- [agda-stdlib][agda-stdlib] ([>= experimental-da286d][agda-stdlib-version])
 - [agdarsec][agdarsec] ([>= master-b26230][agdarsec-version])
 
 Note that the path to `z3` must be added to the list of trusted executables in Agda. See  [manual.](https://agda.readthedocs.io/en/latest/language/reflection.html?highlight=trusted#system-calls)
 # Roadmap
 
-- [ ] Upstream: merge [`Reflection.External`][Reflection.External] into [agda-stdlib][agda-stdlib];
 - [ ] Upstream: merge [`Text.Parser.String`][Text.Parser.String] into [agdarsec][agdarsec];
-- [ ] Upstream: merge [`Reflection.Traversal`][Reflection.Traversal] into [agda-stdlib][agda-stdlib];
-- [ ] Upstream: merge [`Reflection.DeBruijn`][Reflection.DeBruijn] into [agda-stdlib][agda-stdlib];
-- [ ] Upstream: merge [`Reflection.Universe`][Reflection.Universe] into [agda-stdlib][agda-stdlib];
-- [ ] Upstream: merge [`Reflection.Annotated`][Reflection.Annotated] into [agda-stdlib][agda-stdlib];
-- [ ] Upstream: merge [`Reflection.Annotated.Free`][Reflection.Annotated.Free] into [agda-stdlib][agda-stdlib];
 - [ ] Issue: only normalise closed subterms in error messages (moderate);
 - [ ] Add error reporting to the parser (easy);
 - [ ] Add backends for other SMT-LIB compliant solvers (easy);
@@ -109,18 +103,12 @@ Note that the path to `z3` must be added to the list of trusted executables in A
 [SMT.Backend.Z3]: https://wenkokke.github.io/schmitty/SMT.Backend.Z3.html
 [SMT.Backend.CVC4]: https://wenkokke.github.io/schmitty/SMT.Backend.CVC4.html
 [Text.Parser.String]: https://wenkokke.github.io/schmitty/Text.Parser.String.html
-[Reflection.External]: https://wenkokke.github.io/schmitty/Reflection.External.html
-[Reflection.Traversal]: https://wenkokke.github.io/schmitty/Reflection.Traversal.html
-[Reflection.DeBruijn]: https://wenkokke.github.io/schmitty/Reflection.DeBruijn.html
-[Reflection.Universe]: https://wenkokke.github.io/schmitty/Reflection.Universe.html
-[Reflection.Annotated]: https://wenkokke.github.io/schmitty/Reflection.Annotated.html
-[Reflection.Annotated.Free]: https://wenkokke.github.io/schmitty/Reflection.Annotated.Free.html
 [gallais]: https://github.com/gallais
 [kazkansouh]: https://github.com/kazkansouh
 [satsolver]: https://github.com/wenkokke/schmitty/tree/master/extra/Kanso
 [agda]: https://github.com/agda/agda
 [agda-version]: https://github.com/agda/agda/commit/0f4538c8dcd175b92acd577ca0bdca232f5cd17f
-[agda-stdlib]: https://github.com/agda/agda-stdlib
+[agda-stdlib]: https://github.com/agda/agda-stdlib/commit/da286d0e2c767074faa218cbca53aaf5a1b8fc7f
 [agda-stdlib-version]: https://github.com/agda/agda-stdlib/pull/1285/commits/9c56155ffdc1930b6c33caa38ef384ab8cc2dba1
 [agdarsec]: https://github.com/gallais/agdarsec
 [agdarsec-version]: https://github.com/gallais/agdarsec/commit/b26230ab714cddc23f1fe242d8a80abbf3b43d4f
