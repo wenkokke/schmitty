@@ -11,6 +11,7 @@ open import Data.Environment as Env using (Env; _∷_; [])
 open import Data.Fin as Fin using (Fin; suc; zero)
 open import Data.List as List using (List; _∷_; []; _++_; length)
 open import Data.List.Relation.Unary.All as All using (All; _∷_; [])
+open import Data.List.Relation.Unary.Any as Any using (here; there)
 open import Data.List.NonEmpty as List⁺ using (List⁺; _∷_)
 open import Data.Maybe as Maybe using (Maybe; just; nothing)
 import Data.Maybe.Categorical as MaybeCat
@@ -122,8 +123,8 @@ module _ where
     MaybeModel Γ = Env (λ σ _Γ → List (Value σ)) Γ
 
     insertMM : ∃[ σ ] (Γ ∋ σ × Value σ) → MaybeModel Γ → MaybeModel Γ
-    insertMM {.σ ∷ Γ} (σ , (Fin.zero  , refl) , v) (vs ∷ env) = (v ∷ vs) ∷ env
-    insertMM {σ′ ∷ Γ} (σ , (Fin.suc i , p)    , v) (vs ∷ env) = vs ∷ insertMM (σ , (i , p) , v) env
+    insertMM {.σ ∷ Γ} (σ , (here refl) , v) (vs ∷ env) = (v ∷ vs) ∷ env
+    insertMM {σ′ ∷ Γ} (σ , (there p)    , v) (vs ∷ env) = vs ∷ insertMM (σ , p , v) env
 
     mkMM : List (Defn Γ) → MaybeModel Γ
     mkMM {Γ} []       = Env.repeat (λ _σ _Γ → []) Γ
@@ -195,7 +196,7 @@ module _ where
   freshNameS n σ = do
     (ns , vps) ← get
     let (n′ , ns) = freshName n σ ns
-    let vps = ((Fin.zero , refl) <$ withSpaces (exacts n′)) ∷ vps
+    let vps = (here refl <$ withSpaces (exacts n′)) ∷ vps
     put (ns , vps)
     return n′
 
@@ -206,9 +207,9 @@ module _ where
     return _
 
   lookupNameS : (i : Γ ∋ σ) → NameState Γ Γ Name
-  lookupNameS (i , _p) = do
+  lookupNameS p = do
     (ns , _vps) ← get
-    return $ Env.lookup (Names.nameEnv ns) i
+    return $ Env.lookup (Names.nameEnv ns) (Any.index p)
 
 
   -- * Printing functions

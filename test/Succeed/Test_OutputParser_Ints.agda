@@ -6,10 +6,10 @@
 
 module Test_OutputParser_Ints where
 
-open import Data.Fin using (Fin; suc; zero)
 open import Data.Integer using (ℤ; +_; -[1+_])
 open import Data.List using (List; _∷_; [])
 open import Data.List.NonEmpty using (List⁺; _∷_)
+open import Data.List.Relation.Unary.Any using (here; there)
 open import Data.Product as Prod using (_,_)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import Text.Parser.String
@@ -29,10 +29,10 @@ pVar : ∀[ Parser (Var (INT ∷ INT ∷ [])) ]
 pVar = getVarParser script
 
 _ : pVar parses "x_0"
-_ = ! INT , suc zero , refl
+_ = ! INT , there (here refl)
 
 _ : pVar parses "y_1"
-_ = ! INT , zero , refl
+_ = ! INT , here refl
 
 _ : pVar rejects "x_2"
 _ = _
@@ -42,10 +42,10 @@ pDefn : ∀[ Parser (Defn (INT ∷ INT ∷ [])) ]
 pDefn = mkDefnParser pVar
 
 _ : pDefn parses "(define-fun x_0 () Int 0)"
-_ = ! INT , (suc zero , refl) , + 0
+_ = ! INT , there (here refl) , + 0
 
 _ : pDefn parses "(define-fun y_1 () Int (- 1))"
-_ = ! INT , (zero , refl) , -[1+ 0 ]
+_ = ! INT , here refl , -[1+ 0 ]
 
 
 pDefns : ∀[ Parser (List⁺ (Defn (INT ∷ INT ∷ [])))]
@@ -53,7 +53,7 @@ pDefns = mkDefnsParser pVar
 
 _ : pDefns parses
     "(model (define-fun y_1 () Int 0) (define-fun x_0 () Int 0))"
-_ = ! ((INT , (zero , refl) , + 0) ∷ (INT , (suc zero , refl) , + 0) ∷ [])
+_ = ! ((INT , here refl , + 0) ∷ (INT , there (here refl) , + 0) ∷ [])
 
 
 pModel : ∀[ Parser (QualifiedModel (INT ∷ INT ∷ [])) ]

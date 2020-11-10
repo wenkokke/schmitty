@@ -10,6 +10,7 @@ open import Data.Environment as Env using (Env; _∷_; [])
 open import Data.Fin as Fin using (Fin; suc; zero)
 open import Data.List as List using (List; _∷_; []; _++_; length)
 open import Data.List.Relation.Unary.All using (All; _∷_; [])
+open import Data.List.Relation.Unary.Any as Any using (here; there)
 open import Data.Maybe as Maybe using (Maybe; just; nothing)
 import Data.Maybe.Categorical as MaybeCat
 open import Data.Nat as Nat using (ℕ; suc; zero)
@@ -23,7 +24,7 @@ import Level
 import Reflection as Rfl
 open import Relation.Nullary using (Dec; yes; no)
 open import Relation.Nullary.Decidable using (True)
-open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym)
 open import SMT.Script.Base baseTheory
 open import SMT.Script.Show theory
 
@@ -61,13 +62,13 @@ module _ where
 
   checkRawVar : (Γ : Ctxt) (σ : Sort) (n : ℕ) → Maybe (Γ ∋ σ)
   checkRawVar []       σ n       = nothing
-  checkRawVar (σ′ ∷ Γ) σ zero    = ⦇ (zero ,_) (Maybe.decToMaybe (σ′ ≟-Sort σ)) ⦈
+  checkRawVar (σ′ ∷ Γ) σ zero    = ⦇ (here ∘ sym) (Maybe.decToMaybe (σ′ ≟-Sort σ)) ⦈
   checkRawVar (σ′ ∷ Γ) σ (suc n) = ⦇ extendVar (checkRawVar Γ σ n) ⦈
 
   mutual
     checkRawTerm : (Γ : Ctxt) (σ : Sort) {σᵣ : RawSort} → RawTerm Γᵣ σᵣ → Maybe (Term Γ σ)
     checkRawTerm Γ σ (appᵣ (quote rawVar) (varᵣ n ∷ [])) = do
-      x ← checkRawVar Γ σ (Fin.toℕ (proj₁ n))
+      x ← checkRawVar Γ σ (Fin.toℕ (Any.index n))
       return $ var x
     checkRawTerm Γ σ (varᵣ n) = nothing -- should be no naked variables
     checkRawTerm Γ σ (litᵣ l) = do

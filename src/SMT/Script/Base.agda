@@ -9,6 +9,12 @@ open import Data.List as List using (List; _∷_; []; _++_; _ʳ++_)
 import Data.List.Properties as List
 open import Data.List.NonEmpty as List⁺ using (List⁺; _∷_)
 open import Data.List.Relation.Unary.All
+open import Data.List.Relation.Unary.Any as Any using (here; there)
+import Data.List.Relation.Binary.Subset.Propositional as Subset
+import Data.List.Relation.Binary.Subset.Propositional.Properties as Subset
+import Data.List.Relation.Binary.Subset.Propositional.ExtraProperties as Subset
+open import Data.List.Membership.Propositional using (_∈_)
+import Data.List.Membership.Propositional.Properties as Membership
 open import Data.Maybe using (Maybe; just; nothing)
 open import Data.Nat as Nat using (ℕ; _<?_)
 open import Data.Product as Prod using (∃; ∃-syntax; _×_; _,_)
@@ -42,7 +48,7 @@ private
 
 -- |Well-typed variables.
 _∋_ : (Γ : Ctxt) (σ : Sort) → Set
-Γ ∋ σ = ∃[ i ] (List.lookup Γ i ≡ σ)
+Γ ∋ σ = σ ∈ Γ
 
 -- |SMT-LIB terms.
 --
@@ -67,21 +73,24 @@ pattern app₁ f x     = app f (x ∷ [])
 pattern app₂ f x y   = app f (x ∷ y ∷ [])
 pattern app₃ f x y z = app f (x ∷ y ∷ z ∷ [])
 
+private
+  -- Add to stdlib
+  lookup-∋ : ∀ i → List.lookup Γ i ≡ σ → Γ ∋ σ
+  lookup-∋ {x ∷ Γ} zero    eq = here (Eq.sym eq)
+  lookup-∋ {x ∷ Γ} (suc i) eq = there (lookup-∋ i eq)
+  
 -- |Helper function for writing variables.
 #_ : {Γ : Ctxt} {σ : Sort} (n : ℕ)
      {n<∣Γ∣ : True (n <? List.length Γ)}
-     {Γ∋σ : True (List.lookup Γ (Fin.fromℕ< (toWitness n<∣Γ∣)) ≟-Sort σ)} → Term Γ σ
-#_ {Γ} {σ} n {n<∣Γ∣} {Γ∋σ} = var (Fin.fromℕ< (toWitness n<∣Γ∣) , toWitness Γ∋σ)
+     {Γ∋σ : True (List.lookup Γ (Fin.fromℕ< (toWitness n<∣Γ∣)) ≟-Sort σ)} →
+     Term Γ σ
+#_ i {n<∣Γ∣} {Γ∋σ} = var (lookup-∋ (Fin.fromℕ< (toWitness n<∣Γ∣)) (toWitness Γ∋σ))
 
-Rename : (Γ Δ : Ctxt) → Set
-Rename Γ Δ = ∀ {σ} → Γ ∋ σ → Δ ∋ σ
-
-extendVar : Γ ∋ σ → (σ′ ∷ Γ) ∋ σ
-extendVar (i , p) = suc i , p
+Rename : Ctxt → Ctxt → Set
+Rename = Subset._⊆_
 
 extendRename : Rename Γ Γ′ → Rename (σ ∷ Γ) (σ ∷ Γ′)
-extendRename r (zero  , p) = zero , p
-extendRename r (suc i , p) = extendVar (r (i , p))
+extendRename = Subset.++⁺ʳ _
 
 mutual
   renameTerm : Rename Γ Γ′ → Term Γ σ → Term Γ′ σ
@@ -95,33 +104,17 @@ mutual
   renameArgs r [] = []
   renameArgs r (x ∷ xs) = renameTerm r x ∷ renameArgs r xs
 
+extendVar : Γ ∋ σ → (σ′ ∷ Γ) ∋ σ
+extendVar = there
+
 injectVar : (Γ : Ctxt) → Γ ∋ σ → (Γ ++ Γ′) ∋ σ
-injectVar (σ′ ∷ Γ) (zero  , p) = zero , p
-injectVar (σ′ ∷ Γ) (suc i , p) = extendVar (injectVar Γ (i , p))
+injectVar Γ = Subset.xs⊆xs++ys
 
 raiseVar : (Γ′ : Ctxt) → Γ ∋ σ → (Γ′ ++ Γ) ∋ σ
-raiseVar []       x = x
-raiseVar (σ ∷ Γ′) x = extendVar (raiseVar Γ′ x)
-
-swapVar : (Γ : Ctxt) → (Γ ++ τ ∷ τ′ ∷ Γ′) ∋ σ → (Γ ++ τ′ ∷ τ ∷ Γ′) ∋ σ
-swapVar [] (zero        , p) = (suc zero    , p)
-swapVar [] (suc zero    , p) = (zero        , p)
-swapVar [] (suc (suc i) , p) = (suc (suc i) , p)
-swapVar (σ′ ∷ Γ) (zero  , p) = (zero        , p)
-swapVar (σ′ ∷ Γ) (suc i , p) = extendVar (swapVar Γ (i , p))
-
-moveVar : (Γ Γ′ {Γ″} : Ctxt) → (Γ ++ τ ∷ Γ′ ++ Γ″) ∋ σ → (Γ ++ Γ′ ++ τ ∷ Γ″) ∋ σ
-moveVar {τ} {σ} Γ []        {Γ″} x = x
-moveVar {τ} {σ} Γ (σ′ ∷ Γ′) {Γ″} x = x″
-  where
-    x′ : ((Γ ++ σ′ ∷ []) ++ τ ∷ Γ′ ++ Γ″) ∋ σ
-    x′ rewrite List.++-assoc Γ (σ′ ∷ []) (τ ∷ Γ′ ++ Γ″) = swapVar Γ x
-    x″ : (Γ ++ σ′ ∷ Γ′ ++ τ ∷ Γ″) ∋ σ
-    x″ rewrite Eq.sym (List.++-assoc Γ (σ′ ∷ []) (Γ′ ++ τ ∷ Γ″)) = moveVar (Γ ++ σ′ ∷ []) Γ′ x′
+raiseVar Γ = Subset.xs⊆ys++xs
 
 reverseVar : (Γ {Γ′} : Ctxt) → (Γ ++ Γ′) ∋ σ → (Γ ʳ++ Γ′) ∋ σ
-reverseVar [] x = x
-reverseVar {σ} (σ′ ∷ Γ) {Γ′} x rewrite List.ʳ++-++ (σ′ ∷ []) {Γ} {Γ′} = reverseVar Γ (moveVar [] Γ x)
+reverseVar Γ = Subset.↭⇒⊆ (Subset.++↭ʳ++ Γ _)
 
 inject : (Γ : Ctxt) → Term Γ σ → Term (Γ ++ Γ′) σ
 inject Γ = renameTerm (injectVar Γ)

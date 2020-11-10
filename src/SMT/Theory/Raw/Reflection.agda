@@ -6,6 +6,7 @@ open import Data.Fin as Fin using (Fin; suc; zero)
 open import Data.Integer as Int using (ℤ; +_; -[1+_])
 open import Data.List as List using (List; _∷_; [])
 open import Data.List.Relation.Unary.All using (All; _∷_; [])
+open import Data.List.Relation.Unary.Any using (here; there)
 open import Data.List.NonEmpty as List⁺ using (List⁺; _∷_)
 open import Data.Nat as Nat using (ℕ; zero; suc; _∸_)
 import Data.Nat.Literals as NatLits using (number)
@@ -48,10 +49,10 @@ private
 
 reflectToRawVar : (Γ : RawCtxt) (n : ℕ) → TC (∃[ σ ] (Γ ∋ᵣ σ))
 reflectToRawVar []      n       = typeErrorFmt "Variable out of bounds"
-reflectToRawVar (x ∷ Γ) zero    = return (_ , zero , refl)
+reflectToRawVar (x ∷ Γ) zero    = return (_ , here refl)
 reflectToRawVar (x ∷ Γ) (suc n) = do
-  σ , i , refl ← reflectToRawVar Γ n
-  return (σ , suc i , refl)
+  σ , p ← reflectToRawVar Γ n
+  return (σ , there p)
 
 -- | Keep track of which variables are allowed to be used by a script and which are not.
 --   Non-dependent functions are translated to implication, but they still bring a variable
