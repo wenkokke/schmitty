@@ -22,7 +22,7 @@ init:
 #######################
 
 index.agda: $(SOURCES)
-	@echo "module index where\n$(foreach module_name,$(MODULES),\nimport $(module_name))" > index.agda
+	@echo "module index where\n$(foreach module_name,$(MODULES),\nimport $(module_name))" | sed 's/ $$//' > index.agda
 
 
 ##################
