@@ -17,12 +17,12 @@ verycool = solveZ3
 So, basically, what Schmitty offers you is a well-typed embedding of *some* of the SMT-LIB language in Agda. That means you can't *just* shout “solve” at your problems, you can also write SMT queries yourself!
 ```agda
 blegh : Script [] (INT ∷ INT ∷ []) (SAT ∷ [])
-blegh = declare-const "x" INT
-      ∷ declare-const "y" INT
-      ∷ assert (app₂ leq (# 0) (# 1))
-      ∷ assert (app₂ leq (# 1) (# 0))
-      ∷ assert (app₁ not (app₂ eq (# 0) (# 1)))
-      ∷ check-sat
+blegh = `declare-const "x" INT
+      ∷ `declare-const "y" INT
+      ∷ `assert (`app₂ leq (# 0) (# 1))
+      ∷ `assert (`app₂ leq (# 1) (# 0))
+      ∷ `assert (`app₁ not (`app₂ eq (# 0) (# 1)))
+      ∷ `check-sat
       ∷ []
 ```
 Ohh, that's *almost* the script that our call to `solveZ3` above generates! What a lucky coincidence! You see, top-level constants are existentially quantified, so that script asks Z3 to see if `∃[ x ] ∃[ y ] (x ≤ y → y ≤ x → x ≢ y)` is satisfiable… and if it is, then, well, there *must* be a counter-example to our original goal!
@@ -35,11 +35,11 @@ Lucky us! It's *very* unsatisfiable… Wait, how did that work?! Did you just *c
 Did you pick up on that `unsat` there? Schmitty doesn’t just give you back the solver’s output… she’s kind enough to actually parse the output for you! In fact, when Schmitty prints the term, she also builds you an output parser, which parses the expected solver output, including models! Let’s make sure our next query is satisfiable!
 ```agda
 yesss : Script [] (INT ∷ INT ∷ []) (MODEL (INT ∷ INT ∷ []) ∷ [])
-yesss = declare-const "x" INT
-      ∷ declare-const "y" INT
-      ∷ assert (app₂ leq (app₂ sub (# 0) (# 1)) (app₂ add (# 0) (# 1)))
-      ∷ assert (app₁ not (app₂ eq (# 0) (# 1)))
-      ∷ get-model
+yesss = `declare-const "x" INT
+      ∷ `declare-const "y" INT
+      ∷ `assert (`app₂ leq (`app₂ sub (# 0) (# 1)) (`app₂ add (# 0) (# 1)))
+      ∷ `assert (`app₁ not (`app₂ eq (# 0) (# 1)))
+      ∷ `get-model
       ∷ []
 ```
 If we call `get-model` instead of `check-sat`, Schmitty will give us back a valid model!
