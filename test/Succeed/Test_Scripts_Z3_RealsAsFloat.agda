@@ -6,10 +6,14 @@
 
 module Test_Scripts_Z3_RealsAsFloat where
 
+open import Data.Empty using (⊥)
+open import Data.Float using (_≟_; _÷_)
 open import Data.Integer using (+_)
 open import Data.List using (List; _∷_; [])
 open import Data.Product using (_,_)
+open import Data.Unit using (⊤; tt)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import Relation.Nullary.Decidable using (True)
 open import Text.Parser.String
 open import SMT.Theories.Reals as Reals
 open import SMT.Backend.Z3 Reals.reflectable
@@ -23,5 +27,11 @@ script = `declare-const "x" REAL
        ∷ `get-model
        ∷ []
 
-_ : z3 script ≡ ((sat , 2.0 ∷ 4.0 ∷ []) ∷ [])
-_ = refl
+is-correct : Outputs (MODEL (REAL ∷ REAL ∷ []) ∷ []) → Set
+is-correct ((sat     , (x ∷ y ∷ [])) ∷ []) = True (x ≟ y ÷ 2.0)
+is-correct ((unsat   , tt)           ∷ []) = ⊥
+is-correct ((unknown , tt)           ∷ []) = ⊥
+
+_ : is-correct (z3 script)
+_ = tt
+
