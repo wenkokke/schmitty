@@ -43,7 +43,7 @@ z3TC {Γ} {ξ} {Ξ} scr = do
   -- Run the Z3 command and parse the output.
   (result exitCode stdout stderr) ← unsafeRunCmdTC z3Cmd
   case runParser parseOutputs stdout of λ where
-    (inj₁ parserr) → parseError stdout parserr
+    (inj₁ parserr) → parseError stdout parserr (showCmdSpec z3Cmd) scr
     (inj₂ outputs) → return outputs
 
 

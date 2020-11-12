@@ -4,9 +4,11 @@ open import Data.List.Relation.Unary.Any
 open import Data.List.Membership.Propositional.Properties
 open import Data.List.Relation.Binary.Subset.Propositional
 open import Data.List.Relation.Binary.Subset.Propositional.Properties
-open import Level
 open import Data.List.Relation.Binary.Permutation.Propositional
 import Data.List.Relation.Binary.Permutation.Propositional.Properties as Perm
+open import Function.Base
+open import Level
+
 
 module Data.List.Relation.Binary.Subset.Propositional.ExtraProperties where
 

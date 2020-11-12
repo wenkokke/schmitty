@@ -44,7 +44,7 @@ cvc4TC {Γ} {ξ} {Ξ} scr = do
   -- Run the CVC4 command and parse the output.
   result exitCode stdout stderr ← unsafeRunCmdTC cvc4Cmd
   case runParser parseOutputs stdout of λ where
-    (inj₁ parserr) → parseError stdout parserr
+    (inj₁ parserr) → parseError stdout parserr (showCmdSpec cvc4Cmd) scr
     (inj₂ outputs) → return outputs
 
 macro

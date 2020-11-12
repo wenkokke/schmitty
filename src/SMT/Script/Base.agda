@@ -21,12 +21,14 @@ open import Data.Product as Prod using (∃; ∃-syntax; _×_; _,_)
 open import Data.String as String using (String)
 open import Data.Unit as Unit using (⊤)
 open import Function using (_$_; _∘_; id)
-open import Relation.Nullary using (Dec; yes; no)
+open import Relation.Nullary using (yes; no)
 open import Relation.Nullary.Decidable using (True; toWitness)
+open import Relation.Binary.Definitions using (DecidableEquality)
 open import Relation.Binary.PropositionalEquality as Eq using (_≡_; refl)
 open import Data.Environment as Env using (Env; _∷_; [])
 import Reflection as Rfl
 open import Text.Parser.String using (ParseErrorMsg; no-parse; ambiguous-parse)
+open import Text.Printf
 
 -------------------
 -- SMT-LIB Terms --
@@ -50,21 +52,35 @@ private
 _∋_ : (Γ : Ctxt) (σ : Sort) → Set
 Γ ∋ σ = σ ∈ Γ
 
+extendVar : Γ ∋ σ → (σ′ ∷ Γ) ∋ σ
+extendVar = there
+
+injectVar : (Γ : Ctxt) → Γ ∋ σ → (Γ ++ Γ′) ∋ σ
+injectVar Γ = Subset.xs⊆xs++ys
+
+raiseVar : (Γ′ : Ctxt) → Γ ∋ σ → (Γ′ ++ Γ) ∋ σ
+raiseVar Γ = Subset.xs⊆ys++xs
+
+reverseVar : (Γ {Γ′} : Ctxt) → (Γ ++ Γ′) ∋ σ → (Γ ʳ++ Γ′) ∋ σ
+reverseVar Γ = Subset.↭⇒⊆ (Subset.++↭ʳ++ Γ _)
+
 -- |SMT-LIB terms.
 --
 --  NOTE: match expressions are omitted, since we have no plans at the moment
 --        to support datatype sorts.
+
 mutual
   data Term (Γ : Ctxt) : (σ : Sort) → Set where
-    var    : ∀ {σ} (x : Γ ∋ σ) → Term Γ σ
-    lit    : ∀ {σ} (l : Literal σ) → Term Γ σ
-    app    : ∀ {σ} {Σ : Signature σ} (x : Identifier Σ) (xs : Args Γ (ArgSorts Σ)) → Term Γ σ
-    forAll : ∀ (n : String) (σ : Sort) (x : Term (σ ∷ Γ) BOOL) → Term Γ BOOL
-    exists : ∀ (n : String) (σ : Sort) (x : Term (σ ∷ Γ) BOOL) → Term Γ BOOL
+    var             : ∀ {σ} (x : Γ ∋ σ) → Term Γ σ
+    lit             : ∀ {σ} (l : Literal σ) → Term Γ σ
+    app             : ∀ {σ} {Σ : Signature σ} (x : Identifier Σ) (xs : Args Γ (ArgSorts Σ)) → Term Γ σ
+    forAll          : ∀ (n : String) (σ : Sort) (x : Term (σ ∷ Γ) BOOL) → Term Γ BOOL
+    exists          : ∀ (n : String) (σ : Sort) (x : Term (σ ∷ Γ) BOOL) → Term Γ BOOL
+    ⟨let⟩_∶_≈_⟨in⟩_ : ∀ (n : String) (σ : Sort) → Term Γ σ → Term (σ ∷ Γ) σ′ → Term Γ σ′
 
   Args : (Γ Δ : Ctxt) → Set
   Args Γ Δ = All (λ σ → Term Γ σ) Δ
-
+  
 Macro : (Σ : Signature σ) → Set
 Macro {σ} Σ = ∀ {Γ} → Args Γ (ArgSorts Σ) → Term Γ σ
 
@@ -94,27 +110,16 @@ extendRename = Subset.++⁺ʳ _
 
 mutual
   renameTerm : Rename Γ Γ′ → Term Γ σ → Term Γ′ σ
-  renameTerm r (var i)        = var (r i)
-  renameTerm r (lit l)        = lit l
-  renameTerm r (app x xs)     = app x (renameArgs r xs)
-  renameTerm r (forAll n σ x) = forAll n σ (renameTerm (extendRename r) x)
-  renameTerm r (exists n σ x) = exists n σ (renameTerm (extendRename r) x)
+  renameTerm r (var i)                   = var (r i)
+  renameTerm r (lit l)                   = lit l
+  renameTerm r (app x xs)                = app x (renameArgs r xs)
+  renameTerm r (forAll n σ x)            = forAll n σ (renameTerm (extendRename r) x)
+  renameTerm r (exists n σ x)            = exists n σ (renameTerm (extendRename r) x)
+  renameTerm r (⟨let⟩ n ∶ σ ≈ x ⟨in⟩ y) = ⟨let⟩ n ∶ σ ≈ renameTerm r x ⟨in⟩ (renameTerm (extendRename r) y)
 
   renameArgs : Rename Γ Γ′ → Args Γ Δ → Args Γ′ Δ
-  renameArgs r [] = []
+  renameArgs r []       = []
   renameArgs r (x ∷ xs) = renameTerm r x ∷ renameArgs r xs
-
-extendVar : Γ ∋ σ → (σ′ ∷ Γ) ∋ σ
-extendVar = there
-
-injectVar : (Γ : Ctxt) → Γ ∋ σ → (Γ ++ Γ′) ∋ σ
-injectVar Γ = Subset.xs⊆xs++ys
-
-raiseVar : (Γ′ : Ctxt) → Γ ∋ σ → (Γ′ ++ Γ) ∋ σ
-raiseVar Γ = Subset.xs⊆ys++xs
-
-reverseVar : (Γ {Γ′} : Ctxt) → (Γ ++ Γ′) ∋ σ → (Γ ʳ++ Γ′) ∋ σ
-reverseVar Γ = Subset.↭⇒⊆ (Subset.++↭ʳ++ Γ _)
 
 inject : (Γ : Ctxt) → Term Γ σ → Term (Γ ++ Γ′) σ
 inject Γ = renameTerm (injectVar Γ)
@@ -125,9 +130,9 @@ raise Γ′ = renameTerm (raiseVar Γ′)
 reverse : (Γ : Ctxt) → Term (Γ ++ Γ′) σ → Term (Γ ʳ++ Γ′) σ
 reverse Γ = renameTerm (reverseVar Γ)
 
---------------------------
+---------------------
 -- SMT-LIB Outputs --
---------------------------
+---------------------
 
 -- |SMT-LIB output types.
 data OutputType : Set where
@@ -150,7 +155,7 @@ data Sat : Set where
   unsat   : Sat
   unknown : Sat
 
-_≟-Sat_ : (s₁ s₂ : Sat) → Dec (s₁ ≡ s₂)
+_≟-Sat_ : DecidableEquality Sat
 sat     ≟-Sat sat     = yes refl
 sat     ≟-Sat unsat   = no (λ ())
 sat     ≟-Sat unknown = no (λ ())
@@ -323,10 +328,13 @@ Defn Γ = ∃[ σ ] (Γ ∋ σ × Value σ)
 -- Useful functions --
 ----------------------
 
+declare-named-consts : (δΓ : Ctxt) → (name : String) → Script (δΓ ʳ++ Γ) Γ′ Ξ → Script Γ Γ′ Ξ
+declare-named-consts {Γ} []       name scr = scr
+declare-named-consts {Γ} (σ ∷ δΓ) name scr
+  rewrite List.ʳ++-++ (σ ∷ []) {δΓ} {Γ} = declare-const name σ ∷ declare-named-consts δΓ name scr
+
 declare-consts : (δΓ : Ctxt) → Script (δΓ ʳ++ Γ) Γ′ Ξ → Script Γ Γ′ Ξ
-declare-consts {Γ} [] scr = scr
-declare-consts {Γ} (σ ∷ δΓ) scr
-  rewrite List.ʳ++-++ (σ ∷ []) {δΓ} {Γ} = declare-const "_" σ ∷ declare-consts δΓ scr
+declare-consts δΓ scr = declare-named-consts δΓ "_" scr
 
 VarNames : Ctxt → Set
 VarNames = All (λ _ → String)
@@ -348,10 +356,11 @@ scriptVarNames s = scriptVarNames′ s []
 ----------------------
 
 -- |Format a parser error to the user.
-parseErrorMsg : (input : String) → ParseErrorMsg →  String
-parseErrorMsg input no-parse        = "Failed to parse '" String.++ input String.++ "'"
-parseErrorMsg input ambiguous-parse = "Ambiguous parse '" String.++ input String.++ "'"
+parseErrorMsg : ParseErrorMsg →  String
+parseErrorMsg no-parse        = "Failed to parse output"
+parseErrorMsg ambiguous-parse = "Ambiguous parse of output"
 
 -- |Display a parser error to the user.
-parseError : ∀ {a} {A : Set a} (input : String) (errMsg : ParseErrorMsg) → Rfl.TC A
-parseError input errMsg = Rfl.typeError (Rfl.strErr (parseErrorMsg input errMsg) ∷ [])
+parseError : ∀ {a} {A : Set a} (output : String) (errMsg : ParseErrorMsg) (cmd : String) (input : String) → Rfl.TC A
+parseError output errMsg cmd input = Rfl.typeError (Rfl.strErr msg ∷ [])
+  where msg = printf "%s:\n\n%s\nwhen running script:\n\n%s\n%s" (parseErrorMsg errMsg) output cmd input

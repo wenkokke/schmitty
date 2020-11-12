@@ -9,7 +9,7 @@ open import Codata.Musical.Stream as Stream using (Stream)
 open import Data.Char as Char using (Char)
 open import Data.Environment as Env using (Env; _∷_; [])
 open import Data.Fin as Fin using (Fin; suc; zero)
-open import Data.List as List using (List; _∷_; []; _++_; length)
+open import Data.List as List using (List; _∷_; []; [_]; _ʳ++_; _++_; length)
 open import Data.List.Relation.Unary.All as All using (All; _∷_; [])
 open import Data.List.Relation.Unary.Any as Any using (here; there)
 open import Data.List.NonEmpty as List⁺ using (List⁺; _∷_)
@@ -25,8 +25,7 @@ open import Function using (_$_; case_of_; _∘_; const; flip; id)
 import Function.Identity.Categorical as Identity
 import Level
 import Reflection as Rfl
-open import Relation.Nullary using (Dec; yes; no)
-open import Relation.Nullary.Decidable using (True)
+open import Relation.Nullary using (yes; no)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import SMT.Script.Base baseTheory
 open import SMT.Script.Names baseTheory
@@ -124,7 +123,7 @@ module _ where
 
     insertMM : ∃[ σ ] (Γ ∋ σ × Value σ) → MaybeModel Γ → MaybeModel Γ
     insertMM {.σ ∷ Γ} (σ , (here refl) , v) (vs ∷ env) = (v ∷ vs) ∷ env
-    insertMM {σ′ ∷ Γ} (σ , (there p)    , v) (vs ∷ env) = vs ∷ insertMM (σ , p , v) env
+    insertMM {σ′ ∷ Γ} (σ , (there p)   , v) (vs ∷ env) = vs ∷ insertMM (σ , p , v) env
 
     mkMM : List (Defn Γ) → MaybeModel Γ
     mkMM {Γ} []       = Env.repeat (λ _σ _Γ → []) Γ
@@ -239,12 +238,17 @@ module _ where
       x ← showTermS x
       dropNameS
       return $ mkSTerm ("exists" ∷ mkSTerm (mkSTerm (showName n′ ∷ showSort σ ∷ []) ∷ []) ∷ x ∷ [])
+    showTermS (⟨let⟩ n ∶ σ ≈ x ⟨in⟩ y) = do
+      x ← showTermS x
+      n ← freshNameS n σ
+      y ← showTermS y
+      dropNameS
+      return $ mkSTerm (("let" ∷ mkSTerm [ mkSTerm (showName n ∷ x ∷ []) ] ∷ y ∷ []) )
 
     showArgsS : Args Γ Δ → NameState Γ Γ (List String)
     showArgsS []       = return []
     showArgsS (x ∷ xs) = do x ← showTermS x; xs ← showArgsS xs; return (x ∷ xs)
-
-
+    
   -- |Show a command as an S-expression, and build up an environment of output parsers.
   showCommandS : Command Γ δΓ δΞ → NameState Γ (δΓ ++ Γ) (String × OutputParsers δΞ)
   showCommandS (set-logic l) = do

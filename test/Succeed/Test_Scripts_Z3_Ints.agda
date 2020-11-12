@@ -24,8 +24,8 @@ open import SMT.Backend.Z3 Ints.reflectable
 --   (exit)
 -- @
 --
-script : Script [] (INT ∷ INT ∷ []) (SAT ∷ [])
-script = declare-const "x" INT
+script₁ : Script [] (INT ∷ INT ∷ []) (SAT ∷ [])
+script₁ = declare-const "x" INT
        ∷ declare-const "y" INT
        ∷ assert (app₂ eq
                 (app₂ sub (# 0) (# 1))
@@ -34,6 +34,18 @@ script = declare-const "x" INT
        ∷ check-sat
          ∷ []
 
-_ : z3 script ≡ unsat ∷ []
+_ : z3 script₁ ≡ unsat ∷ []
 _ = refl
 
+
+
+script₂ : Script [] (INT ∷ []) (SAT ∷ [])
+script₂ = declare-const "x" INT
+  ∷ assert (
+    ⟨let⟩ "y" ∶ INT ≈ # 0 ⟨in⟩
+      app₂ eq (# 0) (# 1))
+  ∷ check-sat
+  ∷ []
+
+_ : z3 script₂ ≡ sat ∷ []
+_ = refl

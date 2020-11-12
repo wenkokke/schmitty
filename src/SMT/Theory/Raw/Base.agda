@@ -62,26 +62,27 @@ Theory.parsable    rawTheory = rawParsable
 -- conflicts with other theories are possible.
 open import SMT.Script.Base rawBaseTheory public
   using ()
-  renaming ( OutputType    to RawOutputType
-           ; OutputCtxt    to RawOutputCtxt
-           ; Ctxt          to RawCtxt
-           ; _∋_           to _∋ᵣ_
-           ; Term          to RawTerm
-           ; var           to varᵣ
-           ; lit           to litᵣ
-           ; app           to appᵣ
-           ; forAll        to forAllᵣ
-           ; exists        to existsᵣ
-           ; Args          to RawArgs
-           ; Command       to RawCommand
-           ; set-logic     to set-logicᵣ
-           ; declare-const to declare-constᵣ
-           ; assert        to assertᵣ
-           ; check-sat     to check-satᵣ
-           ; get-model     to get-modelᵣ
-           ; Script        to RawScript
-           ; []            to []ᵣ
-           ; _∷_           to _∷ᵣ_
+  renaming ( OutputType      to RawOutputType
+           ; OutputCtxt      to RawOutputCtxt
+           ; Ctxt            to RawCtxt
+           ; _∋_             to _∋ᵣ_
+           ; Term            to RawTerm
+           ; var             to varᵣ
+           ; lit             to litᵣ
+           ; app             to appᵣ
+           ; forAll          to forAllᵣ
+           ; exists          to existsᵣ
+           ; ⟨let⟩_∶_≈_⟨in⟩_ to ⟨let⟩ᵣ_∶_≈_⟨in⟩
+           ; Args            to RawArgs
+           ; Command         to RawCommand
+           ; set-logic       to set-logicᵣ
+           ; declare-const   to declare-constᵣ
+           ; assert          to assertᵣ
+           ; check-sat       to check-satᵣ
+           ; get-model       to get-modelᵣ
+           ; Script          to RawScript
+           ; []              to []ᵣ
+           ; _∷_             to _∷ᵣ_
            )
 
 open import SMT.Script.Names rawBaseTheory using (x′es)

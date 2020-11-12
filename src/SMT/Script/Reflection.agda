@@ -56,9 +56,14 @@ module _ where
 
   private
     variable
+      σᵣ         : RawSort
       Γᵣ Γᵣ′ δΓᵣ : RawCtxt
       Ξᵣ Ξᵣ′ δΞᵣ : RawOutputCtxt
-      Δᵣ Δᵣ′ : RawCtxt
+      Δᵣ Δᵣ′     : RawCtxt
+
+  checkRawSort : RawSort → Maybe Sort
+  checkRawSort ⋆        = just BOOL
+  checkRawSort (TERM x) = checkSort x
 
   checkRawVar : (Γ : Ctxt) (σ : Sort) (n : ℕ) → Maybe (Γ ∋ σ)
   checkRawVar []       σ n       = nothing
@@ -80,22 +85,25 @@ module _ where
       return $ f args
     checkRawTerm Γ σ (forAllᵣ n σᵣ x) = do
       refl ← Maybe.decToMaybe (σ ≟-Sort BOOL)
-      checkRawQ (forAll n) Γ x
+      σ′   ← checkRawSort σᵣ
+      x    ← checkRawTerm (σ′ ∷ Γ) BOOL x
+      return $ forAll n σ′ x
     checkRawTerm Γ σ (existsᵣ n σᵣ x) = do
       refl ← Maybe.decToMaybe (σ ≟-Sort BOOL)
-      checkRawQ (exists n) Γ x
-
-    checkRawQ : (q : ∀ {Γ} σ → Term (σ ∷ Γ) BOOL → Term Γ BOOL) (Γ : Ctxt) → RawTerm Γᵣ ⋆ → Maybe (Term Γ BOOL)
-    checkRawQ q Γ x
-      = List.foldr Maybe._<∣>_ nothing
-      $ List.map (λ σ′ → ⦇ (q σ′) (checkRawTerm (σ′ ∷ Γ) BOOL x) ⦈ ) sorts
+      σ′   ← checkRawSort σᵣ
+      x    ← checkRawTerm (σ′ ∷ Γ) BOOL x
+      return $ exists n σ′ x
+    checkRawTerm Γ σ (⟨let⟩ᵣ n ∶ σᵣ ≈ x ⟨in⟩ y) = do
+      σ′ ← checkRawSort σᵣ
+      x  ← checkRawTerm Γ σ′ x
+      y  ← checkRawTerm (σ′ ∷ Γ) σ y
+      return $ (⟨let⟩ n ∶ σ′ ≈ x ⟨in⟩ y)
 
     checkRawArgs : (Γ Δ : Ctxt) → RawArgs Γᵣ Δᵣ → Maybe (Args Γ Δ)
     checkRawArgs Γ []      []           = ⦇ [] ⦈
     checkRawArgs Γ (σ ∷ Δ) (arg ∷ args) = ⦇ (checkRawTerm Γ σ arg) ∷ (checkRawArgs Γ Δ args) ⦈
     checkRawArgs _ _       _            = nothing
-
-
+    
   Script[_↦_,_↦_,_↦_] :
     (Γᵣ  : RawCtxt)       (Γ  : Vec Sort (length Γᵣ))
     (Γᵣ′ : RawCtxt)       (Γ′ : Vec Sort (length Γᵣ′))
