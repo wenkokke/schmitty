@@ -217,28 +217,28 @@ module _ where
 
     -- |Show a term as an S-expression.
     showTermS : Term Γ σ → NameState Γ Γ String
-    showTermS (var i) = do
+    showTermS (`var i) = do
       n ← lookupNameS i
       return $ showName n
-    showTermS (lit l) = do
+    showTermS (`lit l) = do
       return $ showLiteral l
-    showTermS (app x []) = do
+    showTermS (`app x []) = do
       return $ showIdentifier x
-    showTermS (app x xs) = do
+    showTermS (`app x xs) = do
       let x = showIdentifier x
       xs ← showArgsS xs
       return $ mkSTerm (x ∷ xs)
-    showTermS (forAll n σ x) = do
+    showTermS (`forall n σ x) = do
       n′ ← freshNameS n σ
       x ← showTermS x
       dropNameS
       return $ mkSTerm ("forall" ∷ mkSTerm (mkSTerm (showName n′ ∷ showSort σ ∷ []) ∷ []) ∷ x ∷ [])
-    showTermS (exists n σ x) = do
+    showTermS (`exists n σ x) = do
       n′ ← freshNameS n σ
       x ← showTermS x
       dropNameS
       return $ mkSTerm ("exists" ∷ mkSTerm (mkSTerm (showName n′ ∷ showSort σ ∷ []) ∷ []) ∷ x ∷ [])
-    showTermS (⟨let⟩ n ∶ σ ≈ x ⟨in⟩ y) = do
+    showTermS (`let n σ x y) = do
       x ← showTermS x
       n ← freshNameS n σ
       y ← showTermS y
@@ -248,20 +248,20 @@ module _ where
     showArgsS : Args Γ Δ → NameState Γ Γ (List String)
     showArgsS []       = return []
     showArgsS (x ∷ xs) = do x ← showTermS x; xs ← showArgsS xs; return (x ∷ xs)
-    
+
   -- |Show a command as an S-expression, and build up an environment of output parsers.
   showCommandS : Command Γ δΓ δΞ → NameState Γ (δΓ ++ Γ) (String × OutputParsers δΞ)
-  showCommandS (set-logic l) = do
+  showCommandS (`set-logic l) = do
     return $ mkSTerm ("set-logic" ∷ l ∷ []) , []
-  showCommandS (declare-const n σ) = do
+  showCommandS (`declare-const n σ) = do
     n′ ← freshNameS n σ
     return $ mkSTerm ("declare-const" ∷ showName n′ ∷ showSort σ ∷ []) , []
-  showCommandS (assert x) = do
+  showCommandS (`assert x) = do
     x ← showTermS x
     return $ mkSTerm ("assert" ∷ x ∷ []) , []
-  showCommandS check-sat = do
+  showCommandS `check-sat = do
     return $ mkSTerm ("check-sat" ∷ []) , pSat ∷ []
-  showCommandS get-model = do
+  showCommandS `get-model = do
     (_ns , vps) ← get
     return $ String.unlines ( mkSTerm ("check-sat" ∷ [])
                             ∷ mkSTerm ("get-model" ∷ []) ∷ [] )

@@ -15,13 +15,13 @@ open import SMT.Theories.Reals as Reals
 open import SMT.Backend.Z3 Reals.reflectable
 
 script : Script [] (REAL ∷ REAL ∷ []) (MODEL (REAL ∷ REAL ∷ []) ∷ [])
-script = declare-const "x" REAL
-       ∷ declare-const "y" REAL
-       ∷ assert (app₂ eq (# 0) (app₂ div (# 1) (lit (nat 2))))
-       ∷ assert (app₂ gt (# 0) (lit (nat 1)))
-       ∷ assert (app₂ gt (# 1) (lit (nat 1)))
-       ∷ get-model
+script = `declare-const "x" REAL
+       ∷ `declare-const "y" REAL
+       ∷ `assert (`app₂ eq (# 0) (`app₂ div (# 1) (`lit (nat 2))))
+       ∷ `assert (`app₂ gt (# 0) (`lit (nat 1)))
+       ∷ `assert (`app₂ gt (# 1) (`lit (nat 1)))
+       ∷ `get-model
        ∷ []
 
-_ : z3 script ≡ ((sat , 1.5 ∷ 3.0 ∷ []) ∷ [])
+_ : z3 script ≡ ((sat , 2.0 ∷ 4.0 ∷ []) ∷ [])
 _ = refl

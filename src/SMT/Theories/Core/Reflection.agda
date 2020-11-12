@@ -68,7 +68,7 @@ checkCoreIdentifier′ BOOL `or      = just (Op₂ BOOL , or)
 checkCoreIdentifier′ BOOL  _       = nothing
 
 checkCoreIdentifier : (φ : CoreSort) → Rfl.Name → Maybe (Σ[ Φ ∈ Signature φ ] CoreMacro Φ)
-checkCoreIdentifier φ n = Maybe.map (Prod.map₂ λ {Φ} f args → app f args) (checkCoreIdentifier′ φ n)
+checkCoreIdentifier φ n = Maybe.map (Prod.map₂ λ {Φ} f args → `app f args) (checkCoreIdentifier′ φ n)
 
 
 -----------------------

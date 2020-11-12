@@ -72,38 +72,38 @@ module _ where
 
   mutual
     checkRawTerm : (Γ : Ctxt) (σ : Sort) {σᵣ : RawSort} → RawTerm Γᵣ σᵣ → Maybe (Term Γ σ)
-    checkRawTerm Γ σ (appᵣ (quote rawVar) (varᵣ n ∷ [])) = do
+    checkRawTerm Γ σ (`appᵣ (quote rawVar) (`varᵣ n ∷ [])) = do
       x ← checkRawVar Γ σ (Fin.toℕ (Any.index n))
-      return $ var x
-    checkRawTerm Γ σ (varᵣ n) = nothing -- should be no naked variables
-    checkRawTerm Γ σ (litᵣ l) = do
+      return $ `var x
+    checkRawTerm Γ σ (`varᵣ n) = nothing -- should be no naked variables
+    checkRawTerm Γ σ (`litᵣ l) = do
       l ← checkLiteral σ l
-      return $ lit l
-    checkRawTerm Γ σ (appᵣ f args) = do
+      return $ `lit l
+    checkRawTerm Γ σ (`appᵣ f args) = do
       (Σ , f) ← checkIdentifier σ f
       args ← checkRawArgs Γ (ArgSorts Σ) args
       return $ f args
-    checkRawTerm Γ σ (forAllᵣ n σᵣ x) = do
+    checkRawTerm Γ σ (`forallᵣ n σᵣ x) = do
       refl ← Maybe.decToMaybe (σ ≟-Sort BOOL)
       σ′   ← checkRawSort σᵣ
       x    ← checkRawTerm (σ′ ∷ Γ) BOOL x
-      return $ forAll n σ′ x
-    checkRawTerm Γ σ (existsᵣ n σᵣ x) = do
+      return $ `forall n σ′ x
+    checkRawTerm Γ σ (`existsᵣ n σᵣ x) = do
       refl ← Maybe.decToMaybe (σ ≟-Sort BOOL)
       σ′   ← checkRawSort σᵣ
       x    ← checkRawTerm (σ′ ∷ Γ) BOOL x
-      return $ exists n σ′ x
-    checkRawTerm Γ σ (⟨let⟩ᵣ n ∶ σᵣ ≈ x ⟨in⟩ y) = do
+      return $ `exists n σ′ x
+    checkRawTerm Γ σ (`letᵣ n σᵣ x y) = do
       σ′ ← checkRawSort σᵣ
       x  ← checkRawTerm Γ σ′ x
       y  ← checkRawTerm (σ′ ∷ Γ) σ y
-      return $ (⟨let⟩ n ∶ σ′ ≈ x ⟨in⟩ y)
+      return $ (`let n σ′ x y)
 
     checkRawArgs : (Γ Δ : Ctxt) → RawArgs Γᵣ Δᵣ → Maybe (Args Γ Δ)
     checkRawArgs Γ []      []           = ⦇ [] ⦈
     checkRawArgs Γ (σ ∷ Δ) (arg ∷ args) = ⦇ (checkRawTerm Γ σ arg) ∷ (checkRawArgs Γ Δ args) ⦈
     checkRawArgs _ _       _            = nothing
-    
+
   Script[_↦_,_↦_,_↦_] :
     (Γᵣ  : RawCtxt)       (Γ  : Vec Sort (length Γᵣ))
     (Γᵣ′ : RawCtxt)       (Γ′ : Vec Sort (length Γᵣ′))
@@ -116,24 +116,24 @@ module _ where
     → Maybe (∃[ Γ′ ] ∃[ Ξ ] Script[ Γᵣ ↦ Γ , Γᵣ′ ↦ Γ′ , Ξᵣ ↦ Ξ ])
   checkRawScript {Γᵣ} {.Γᵣ} {.[]} Γ []ᵣ =
     return $ Γ , [] , []
-  checkRawScript Γ (set-logicᵣ l ∷ᵣ scr) = do
+  checkRawScript Γ (`set-logicᵣ l ∷ᵣ scr) = do
     (Γ′ , Ξ , scr) ← checkRawScript Γ scr
-    return $ Γ′ , Ξ , (set-logic l ∷ scr)
-  checkRawScript Γ (declare-constᵣ _ ⋆ ∷ _) = nothing -- we never declare constants of type ⋆
-  checkRawScript Γ (declare-constᵣ n (TERM σᵣ) ∷ᵣ scr) = do
+    return $ Γ′ , Ξ , (`set-logic l ∷ scr)
+  checkRawScript Γ (`declare-constᵣ _ ⋆ ∷ _) = nothing -- we never declare constants of type ⋆
+  checkRawScript Γ (`declare-constᵣ n (TERM σᵣ) ∷ᵣ scr) = do
     σ ← checkSort σᵣ
     Γ′ , Ξ , scr ← checkRawScript (σ ∷ Γ) scr
-    return $ Γ′ , Ξ , (declare-const n σ ∷ scr)
-  checkRawScript Γ (assertᵣ x ∷ᵣ scr) = do
+    return $ Γ′ , Ξ , (`declare-const n σ ∷ scr)
+  checkRawScript Γ (`assertᵣ x ∷ᵣ scr) = do
     x ← (checkRawTerm (Vec.toList Γ) BOOL x)
     (Γ′ , Ξ , scr) ← (checkRawScript Γ scr)
-    return $ Γ′ , Ξ , (assert x ∷ scr)
-  checkRawScript Γ (check-satᵣ ∷ᵣ scr) = do
+    return $ Γ′ , Ξ , (`assert x ∷ scr)
+  checkRawScript Γ (`check-satᵣ ∷ᵣ scr) = do
     (Γ′ , Ξ , scr) ← checkRawScript Γ scr
-    return $ Γ′ , SAT ∷ Ξ , (check-sat ∷ scr)
-  checkRawScript Γ (get-modelᵣ ∷ᵣ scr) = do
+    return $ Γ′ , SAT ∷ Ξ , (`check-sat ∷ scr)
+  checkRawScript Γ (`get-modelᵣ ∷ᵣ scr) = do
     (Γ′ , Ξ , scr) ← checkRawScript Γ scr
-    return $ Γ′ , MODEL (Vec.toList Γ) ∷ Ξ , (get-model ∷ scr)
+    return $ Γ′ , MODEL (Vec.toList Γ) ∷ Ξ , (`get-model ∷ scr)
 
 module _ where
 

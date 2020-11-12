@@ -81,20 +81,20 @@ private
   pattern `gt  = quote Float._>_
 
 checkIdentifier : (σ : Sort) → Rfl.Name → Maybe (Σ[ Σ ∈ Signature σ ] Macro Σ)
-checkIdentifier BOOL     `eq  = just (Rel REAL , app eq)
-checkIdentifier BOOL     `neq = just (Rel REAL , app neq)
-checkIdentifier REAL     `neg = just (Op₁ REAL , app neg)
-checkIdentifier REAL     `sub = just (Op₂ REAL , app sub)
-checkIdentifier REAL     `add = just (Op₂ REAL , app add)
-checkIdentifier REAL     `mul = just (Op₂ REAL , app mul)
-checkIdentifier REAL     `div = just (Op₂ REAL , app div)
-checkIdentifier BOOL     `leq = just (Rel REAL , app leq)
-checkIdentifier BOOL     `lt  = just (Rel REAL , app lt)
-checkIdentifier BOOL     `geq = just (Rel REAL , app geq)
-checkIdentifier BOOL     `gt  = just (Rel REAL , app gt)
+checkIdentifier BOOL     `eq  = just (Rel REAL , `app eq)
+checkIdentifier BOOL     `neq = just (Rel REAL , `app neq)
+checkIdentifier REAL     `neg = just (Op₁ REAL , `app neg)
+checkIdentifier REAL     `sub = just (Op₂ REAL , `app sub)
+checkIdentifier REAL     `add = just (Op₂ REAL , `app add)
+checkIdentifier REAL     `mul = just (Op₂ REAL , `app mul)
+checkIdentifier REAL     `div = just (Op₂ REAL , `app div)
+checkIdentifier BOOL     `leq = just (Rel REAL , `app leq)
+checkIdentifier BOOL     `lt  = just (Rel REAL , `app lt)
+checkIdentifier BOOL     `geq = just (Rel REAL , `app geq)
+checkIdentifier BOOL     `gt  = just (Rel REAL , `app gt)
 checkIdentifier REAL      _   = nothing
 checkIdentifier (CORE φ)  x   =
-  Maybe.map (Prod.map liftCoreSignature (λ i → app (core i))) (checkCoreIdentifier′ φ x)
+  Maybe.map (Prod.map liftCoreSignature (λ i → `app (core i))) (checkCoreIdentifier′ φ x)
 
 
 -----------------------

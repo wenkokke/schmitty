@@ -18,10 +18,10 @@ open import SMT.Script Ints.reflectable
 
 -- |Parser test.
 script : Script [] (INT ∷ INT ∷ []) (MODEL (INT ∷ INT ∷ []) ∷ [])
-script = declare-const "x" INT
-       ∷ declare-const "y" INT
-       ∷ assert (app₂ eq (# 0) (# 1))
-       ∷ get-model
+script = `declare-const "x" INT
+       ∷ `declare-const "y" INT
+       ∷ `assert (`app₂ eq (# 0) (# 1))
+       ∷ `get-model
        ∷ []
 
 

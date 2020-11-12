@@ -71,36 +71,36 @@ reverseVar Γ = Subset.↭⇒⊆ (Subset.++↭ʳ++ Γ _)
 
 mutual
   data Term (Γ : Ctxt) : (σ : Sort) → Set where
-    var             : ∀ {σ} (x : Γ ∋ σ) → Term Γ σ
-    lit             : ∀ {σ} (l : Literal σ) → Term Γ σ
-    app             : ∀ {σ} {Σ : Signature σ} (x : Identifier Σ) (xs : Args Γ (ArgSorts Σ)) → Term Γ σ
-    forAll          : ∀ (n : String) (σ : Sort) (x : Term (σ ∷ Γ) BOOL) → Term Γ BOOL
-    exists          : ∀ (n : String) (σ : Sort) (x : Term (σ ∷ Γ) BOOL) → Term Γ BOOL
-    ⟨let⟩_∶_≈_⟨in⟩_ : ∀ (n : String) (σ : Sort) → Term Γ σ → Term (σ ∷ Γ) σ′ → Term Γ σ′
+    `var           : ∀ {σ} (x : Γ ∋ σ) → Term Γ σ
+    `lit           : ∀ {σ} (l : Literal σ) → Term Γ σ
+    `app           : ∀ {σ} {Σ : Signature σ} (x : Identifier Σ) (xs : Args Γ (ArgSorts Σ)) → Term Γ σ
+    `forall        : ∀ (n : String) (σ : Sort) (x : Term (σ ∷ Γ) BOOL) → Term Γ BOOL
+    `exists        : ∀ (n : String) (σ : Sort) (x : Term (σ ∷ Γ) BOOL) → Term Γ BOOL
+    `let           : ∀ (n : String) (σ : Sort) → Term Γ σ → Term (σ ∷ Γ) σ′ → Term Γ σ′
 
   Args : (Γ Δ : Ctxt) → Set
   Args Γ Δ = All (λ σ → Term Γ σ) Δ
-  
+
 Macro : (Σ : Signature σ) → Set
 Macro {σ} Σ = ∀ {Γ} → Args Γ (ArgSorts Σ) → Term Γ σ
 
-pattern app₀ f       = app f []
-pattern app₁ f x     = app f (x ∷ [])
-pattern app₂ f x y   = app f (x ∷ y ∷ [])
-pattern app₃ f x y z = app f (x ∷ y ∷ z ∷ [])
+pattern `app₀ f       = `app f []
+pattern `app₁ f x     = `app f (x ∷ [])
+pattern `app₂ f x y   = `app f (x ∷ y ∷ [])
+pattern `app₃ f x y z = `app f (x ∷ y ∷ z ∷ [])
 
 private
   -- Add to stdlib
   lookup-∋ : ∀ i → List.lookup Γ i ≡ σ → Γ ∋ σ
   lookup-∋ {x ∷ Γ} zero    eq = here (Eq.sym eq)
   lookup-∋ {x ∷ Γ} (suc i) eq = there (lookup-∋ i eq)
-  
+
 -- |Helper function for writing variables.
 #_ : {Γ : Ctxt} {σ : Sort} (n : ℕ)
      {n<∣Γ∣ : True (n <? List.length Γ)}
      {Γ∋σ : True (List.lookup Γ (Fin.fromℕ< (toWitness n<∣Γ∣)) ≟-Sort σ)} →
      Term Γ σ
-#_ i {n<∣Γ∣} {Γ∋σ} = var (lookup-∋ (Fin.fromℕ< (toWitness n<∣Γ∣)) (toWitness Γ∋σ))
+#_ i {n<∣Γ∣} {Γ∋σ} = `var (lookup-∋ (Fin.fromℕ< (toWitness n<∣Γ∣)) (toWitness Γ∋σ))
 
 Rename : Ctxt → Ctxt → Set
 Rename = Subset._⊆_
@@ -110,12 +110,12 @@ extendRename = Subset.++⁺ʳ _
 
 mutual
   renameTerm : Rename Γ Γ′ → Term Γ σ → Term Γ′ σ
-  renameTerm r (var i)                   = var (r i)
-  renameTerm r (lit l)                   = lit l
-  renameTerm r (app x xs)                = app x (renameArgs r xs)
-  renameTerm r (forAll n σ x)            = forAll n σ (renameTerm (extendRename r) x)
-  renameTerm r (exists n σ x)            = exists n σ (renameTerm (extendRename r) x)
-  renameTerm r (⟨let⟩ n ∶ σ ≈ x ⟨in⟩ y) = ⟨let⟩ n ∶ σ ≈ renameTerm r x ⟨in⟩ (renameTerm (extendRename r) y)
+  renameTerm r (`var i)        = `var (r i)
+  renameTerm r (`lit l)        = `lit l
+  renameTerm r (`app x xs)     = `app x (renameArgs r xs)
+  renameTerm r (`forall n σ x) = `forall n σ (renameTerm (extendRename r) x)
+  renameTerm r (`exists n σ x) = `exists n σ (renameTerm (extendRename r) x)
+  renameTerm r (`let n σ x y)  = `let n σ (renameTerm r x) (renameTerm (extendRename r) y)
 
   renameArgs : Rename Γ Γ′ → Args Γ Δ → Args Γ′ Δ
   renameArgs r []       = []
@@ -181,13 +181,12 @@ data Model : (Γ : Ctxt) → Set where
   []  : Model []
   _∷_ : Value σ → Model Γ → Model (σ ∷ Γ)
 
-_if-sat_ : (A : Set) → Sat → Set
-A if-sat sat = A
-A if-sat _   = ⊤
-
 QualifiedModel : (Γ : Ctxt) → Set
 QualifiedModel Γ = ∃[ s ] (Model Γ if-sat s)
-
+  where
+    _if-sat_ : (A : Set) → Sat → Set
+    A if-sat sat = A
+    A if-sat _   = ⊤
 
 -- |SMT-LIB script result.
 Output : OutputType → Set
@@ -288,11 +287,11 @@ Logic = String
 --        types of the outputs, using `Ξ` and `δΞ`.
 --
 data Command (Γ : Ctxt) : (δΓ : Ctxt) (δΞ : OutputCtxt) → Set where
-  set-logic     : (l : Logic) → Command Γ [] []
-  declare-const : (n : String) (σ : Sort) → Command Γ (σ ∷ []) []
-  assert        : Term Γ BOOL → Command Γ [] []
-  check-sat     : Command Γ [] (SAT ∷ [])
-  get-model     : Command Γ [] (MODEL Γ ∷ [])
+  `set-logic     : (l : Logic) → Command Γ [] []
+  `declare-const : (n : String) (σ : Sort) → Command Γ (σ ∷ []) []
+  `assert        : Term Γ BOOL → Command Γ [] []
+  `check-sat     : Command Γ [] (SAT ∷ [])
+  `get-model     : Command Γ [] (MODEL Γ ∷ [])
 
 
 ---------------------
@@ -328,28 +327,27 @@ Defn Γ = ∃[ σ ] (Γ ∋ σ × Value σ)
 -- Useful functions --
 ----------------------
 
-declare-named-consts : (δΓ : Ctxt) → (name : String) → Script (δΓ ʳ++ Γ) Γ′ Ξ → Script Γ Γ′ Ξ
-declare-named-consts {Γ} []       name scr = scr
-declare-named-consts {Γ} (σ ∷ δΓ) name scr
-  rewrite List.ʳ++-++ (σ ∷ []) {δΓ} {Γ} = declare-const name σ ∷ declare-named-consts δΓ name scr
+`declare-named-consts : (δΓ : Ctxt) → (name : String) → Script (δΓ ʳ++ Γ) Γ′ Ξ → Script Γ Γ′ Ξ
+`declare-named-consts {Γ} []       name scr = scr
+`declare-named-consts {Γ} (σ ∷ δΓ) name scr
+  rewrite List.ʳ++-++ (σ ∷ []) {δΓ} {Γ} = `declare-const name σ ∷ `declare-named-consts δΓ name scr
 
-declare-consts : (δΓ : Ctxt) → Script (δΓ ʳ++ Γ) Γ′ Ξ → Script Γ Γ′ Ξ
-declare-consts δΓ scr = declare-named-consts δΓ "_" scr
+`declare-consts : (δΓ : Ctxt) → Script (δΓ ʳ++ Γ) Γ′ Ξ → Script Γ Γ′ Ξ
+`declare-consts δΓ scr = `declare-named-consts δΓ "_" scr
 
 VarNames : Ctxt → Set
 VarNames = All (λ _ → String)
 
-private
-  scriptVarNames′ : Script Γ′ Γ Ξ → VarNames Γ′ → VarNames Γ
-  scriptVarNames′ [] acc = acc
-  scriptVarNames′ (set-logic l       ∷ s) acc = scriptVarNames′ s acc
-  scriptVarNames′ (declare-const x σ ∷ s) acc = scriptVarNames′ s (x ∷ acc)
-  scriptVarNames′ (assert x          ∷ s) acc = scriptVarNames′ s acc
-  scriptVarNames′ (check-sat         ∷ s) acc = scriptVarNames′ s acc
-  scriptVarNames′ (get-model         ∷ s) acc = scriptVarNames′ s acc
-
 scriptVarNames : Script [] Γ Ξ → VarNames Γ
 scriptVarNames s = scriptVarNames′ s []
+  where
+    scriptVarNames′ : Script Γ′ Γ Ξ → VarNames Γ′ → VarNames Γ
+    scriptVarNames′ [] acc = acc
+    scriptVarNames′ (`set-logic l       ∷ s) acc = scriptVarNames′ s acc
+    scriptVarNames′ (`declare-const x σ ∷ s) acc = scriptVarNames′ s (x ∷ acc)
+    scriptVarNames′ (`assert x          ∷ s) acc = scriptVarNames′ s acc
+    scriptVarNames′ (`check-sat         ∷ s) acc = scriptVarNames′ s acc
+    scriptVarNames′ (`get-model         ∷ s) acc = scriptVarNames′ s acc
 
 ----------------------
 -- Parser utilities --

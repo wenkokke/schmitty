@@ -72,7 +72,7 @@ private
   discardIncompleteParses : List (Success A n) → List A
   discardIncompleteParses = Maybe.maybe id [] ∘ ListCat.TraversableM.mapM MaybeCat.monad runSuccess
 
-  -- |Discard outcomes that did not result in a unique successful parse. 
+  -- |Discard outcomes that did not result in a unique successful parse.
   discardNonUniqueParses : List A → ParseErrorMsg ⊎ A
   discardNonUniqueParses []          = inj₁ no-parse
   discardNonUniqueParses (v ∷ [])    = inj₂ v

@@ -52,8 +52,8 @@ TEST_FAIL_OBJECTS := $(TEST_FAIL_SOURCES:.agda=.agdai)
 test/Fail/%.agdai: test/Fail/%.agda test/Fail/%.err
 	@echo "Checking $(notdir $(basename $<))..."
 	@$(AGDA) -v0 -isrc -itest/Fail "$<" \
-		| tail -n +2 \
-		| diff --suppress-common-lines "$(<:.agda=.err)" -
+	        | tail -n +2 \
+	        | diff --suppress-common-lines "$(<:.agda=.err)" -
 
 .PHONY: test-fail
 test-fail: $(TEST_FAIL_OBJECTS)

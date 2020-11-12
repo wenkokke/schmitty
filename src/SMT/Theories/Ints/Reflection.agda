@@ -79,11 +79,11 @@ private
 
   -- NOTE: These should eventually use NAT sort, once we implement NAT sort.
   `zero! : Macro (Op₀ INT)
-  `zero! [] = lit (nat 0)
+  `zero! [] = `lit (nat 0)
 
   `suc! : Macro (Op₁ INT)
-  `suc! (lit (nat x) ∷ []) = lit (nat (Nat.suc x))
-  `suc! (x ∷ [])           = app₂ add (lit (nat 1)) x
+  `suc! (`lit (nat x) ∷ []) = `lit (nat (Nat.suc x))
+  `suc! (x ∷ [])           = `app₂ add (`lit (nat 1)) x
 
   pattern `+_     = quote Int.+_
   pattern `-[1+_] = quote Int.-[1+_]
@@ -92,29 +92,29 @@ private
   `+! (x ∷ []) = x
 
   `-[1+_]! : Macro (Op₁ INT)
-  `-[1+ lit (nat x) ∷ [] ]! = lit (int -[1+ x ])
-  `-[1+ lit (int x) ∷ [] ]! = lit (int (Int.- (Int.1ℤ Int.+ x)))
-  `-[1+ x ∷ [] ]!           = app₁ neg (app₂ add (lit (nat 1)) x)
+  `-[1+ `lit (nat x) ∷ [] ]! = `lit (int -[1+ x ])
+  `-[1+ `lit (int x) ∷ [] ]! = `lit (int (Int.- (Int.1ℤ Int.+ x)))
+  `-[1+ x ∷ [] ]!            = `app₁ neg (`app₂ add (`lit (nat 1)) x)
 
 checkIdentifier : (σ : Sort) → Rfl.Name → Maybe (Σ[ Σ ∈ Signature σ ] Macro Σ)
 checkIdentifier INT      `zero   = just (Op₀ INT , `zero!)
 checkIdentifier INT      `suc    = just (Op₁ INT , `suc!)
 checkIdentifier INT      `+_     = just (Op₁ INT , `+!_)
 checkIdentifier INT      `-[1+_] = just (Op₁ INT , `-[1+_]!)
-checkIdentifier BOOL     `eq     = just (Rel INT , app eq)
-checkIdentifier BOOL     `neq    = just (Rel INT , app neq)
-checkIdentifier INT      `neg    = just (Op₁ INT , app neg)
-checkIdentifier INT      `sub    = just (Op₂ INT , app sub)
-checkIdentifier INT      `add    = just (Op₂ INT , app add)
-checkIdentifier INT      `mul    = just (Op₂ INT , app mul)
-checkIdentifier INT      `abs    = just (Op₁ INT , app abs)
-checkIdentifier BOOL     `leq    = just (Rel INT , app leq)
-checkIdentifier BOOL     `lt     = just (Rel INT , app lt)
-checkIdentifier BOOL     `geq    = just (Rel INT , app geq)
-checkIdentifier BOOL     `gt     = just (Rel INT , app gt)
+checkIdentifier BOOL     `eq     = just (Rel INT , `app eq)
+checkIdentifier BOOL     `neq    = just (Rel INT , `app neq)
+checkIdentifier INT      `neg    = just (Op₁ INT , `app neg)
+checkIdentifier INT      `sub    = just (Op₂ INT , `app sub)
+checkIdentifier INT      `add    = just (Op₂ INT , `app add)
+checkIdentifier INT      `mul    = just (Op₂ INT , `app mul)
+checkIdentifier INT      `abs    = just (Op₁ INT , `app abs)
+checkIdentifier BOOL     `leq    = just (Rel INT , `app leq)
+checkIdentifier BOOL     `lt     = just (Rel INT , `app lt)
+checkIdentifier BOOL     `geq    = just (Rel INT , `app geq)
+checkIdentifier BOOL     `gt     = just (Rel INT , `app gt)
 checkIdentifier INT       _      = nothing
 checkIdentifier (CORE φ)  x      =
-  Maybe.map (Prod.map liftCoreSignature (λ i → app (core i))) (checkCoreIdentifier′ φ x)
+  Maybe.map (Prod.map liftCoreSignature (λ i → `app (core i))) (checkCoreIdentifier′ φ x)
 
 
 -----------------------
@@ -149,17 +149,17 @@ private
   compute> p = compute< p
 
   proofComputation′ : ∀ {Γ} → Term Γ BOOL → Rfl.Name
-  proofComputation′ (app eq _)  = quote compute≡
-  proofComputation′ (app neq _) = quote compute≢
-  proofComputation′ (app ite _) = quote id
-  proofComputation′ (app leq _) = quote compute≤
-  proofComputation′ (app lt _)  = quote compute<
-  proofComputation′ (app geq _) = quote compute≥
-  proofComputation′ (app gt _)  = quote compute>
-  proofComputation′ _           = quote id
+  proofComputation′ (`app eq _)  = quote compute≡
+  proofComputation′ (`app neq _) = quote compute≢
+  proofComputation′ (`app ite _) = quote id
+  proofComputation′ (`app leq _) = quote compute≤
+  proofComputation′ (`app lt _)  = quote compute<
+  proofComputation′ (`app geq _) = quote compute≥
+  proofComputation′ (`app gt _)  = quote compute>
+  proofComputation′ _            = quote id
 
 proofComputation : ∀ {Γ} → Term Γ BOOL → Rfl.Name
-proofComputation (app (core not) (t ∷ [])) = proofComputation′ t
+proofComputation (`app (core not) (t ∷ [])) = proofComputation′ t
 proofComputation _ = quote id
 
 

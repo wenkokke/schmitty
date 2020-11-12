@@ -36,7 +36,7 @@ mutual
                                                                        (lem-subst ξ φ ψ y' [φ↔ψ]) [ρ]
   lem-subst ξ φ ψ (y && y') [φ↔ψ] [ρ] | inj₂ x rewrite ¬Tb x = Prod.map (lem-subst ξ φ ψ y [φ↔ψ])
                                                                         (lem-subst ξ φ ψ y' [φ↔ψ]) [ρ]
-  lem-subst ξ φ ψ (y => y') [φ↔ψ] [ρ] | inj₂ x rewrite ¬Tb x = lem-subst ξ φ ψ y' [φ↔ψ] ∘ [ρ] ∘ 
+  lem-subst ξ φ ψ (y => y') [φ↔ψ] [ρ] | inj₂ x rewrite ¬Tb x = lem-subst ξ φ ψ y' [φ↔ψ] ∘ [ρ] ∘
                                                                  lem-subst' ξ φ ψ y [φ↔ψ]
   lem-subst ξ φ ψ (¥ y)     [φ↔ψ] [ρ] | inj₂ x rewrite ¬Tb x = [ρ]
 
@@ -49,6 +49,6 @@ mutual
                                                                         (lem-subst' ξ φ ψ y' [φ↔ψ]) [ρ]
   lem-subst' ξ φ ψ (y && y') [φ↔ψ] [ρ] | inj₂ x rewrite ¬Tb x = Prod.map (lem-subst' ξ φ ψ y [φ↔ψ])
                                                                          (lem-subst' ξ φ ψ y' [φ↔ψ]) [ρ]
-  lem-subst' ξ φ ψ (y => y') [φ↔ψ] [ρ] | inj₂ x rewrite ¬Tb x = lem-subst' ξ φ ψ y' [φ↔ψ] ∘ [ρ] ∘ 
+  lem-subst' ξ φ ψ (y => y') [φ↔ψ] [ρ] | inj₂ x rewrite ¬Tb x = lem-subst' ξ φ ψ y' [φ↔ψ] ∘ [ρ] ∘
                                                                   lem-subst ξ φ ψ y [φ↔ψ]
   lem-subst' ξ φ ψ (¥ y)     [φ↔ψ] [ρ] | inj₂ x rewrite ¬Tb x = [ρ]
