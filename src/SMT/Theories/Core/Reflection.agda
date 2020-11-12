@@ -1,3 +1,9 @@
+--------------------------------------------------------------------------------
+-- Schmitty the Solver
+--
+-- Defines the `Reflectable` instance for core theory, called `coreReflectable`.
+--------------------------------------------------------------------------------
+
 module SMT.Theories.Core.Reflection where
 
 open import Data.Empty as Empty using (⊥)

@@ -1,5 +1,10 @@
-module SMT.Theories.Ints.Base where
+--------------------------------------------------------------------------------
+-- Schmitty the Solver
+--
+-- Defines the `Theory` instance for the theory of integers, called `theory`.
+--------------------------------------------------------------------------------
 
+module SMT.Theories.Ints.Base where
 
 open import Data.Bool.Base as Bool using (Bool; false; true)
 open import Data.Integer as Int using (ℤ; +_; -[1+_]) renaming (show to showℤ)

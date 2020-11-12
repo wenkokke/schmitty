@@ -1,5 +1,14 @@
-module SMT.Theories.Core.Extensions where
+--------------------------------------------------------------------------------
+-- Schmitty the Solver
+--
+-- This modules is intended to make it easier to define theories which extend
+-- the core theory. It defines two submodules, `Sorts` and `Identifiers`, which
+-- are parameterised over the sort and identifier types of the extending
+-- theories, as well as an embedding of the core sorts and identifiers, and
+-- export several convenient definitions.
+--------------------------------------------------------------------------------
 
+module SMT.Theories.Core.Extensions where
 
 open import Data.Bool.Base as Bool using (Bool)
 open import Data.List.Base as List using (List; _∷_; [])

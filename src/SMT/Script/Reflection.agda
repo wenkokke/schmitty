@@ -1,3 +1,10 @@
+--------------------------------------------------------------------------------
+-- Schmitty the Solver
+--
+-- Defines `reflectToScript`, which uses an instance of the `Reflectable` class
+-- to convert reflected Agda syntax to an SMT-LIB script.
+--------------------------------------------------------------------------------
+
 open import SMT.Theory
 
 module SMT.Script.Reflection {theory : Theory} (reflectable : Reflectable theory) where

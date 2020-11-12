@@ -1,5 +1,11 @@
-module SMT.Theories.Ints.Reflection where
+--------------------------------------------------------------------------------
+-- Schmitty the Solver
+--
+-- Defines the `Reflectable` instance for the theory of integers, called
+-- `reflectable`.
+--------------------------------------------------------------------------------
 
+module SMT.Theories.Ints.Reflection where
 
 open import Data.Integer as Int using (ℤ; +_; -[1+_]; _≤_; _≥_; _<_; _>_; _≟_; _≤?_; _<?_)
                                 renaming (show to showℤ)

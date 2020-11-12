@@ -1,3 +1,27 @@
+--------------------------------------------------------------------------------
+-- Schmitty the Solver
+--
+-- Defines the abstract syntax for SMT-LIB expressions:
+--
+-- Terms:
+--   Schmitty defines a *subset* of SMT-LIB v2.6 terms. Notably, we omit
+--   function symbols, data types and match expressions, annotations, and term
+--   attributes.
+--   See <http://smtlib.cs.uiowa.edu/papers/smt-lib-reference-v2.6-r2017-07-18.pdf#section.3.6>.
+--
+-- Commands:
+--   Schmitty defines a *subset* of SMT-LIB v2.6 commands. We include `assert`,
+--   `check-sat`, `declare-const`, `get-model`, and `set-logic`. We omit the
+--   remainder of the commands.
+--   See <http://smtlib.cs.uiowa.edu/papers/smt-lib-reference-v2.6-r2017-07-18.pdf#section.3.9>.
+--
+-- Scripts:
+--   Scripts are lists of commands.
+--
+-- Models:
+--   Models are lists of values.
+--------------------------------------------------------------------------------
+
 open import SMT.Theory.Base
 
 module SMT.Script.Base (baseTheory : BaseTheory) where

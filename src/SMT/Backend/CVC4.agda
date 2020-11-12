@@ -1,3 +1,11 @@
+--------------------------------------------------------------------------------
+-- Schmitty the Solver
+--
+-- Defines the `cvc4` tactic, which runs an SMT-LIB script using CVC4, as well
+-- as the `solveCVC4` tactic, which translates the goal term to an SMT-LIB
+-- script and solves it using CVC4.
+--------------------------------------------------------------------------------
+
 {-# OPTIONS --allow-exec #-}
 
 open import SMT.Theory

@@ -1,3 +1,9 @@
+--------------------------------------------------------------------------------
+-- Schmitty the Solver
+--
+-- Exports the various bits and pieces needed to use a specific theory.
+--------------------------------------------------------------------------------
+
 open import SMT.Theory
 
 module SMT.Script {theory : Theory} (reflectable : Reflectable theory) where

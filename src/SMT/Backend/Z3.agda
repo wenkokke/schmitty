@@ -1,3 +1,11 @@
+--------------------------------------------------------------------------------
+-- Schmitty the Solver
+--
+-- Defines the `z3` tactic, which runs an SMT-LIB script using Z3, as well as
+-- the `solveZ3` tactic, which translates the goal term to an SMT-LIB script and
+-- solves it using Z3.
+--------------------------------------------------------------------------------
+
 {-# OPTIONS --allow-exec #-}
 
 open import SMT.Theory

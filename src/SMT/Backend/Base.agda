@@ -1,3 +1,9 @@
+--------------------------------------------------------------------------------
+-- Schmitty the Solver
+--
+-- Defines various helper functions used in all backends.
+--------------------------------------------------------------------------------
+
 module SMT.Backend.Base where
 
 open import Data.List as List using (List; _∷_; [])

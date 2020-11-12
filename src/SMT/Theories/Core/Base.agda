@@ -1,5 +1,10 @@
-module SMT.Theories.Core.Base where
+--------------------------------------------------------------------------------
+-- Schmitty the Solver
+--
+-- Defines the `Theory` instance for core theory, called `coreTheory`.
+--------------------------------------------------------------------------------
 
+module SMT.Theories.Core.Base where
 
 open import Data.Bool.Base as Bool using (Bool; false; true)
 open import Data.Empty as Empty using (⊥)

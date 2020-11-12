@@ -1,3 +1,10 @@
+--------------------------------------------------------------------------------
+-- Schmitty the Solver
+--
+-- Defines helper functions for dealing with names and name supplies.
+-- Used in `SMT.Script.Show` to define the printing function for scripts.
+--------------------------------------------------------------------------------
+
 open import SMT.Theory.Base
 
 module SMT.Script.Names (baseTheory : BaseTheory) where

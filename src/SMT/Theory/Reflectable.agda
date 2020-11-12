@@ -1,7 +1,18 @@
+--------------------------------------------------------------------------------
+-- Schmitty the Solver
+--
+-- Defines the `Reflectable` class, which is used to provide integration with
+-- Agda reflection. To implement the `Reflectable` class, you need to provide
+-- conversions from the raw theory to the intended theory.
+--
+-- Optionally, you may implement the `proofComputation` function, which is used
+-- to generate proof objects which compute on closed terms. For an example, see
+-- `SMT.Theories.Ints.Reflectable`.
+--------------------------------------------------------------------------------
+
 open import SMT.Theory.Base
 
 module SMT.Theory.Reflectable (theory : Theory) where
-
 
 open Theory theory
 

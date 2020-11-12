@@ -1,10 +1,16 @@
 <!DOCTYPE HTML>
-<html><head><meta charset="utf-8"><title>SMT.Script</title><link rel="stylesheet" href="Agda.css"></head><body><pre class="Agda"><a id="1" class="Keyword">open</a> <a id="6" class="Keyword">import</a> <a id="13" href="SMT.Theory.html" class="Module">SMT.Theory</a>
+<html><head><meta charset="utf-8"><title>SMT.Script</title><link rel="stylesheet" href="Agda.css"></head><body><pre class="Agda"><a id="1" class="Comment">--------------------------------------------------------------------------------</a>
+<a id="82" class="Comment">-- Schmitty the Solver</a>
+<a id="105" class="Comment">--</a>
+<a id="108" class="Comment">-- Exports the various bits and pieces needed to use a specific theory.</a>
+<a id="180" class="Comment">--------------------------------------------------------------------------------</a>
 
-<a id="25" class="Keyword">module</a> <a id="32" href="SMT.Script.html" class="Module">SMT.Script</a> <a id="43" class="Symbol">{</a><a id="44" href="SMT.Script.html#44" class="Bound">theory</a> <a id="51" class="Symbol">:</a> <a id="53" href="SMT.Theory.Base.html#2395" class="Record">Theory</a><a id="59" class="Symbol">}</a> <a id="61" class="Symbol">(</a><a id="62" href="SMT.Script.html#62" class="Bound">reflectable</a> <a id="74" class="Symbol">:</a> <a id="76" href="SMT.Theory.Reflectable.html#331" class="Record">Reflectable</a> <a id="88" href="SMT.Script.html#44" class="Bound">theory</a><a id="94" class="Symbol">)</a> <a id="96" class="Keyword">where</a>
+<a id="262" class="Keyword">open</a> <a id="267" class="Keyword">import</a> <a id="274" href="SMT.Theory.html" class="Module">SMT.Theory</a>
 
-<a id="103" class="Keyword">open</a> <a id="108" href="SMT.Theory.Base.html#2395" class="Module">Theory</a> <a id="115" href="SMT.Script.html#44" class="Bound">theory</a>
-<a id="122" class="Keyword">open</a> <a id="127" class="Keyword">import</a> <a id="134" href="SMT.Script.Base.html" class="Module">SMT.Script.Base</a> <a id="150" href="SMT.Theory.Base.html#2427" class="Function">baseTheory</a> <a id="161" class="Keyword">public</a>
-<a id="168" class="Keyword">open</a> <a id="173" class="Keyword">import</a> <a id="180" href="SMT.Script.Show.html" class="Module">SMT.Script.Show</a> <a id="196" href="SMT.Script.html#44" class="Bound">theory</a> <a id="203" class="Keyword">public</a>
-<a id="210" class="Keyword">open</a> <a id="215" class="Keyword">import</a> <a id="222" href="SMT.Script.Reflection.html" class="Module">SMT.Script.Reflection</a> <a id="244" href="SMT.Script.html#62" class="Bound">reflectable</a> <a id="256" class="Keyword">public</a>
+<a id="286" class="Keyword">module</a> <a id="293" href="SMT.Script.html" class="Module">SMT.Script</a> <a id="304" class="Symbol">{</a><a id="305" href="SMT.Script.html#305" class="Bound">theory</a> <a id="312" class="Symbol">:</a> <a id="314" href="SMT.Theory.Base.html#3890" class="Record">Theory</a><a id="320" class="Symbol">}</a> <a id="322" class="Symbol">(</a><a id="323" href="SMT.Script.html#323" class="Bound">reflectable</a> <a id="335" class="Symbol">:</a> <a id="337" href="SMT.Theory.Reflectable.html#933" class="Record">Reflectable</a> <a id="349" href="SMT.Script.html#305" class="Bound">theory</a><a id="355" class="Symbol">)</a> <a id="357" class="Keyword">where</a>
+
+<a id="364" class="Keyword">open</a> <a id="369" href="SMT.Theory.Base.html#3890" class="Module">Theory</a> <a id="376" href="SMT.Script.html#305" class="Bound">theory</a>
+<a id="383" class="Keyword">open</a> <a id="388" class="Keyword">import</a> <a id="395" href="SMT.Script.Base.html" class="Module">SMT.Script.Base</a> <a id="411" href="SMT.Theory.Base.html#3922" class="Function">baseTheory</a> <a id="422" class="Keyword">public</a>
+<a id="429" class="Keyword">open</a> <a id="434" class="Keyword">import</a> <a id="441" href="SMT.Script.Show.html" class="Module">SMT.Script.Show</a> <a id="457" href="SMT.Script.html#305" class="Bound">theory</a> <a id="464" class="Keyword">public</a>
+<a id="471" class="Keyword">open</a> <a id="476" class="Keyword">import</a> <a id="483" href="SMT.Script.Reflection.html" class="Module">SMT.Script.Reflection</a> <a id="505" href="SMT.Script.html#323" class="Bound">reflectable</a> <a id="517" class="Keyword">public</a>
 </pre></body></html>

@@ -1,3 +1,10 @@
+--------------------------------------------------------------------------------
+-- Schmitty the Solver
+--
+-- Defines the `Theory` instance for the theory of real numbers, called
+-- `theory`. 
+--------------------------------------------------------------------------------
+
 module SMT.Theories.Reals.Base where
 
 open import Data.Bool.Base as Bool using (Bool; false; true; if_then_else_)

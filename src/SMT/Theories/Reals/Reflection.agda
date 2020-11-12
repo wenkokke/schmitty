@@ -1,3 +1,10 @@
+--------------------------------------------------------------------------------
+-- Schmitty the Solver
+--
+-- Defines the `Reflectable` instance for the theory of real numbers, called
+-- `reflectable`.
+--------------------------------------------------------------------------------
+
 module SMT.Theories.Reals.Reflection where
 
 open import Data.Bool.Base as Bool using (Bool; false; true; if_then_else_)

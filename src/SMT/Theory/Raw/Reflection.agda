@@ -1,3 +1,10 @@
+--------------------------------------------------------------------------------
+-- Schmitty the Solver
+--
+-- Defines `reflectToRawScript`, which converts reflected Agda syntax to scripts
+-- in the raw theory.
+--------------------------------------------------------------------------------
+
 module SMT.Theory.Raw.Reflection where
 
 open import Category.Monad

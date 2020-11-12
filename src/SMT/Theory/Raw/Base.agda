@@ -1,6 +1,17 @@
--- This module contains the definition of the 'Raw' theory, which is intended to
--- be targeted by a translation from reflected Agda syntax. It re-exports the
--- basic definitions from SMT.Script.Base, the type names prefixed with 'Raw'.
+--------------------------------------------------------------------------------
+-- Schmitty the Solver
+--
+-- This module contains the definition of the raw theory, whose identifiers are
+-- reflected Agda names and whose literals are reflected Agda literals. The raw
+-- theory does not correspond to any SMT-LIB theory. Instead, it is intended as
+-- an intermediate language between reflected Agda syntax and the various
+-- SMT-LIB theories.
+--
+-- This module re-exports the basic definitions from `SMT.Script.Base`, with the
+-- type names prefixed with `Raw` and the symbols suffixed with `ᵣ`, e.g.,
+-- `RawScript` and `varᵣ`.
+--------------------------------------------------------------------------------
+
 module SMT.Theory.Raw.Base where
 
 open import Data.Empty as Empty using (⊥; ⊥-elim)
