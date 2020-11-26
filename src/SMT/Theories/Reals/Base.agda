@@ -2,7 +2,7 @@
 -- Schmitty the Solver
 --
 -- Defines the `Theory` instance for the theory of real numbers, called
--- `theory`. 
+-- `theory`.
 --------------------------------------------------------------------------------
 
 module SMT.Theories.Reals.Base where
