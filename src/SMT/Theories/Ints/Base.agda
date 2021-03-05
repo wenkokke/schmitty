@@ -7,7 +7,8 @@
 module SMT.Theories.Ints.Base where
 
 open import Data.Bool.Base as Bool using (Bool; false; true)
-open import Data.Integer as Int using (ℤ; +_; -[1+_]) renaming (show to showℤ)
+open import Data.Integer as Int using (ℤ; +_; -[1+_])
+open import Data.Integer.Show using () renaming (show to showℤ)
 open import Data.Nat.Base as Nat using (ℕ)
 open import Data.Nat.Show renaming (show to showℕ)
 open import Data.List as List using (List; _∷_; [])

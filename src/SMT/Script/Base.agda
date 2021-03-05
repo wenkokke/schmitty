@@ -36,7 +36,7 @@ open import Data.List.Relation.Unary.All
 open import Data.List.Relation.Unary.Any as Any using (here; there)
 import Data.List.Relation.Binary.Subset.Propositional as Subset
 import Data.List.Relation.Binary.Subset.Propositional.Properties as Subset
-import Data.List.Relation.Binary.Subset.Propositional.ExtraProperties as Subset
+import Data.List.Relation.Binary.Permutation.Propositional.Properties as Perm
 open import Data.List.Membership.Propositional using (_∈_)
 import Data.List.Membership.Propositional.Properties as Membership
 open import Data.Maybe using (Maybe; just; nothing)
@@ -80,13 +80,13 @@ extendVar : Γ ∋ σ → (σ′ ∷ Γ) ∋ σ
 extendVar = there
 
 injectVar : (Γ : Ctxt) → Γ ∋ σ → (Γ ++ Γ′) ∋ σ
-injectVar Γ = Subset.xs⊆xs++ys
+injectVar Γ = Subset.xs⊆xs++ys _ _
 
 raiseVar : (Γ′ : Ctxt) → Γ ∋ σ → (Γ′ ++ Γ) ∋ σ
-raiseVar Γ = Subset.xs⊆ys++xs
+raiseVar Γ = Subset.xs⊆ys++xs _ _
 
 reverseVar : (Γ {Γ′} : Ctxt) → (Γ ++ Γ′) ∋ σ → (Γ ʳ++ Γ′) ∋ σ
-reverseVar Γ = Subset.↭⇒⊆ (Subset.++↭ʳ++ Γ _)
+reverseVar Γ = Perm.Any-resp-↭ (Perm.++↭ʳ++ Γ _)
 
 -- |SMT-LIB terms.
 --
