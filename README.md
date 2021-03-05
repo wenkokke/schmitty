@@ -66,7 +66,7 @@ Right now, Schmitty supports three theories—[Core][SMT.Theories.Core], [Ints][
 
 # Installation
 
-- [Agda][agda] ([>= 2.6.2-0f4538][agda-version])
+- [Agda][agda] ([>= 2.6.2-60564a4][agda-version])
 - [agda-stdlib][agda-stdlib] ([>= experimental-d66a21f][agda-stdlib-version])
 - [agdarsec][agdarsec] ([>= master-b26230][agdarsec-version])
 
@@ -107,7 +107,7 @@ Note that the path to `z3` must be added to the list of trusted executables in A
 [kazkansouh]: https://github.com/kazkansouh
 [satsolver]: https://github.com/wenkokke/schmitty/tree/master/extra/Kanso
 [agda]: https://github.com/agda/agda
-[agda-version]: https://github.com/agda/agda/commit/0f4538c8dcd175b92acd577ca0bdca232f5cd17f
+[agda-version]: https://github.com/agda/agda/commit/60564a44719c7a8b903bf52fb0b06e2ee986dc52
 [agda-stdlib]: https://github.com/agda/agda-stdlib/commit/da286d0e2c767074faa218cbca53aaf5a1b8fc7f
 [agda-stdlib-version]: https://github.com/agda/agda-stdlib/commit/d66a21f1242b893bb6ead4f6ef6da0a5490924c2
 [agdarsec]: https://github.com/gallais/agdarsec
