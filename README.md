@@ -1,6 +1,7 @@
 # Schmitty the Solver
 ```agda
 {-# OPTIONS --allow-exec #-}
+{-# OPTIONS --guardedness #-}
 
 open import Data.Integer
 open import Data.List
