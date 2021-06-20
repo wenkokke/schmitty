@@ -1,3 +1,5 @@
+{-# OPTIONS --guardedness #-}
+
 module index where
 
 import SMT.Script
@@ -25,6 +27,5 @@ import SMT.Script.Show
 import SMT.Script.Base
 import SMT.Script.Reflection
 import Text.Parser.String
-import Data.List.Relation.Binary.Subset.Propositional.ExtraProperties
 import Data.Environment
 import Reflection.Normalise

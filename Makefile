@@ -22,7 +22,7 @@ init:
 #######################
 
 index.agda: $(SOURCES)
-	@echo "module index where\n$(foreach module_name,$(MODULES),\nimport $(module_name))" | sed 's/ $$//' > index.agda
+	@echo "{-# OPTIONS --guardedness #-}\n\nmodule index where\n$(foreach module_name,$(MODULES),\nimport $(module_name))" | sed 's/ $$//' > index.agda
 
 
 ##################
@@ -89,4 +89,3 @@ define HTML_template
 $(1): docs/index.html
 endef
 $(foreach html_file,$(DOCS),$(eval $(call HTML_template,$(html_file))))
-

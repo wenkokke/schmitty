@@ -1,8 +1,9 @@
+{-# OPTIONS --allow-exec #-}
+{-# OPTIONS --guardedness #-}
+
 ---------------------------------------------------------
 -- Test handwritten scripts for Reals.As.Float with Z3 --
 ---------------------------------------------------------
-
-{-# OPTIONS --allow-exec #-}
 
 module Test_Scripts_Z3_RealsAsFloat where
 
@@ -34,4 +35,3 @@ is-correct ((unknown , tt)           ∷ []) = ⊥
 
 _ : is-correct (z3 script)
 _ = tt
-

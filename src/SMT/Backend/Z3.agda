@@ -1,3 +1,6 @@
+{-# OPTIONS --allow-exec #-}
+{-# OPTIONS --guardedness #-}
+
 --------------------------------------------------------------------------------
 -- Schmitty the Solver
 --
@@ -5,8 +8,6 @@
 -- the `solveZ3` tactic, which translates the goal term to an SMT-LIB script and
 -- solves it using Z3.
 --------------------------------------------------------------------------------
-
-{-# OPTIONS --allow-exec #-}
 
 open import SMT.Theory
 

@@ -1,8 +1,9 @@
+{-# OPTIONS --allow-exec #-}
+{-# OPTIONS --guardedness #-}
+
 --------------------------------------------
 -- Test generated output parsers for Ints --
 --------------------------------------------
-
-{-# OPTIONS --allow-exec #-}
 
 module Test_OutputParser_Ints where
 

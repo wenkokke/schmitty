@@ -1,3 +1,5 @@
+{-# OPTIONS --guardedness #-}
+
 --------------------------------------------------------------------------------
 -- Schmitty the Solver
 --
@@ -135,9 +137,14 @@ mutual
   reflectToRawArgs fuel Γ fv (vArg t ∷ ts) = ⦇ reflectToRawTerm′ fuel Γ fv t ∷ reflectToRawArgs fuel Γ fv ts ⦈
   reflectToRawArgs fuel Γ fv (hArg _ ∷ ts) = reflectToRawArgs fuel Γ fv ts
   reflectToRawArgs fuel Γ fv (iArg _ ∷ ts) = reflectToRawArgs fuel Γ fv ts
-  reflectToRawArgs fuel Γ fv (arg (arg-info visible   irrelevant) _ ∷ ts) = reflectToRawArgs fuel Γ fv ts
-  reflectToRawArgs fuel Γ fv (arg (arg-info hidden    irrelevant) t ∷ ts) = reflectToRawArgs fuel Γ fv ts
-  reflectToRawArgs fuel Γ fv (arg (arg-info instance′ irrelevant) t ∷ ts) = reflectToRawArgs fuel Γ fv ts
+  reflectToRawArgs fuel Γ fv (arg (arg-info visible   (modality irrelevant _)) _ ∷ ts) = reflectToRawArgs fuel Γ fv ts
+  reflectToRawArgs fuel Γ fv (arg (arg-info hidden    (modality irrelevant _)) _ ∷ ts) = reflectToRawArgs fuel Γ fv ts
+  reflectToRawArgs fuel Γ fv (arg (arg-info instance′ (modality irrelevant _)) _ ∷ ts) = reflectToRawArgs fuel Γ fv ts
+
+  -- TODO: @wenkokke added these cases after the release of Agda 2.6.2, but does not know if they're correct.
+  reflectToRawArgs fuel Γ fv (arg (arg-info visible   (modality relevant quantity-0)) _ ∷ ts) = reflectToRawArgs fuel Γ fv ts
+  reflectToRawArgs fuel Γ fv (arg (arg-info hidden    (modality relevant quantity-0)) _ ∷ ts) = reflectToRawArgs fuel Γ fv ts
+  reflectToRawArgs fuel Γ fv (arg (arg-info instance′ (modality relevant quantity-0)) _ ∷ ts) = reflectToRawArgs fuel Γ fv ts
 
 -- |Decode a reflected Agda type to a raw SMT-LIB script.
 --

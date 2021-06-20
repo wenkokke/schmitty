@@ -1,5 +1,5 @@
-
 {-# OPTIONS --allow-exec #-}
+{-# OPTIONS --guardedness #-}
 
 module CounterExample_Z3_Ints_Exists where
 

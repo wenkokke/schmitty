@@ -1,3 +1,6 @@
+{-# OPTIONS --allow-exec #-}
+{-# OPTIONS --guardedness #-}
+
 --------------------------------------------------------------------------------
 -- Schmitty the Solver
 --
@@ -5,8 +8,6 @@
 -- as the `solveCVC4` tactic, which translates the goal term to an SMT-LIB
 -- script and solves it using CVC4.
 --------------------------------------------------------------------------------
-
-{-# OPTIONS --allow-exec #-}
 
 open import SMT.Theory
 
@@ -64,4 +65,3 @@ macro
   solveCVC4 = solve "cvc4" cvc4TC
     where
       open Solver reflectable using (solve)
-

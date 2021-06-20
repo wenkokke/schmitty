@@ -1,8 +1,9 @@
+{-# OPTIONS --allow-exec #-}
+{-# OPTIONS --guardedness #-}
+
 -----------------------------------------------
 -- Test handwritten scripts for Core with Z3 --
 -----------------------------------------------
-
-{-# OPTIONS --allow-exec #-}
 
 module Test_Scripts_Z3_Core where
 

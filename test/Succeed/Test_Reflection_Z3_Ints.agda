@@ -1,4 +1,5 @@
 {-# OPTIONS --allow-exec #-}
+{-# OPTIONS --guardedness #-}
 
 module Test_Reflection_Z3_Ints where
 
