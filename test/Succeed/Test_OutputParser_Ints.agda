@@ -56,6 +56,10 @@ _ : pDefns parses
     "(model (define-fun y_1 () Int 0) (define-fun x_0 () Int 0))"
 _ = ! ((INT , here refl , + 0) ∷ (INT , there (here refl) , + 0) ∷ [])
 
+_ : pDefns parses
+    "((define-fun y_1 () Int 0) (define-fun x_0 () Int 0))"
+_ = ! ((INT , here refl , + 0) ∷ (INT , there (here refl) , + 0) ∷ [])
+
 
 pModel : ∀[ Parser (QualifiedModel (INT ∷ INT ∷ [])) ]
 pModel = mkModelParser pVar

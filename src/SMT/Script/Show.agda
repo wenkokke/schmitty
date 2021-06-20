@@ -122,9 +122,15 @@ module _ where
 
 
   -- |Construct a definition-list parser from a variable parser.
+  --
+  -- NOTE: The SMT-LIB standard specifies models as a series of definition.
+  --       However, some versions of Z3 and CVC4 print them using 'model',
+  --       e.g., `(model (define-fun x () Int 1))`, so Schmitty optionally
+  --       allows the symbol 'model' in the response.
+  --
   mkDefnsParser : ∀[ Parser (Var Γ) ] → ∀[ Parser (List⁺ (Defn Γ)) ]
   mkDefnsParser {Γ} pVar =
-    withSpaces (parens (box (lexeme "model" &> box (list⁺ (mkDefnParser {Γ} pVar)))))
+    withSpaces (parens (box (lexeme "model" ?&> list⁺ (mkDefnParser {Γ} pVar))))
 
 
   private

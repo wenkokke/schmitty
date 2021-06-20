@@ -1,5 +1,5 @@
 Found counter-example:
-  n = -[1+ 0 ]
-refuting Data.Product.Σ ℤ (λ m → + 2 * m ≡ + 1)
+  n = + 3
+refuting Data.Product.Σ ℤ (λ m → + 2 * m ≡ + 9)
 when checking that the expression unquote solveZ3 has type
 (n : ℤ) → ∃-syntax (λ m → + 2 * m ≡ n * n)
