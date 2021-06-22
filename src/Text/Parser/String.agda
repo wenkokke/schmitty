@@ -32,7 +32,9 @@ open import Data.Subset public
 
 open import Level.Bounded as Bounded using ([_])
 import Text.Parser.Monad as ParserMonad
-open import Text.Parser.Types as Parser using (_^_,_)
+import Text.Parser.Monad.Result as ParserMonad
+import Text.Parser.Types as Parser
+open import Text.Parser.Types.Core as Parser using (_^_,_)
 import Text.Parser.Position as Position
 
 
