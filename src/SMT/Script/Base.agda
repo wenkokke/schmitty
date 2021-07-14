@@ -51,8 +51,9 @@ open import Relation.Binary.Definitions using (DecidableEquality)
 open import Relation.Binary.PropositionalEquality as Eq using (_≡_; refl)
 open import Data.Environment as Env using (Env; _∷_; [])
 import Reflection as Rfl
-open import Text.Parser.String using (ParseErrorMsg; no-parse; ambiguous-parse)
+import Text.Parser.String
 open import Text.Printf
+open import Text.Parser.Position as Position using (Position)
 
 -------------------
 -- SMT-LIB Terms --
@@ -378,11 +379,10 @@ scriptVarNames s = scriptVarNames′ s []
 ----------------------
 
 -- |Format a parser error to the user.
-parseErrorMsg : ParseErrorMsg →  String
-parseErrorMsg no-parse        = "Failed to parse output"
-parseErrorMsg ambiguous-parse = "Ambiguous parse of output"
+parseErrorMsg : Position →  String
+parseErrorMsg pos = Position.show pos String.++ ": Failed to parse output"
 
 -- |Display a parser error to the user.
-parseError : ∀ {a} {A : Set a} (output : String) (errMsg : ParseErrorMsg) (cmd : String) (input : String) → Rfl.TC A
+parseError : ∀ {a} {A : Set a} (output : String) (errMsg : Position) (cmd : String) (input : String) → Rfl.TC A
 parseError output errMsg cmd input = Rfl.typeError (Rfl.strErr msg ∷ [])
   where msg = printf "%s:\n\n%s\nwhen running script:\n\n%s\n%s" (parseErrorMsg errMsg) output cmd input

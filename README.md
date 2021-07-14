@@ -69,7 +69,7 @@ Right now, Schmitty supports three theories—[Core][SMT.Theories.Core], [Ints][
 
 - [agda][agda] (>= [v2.6.2][agda-version])
 - [agda-stdlib][agda-stdlib] (>= [v1.7][agda-stdlib-version])
-- [agdarsec][agdarsec] ([master-fd6e7de][agdarsec-version])
+- [agdarsec][agdarsec] ([master-03b8c4e][agdarsec-version])
 
 Note that the path to `z3` must be added to the list of trusted executables in Agda. See  [manual.](https://agda.readthedocs.io/en/latest/language/reflection.html?highlight=trusted#system-calls)
 # Roadmap
@@ -112,7 +112,7 @@ Note that the path to `z3` must be added to the list of trusted executables in A
 [agda-stdlib]: https://github.com/agda/agda-stdlib
 [agda-stdlib-version]: https://github.com/agda/agda-stdlib/releases/tag/v1.7
 [agdarsec]: https://github.com/gallais/agdarsec
-[agdarsec-version]: https://github.com/gallais/agdarsec/commit/fd6e7de75bd0215065cec25c81e911352a86191d
+[agdarsec-version]: https://github.com/gallais/agdarsec/commit/03b8c4ec57b8bc9517b5bc2fca8a540e1ec858f0
 [FloatingPoint]: http://www.philipp.ruemmer.org/publications/smt-fpa.pdf
 [IsabelleHol]: http://www21.in.tum.de/~boehmes/proofrec.pdf
 [SatSolver]: https://github.com/wenkokke/schmitty/blob/master/extra/Kanso/Boolean/SatSolver.agda
