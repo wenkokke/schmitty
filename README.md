@@ -74,10 +74,14 @@ Right now, Schmitty supports three theories—[Core][SMT.Theories.Core], [Ints][
 Note that the path to `z3` must be added to the list of trusted executables in Agda. See  [manual.](https://agda.readthedocs.io/en/latest/language/reflection.html?highlight=trusted#system-calls)
 # Roadmap
 
-- [ ] Upstream: merge [`Text.Parser.String`][Text.Parser.String] into [agdarsec][agdarsec];
-- [ ] Issue: only normalise closed subterms in error messages (moderate);
+- [ ] Issue: move theorems proved via SMT solvers into Prop or the Classical monad (moderate); 
+- [ ] Issue: only normalise closed subterms in error messages (moderate); 
 - [ ] Add error reporting to the parser (easy);
-- [ ] Add backends for other SMT-LIB compliant solvers (easy);
+- [ ] Add backends for other SMT-LIB compliant solvers:
+      * [verit](https://verit.loria.fr/)
+      * [bitwuzla](https://bitwuzla.github.io/)
+      * [yices2](https://yices.csl.sri.com/)
+      * ...
 - [ ] Add theory of real arithmetic linked to Agda rational numbers (easy);
 - [ ] Add theory of floating-point numbers linked to Agda floats (easy);
 - [ ] Add theory of strings linked to Agda strings (easy);
