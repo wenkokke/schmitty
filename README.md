@@ -78,10 +78,10 @@ Note that the path to `z3` must be added to the list of trusted executables in A
 - [ ] Issue: only normalise closed subterms in error messages (moderate); 
 - [ ] Add error reporting to the parser (easy);
 - [ ] Add backends for other SMT-LIB compliant solvers:
-      * [verit](https://verit.loria.fr/)
-      * [bitwuzla](https://bitwuzla.github.io/)
-      * [yices2](https://yices.csl.sri.com/)
-      * ...
+      ([verit](https://verit.loria.fr/),
+       [bitwuzla](https://bitwuzla.github.io/), 
+       [yices2](https://yices.csl.sri.com/),
+       *etc*)
 - [ ] Add theory of real arithmetic linked to Agda rational numbers (easy);
 - [ ] Add theory of floating-point numbers linked to Agda floats (easy);
 - [ ] Add theory of strings linked to Agda strings (easy);
