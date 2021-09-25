@@ -6,6 +6,7 @@
 open import Data.Integer
 open import Data.List
 open import Data.Product
+open import Function
 open import Relation.Binary.PropositionalEquality
 open import SMT.Theories.Ints as Ints
 open import SMT.Backend.Z3 Ints.reflectable
@@ -19,12 +20,12 @@ So, basically, what Schmitty offers you is a well-typed embedding of *some* of t
 ```agda
 blegh : Script [] (INT ∷ INT ∷ []) (SAT ∷ [])
 blegh = `declare-const "x" INT
-      ∷ `declare-const "y" INT
-      ∷ `assert (`app₂ leq (# 0) (# 1))
-      ∷ `assert (`app₂ leq (# 1) (# 0))
-      ∷ `assert (`app₁ not (`app₂ eq (# 0) (# 1)))
-      ∷ `check-sat
-      ∷ []
+      $ `declare-const "y" INT
+      $ `assert (`app₂ leq (# 0) (# 1))
+      $ `assert (`app₂ leq (# 1) (# 0))
+      $ `assert (`app₁ not (`app₂ eq (# 0) (# 1)))
+      $ `check-sat
+      $ []
 ```
 Ohh, that's *almost* the script that our call to `solveZ3` above generates! What a lucky coincidence! You see, top-level constants are existentially quantified, so that script asks Z3 to see if `∃[ x ] ∃[ y ] (x ≤ y → y ≤ x → x ≢ y)` is satisfiable… and if it is, then, well, there *must* be a counter-example to our original goal!
 ```agda
@@ -37,11 +38,11 @@ Did you pick up on that `unsat` there? Schmitty doesn’t just give you back the
 ```agda
 yesss : Script [] (INT ∷ INT ∷ []) (MODEL (INT ∷ INT ∷ []) ∷ [])
 yesss = `declare-const "x" INT
-      ∷ `declare-const "y" INT
-      ∷ `assert (`app₂ leq (`app₂ sub (# 0) (# 1)) (`app₂ add (# 0) (# 1)))
-      ∷ `assert (`app₁ not (`app₂ eq (# 0) (# 1)))
-      ∷ `get-model
-      ∷ []
+      $ `declare-const "y" INT
+      $ `assert (`app₂ leq (`app₂ sub (# 0) (# 1)) (`app₂ add (# 0) (# 1)))
+      $ `assert (`app₁ not (`app₂ eq (# 0) (# 1)))
+      $ `get-model
+      $ []
 ```
 If we call `get-model` instead of `check-sat`, Schmitty will give us back a valid model!
 ```agda
@@ -74,12 +75,12 @@ Right now, Schmitty supports three theories—[Core][SMT.Theories.Core], [Ints][
 Note that the path to `z3` must be added to the list of trusted executables in Agda. See  [manual.](https://agda.readthedocs.io/en/latest/language/reflection.html?highlight=trusted#system-calls)
 # Roadmap
 
-- [ ] Issue: move theorems proved via SMT solvers into Prop or the Classical monad (moderate); 
-- [ ] Issue: only normalise closed subterms in error messages (moderate); 
+- [ ] Issue: move theorems proved via SMT solvers into Prop or the Classical monad (moderate);
+- [ ] Issue: only normalise closed subterms in error messages (moderate);
 - [ ] Add error reporting to the parser (easy);
 - [ ] Add backends for other SMT-LIB compliant solvers:
       ([verit](https://verit.loria.fr/),
-       [bitwuzla](https://bitwuzla.github.io/), 
+       [bitwuzla](https://bitwuzla.github.io/),
        [yices2](https://yices.csl.sri.com/),
        *etc*)
 - [ ] Add theory of real arithmetic linked to Agda rational numbers (easy);

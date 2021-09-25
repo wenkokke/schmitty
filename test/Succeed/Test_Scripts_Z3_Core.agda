@@ -28,9 +28,9 @@ open import SMT.Backend.Z3 Core.coreReflectable
 --
 b∧¬b : Script [] (BOOL ∷ []) (SAT ∷ [])
 b∧¬b = `declare-const "b" BOOL
-     ∷ `assert (`app₂ and (# 0) (`app₁ not (# 0)))
-     ∷ `check-sat
-     ∷ []
+     $ `assert (`app₂ and (# 0) (`app₁ not (# 0)))
+     $ `check-sat
+     $ []
 
 _ : z3 b∧¬b ≡ unsat ∷ []
 _ = refl
@@ -43,8 +43,8 @@ pierce = `assert
        $ `forall "q" BOOL
        $ `app₂ implies (`app₂ implies (`app₂ implies (# 1) (# 0)) (# 1)) (# 1)
        )
-       ∷ `check-sat
-       ∷ []
+       $ `check-sat
+       $ []
 
 _ : z3 pierce ≡ sat ∷ []
 _ = refl

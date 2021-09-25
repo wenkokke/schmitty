@@ -13,6 +13,7 @@ open import Data.Integer using (+_)
 open import Data.List using (List; _∷_; [])
 open import Data.Product using (_,_)
 open import Data.Unit using (⊤; tt)
+open import Function using (_$_)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import Relation.Nullary.Decidable using (True)
 open import Text.Parser.String
@@ -21,12 +22,12 @@ open import SMT.Backend.Z3 Reals.reflectable
 
 script : Script [] (REAL ∷ REAL ∷ []) (MODEL (REAL ∷ REAL ∷ []) ∷ [])
 script = `declare-const "x" REAL
-       ∷ `declare-const "y" REAL
-       ∷ `assert (`app₂ eq (# 0) (`app₂ div (# 1) (`lit (nat 2))))
-       ∷ `assert (`app₂ gt (# 0) (`lit (nat 1)))
-       ∷ `assert (`app₂ gt (# 1) (`lit (nat 1)))
-       ∷ `get-model
-       ∷ []
+       $ `declare-const "y" REAL
+       $ `assert (`app₂ eq (# 0) (`app₂ div (# 1) (`lit (nat 2))))
+       $ `assert (`app₂ gt (# 0) (`lit (nat 1)))
+       $ `assert (`app₂ gt (# 1) (`lit (nat 1)))
+       $ `get-model
+       $ []
 
 is-correct : Outputs (MODEL (REAL ∷ REAL ∷ []) ∷ []) → Set
 is-correct ((sat     , (x ∷ y ∷ [])) ∷ []) = True (x ≟ y ÷ 2.0)
