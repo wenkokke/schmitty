@@ -125,24 +125,24 @@ module _ where
     → Maybe (∃[ Γ′ ] ∃[ Ξ ] Script[ Γᵣ ↦ Γ , Γᵣ′ ↦ Γ′ , Ξᵣ ↦ Ξ ])
   checkRawScript {Γᵣ} {.Γᵣ} {.[]} Γ []ᵣ =
     return $ Γ , [] , []
-  checkRawScript Γ (`set-logicᵣ l ∷ᵣ scr) = do
+  checkRawScript Γ (`set-logicᵣ l scr) = do
     (Γ′ , Ξ , scr) ← checkRawScript Γ scr
-    return $ Γ′ , Ξ , (`set-logic l ∷ scr)
-  checkRawScript Γ (`declare-constᵣ _ ⋆ ∷ _) = nothing -- we never declare constants of type ⋆
-  checkRawScript Γ (`declare-constᵣ n (TERM σᵣ) ∷ᵣ scr) = do
+    return $ Γ′ , Ξ , (`set-logic l scr)
+  checkRawScript Γ (`declare-constᵣ _ ⋆ _) = nothing -- we never declare constants of type ⋆
+  checkRawScript Γ (`declare-constᵣ n (TERM σᵣ) scr) = do
     σ ← checkSort σᵣ
     Γ′ , Ξ , scr ← checkRawScript (σ ∷ Γ) scr
-    return $ Γ′ , Ξ , (`declare-const n σ ∷ scr)
-  checkRawScript Γ (`assertᵣ x ∷ᵣ scr) = do
+    return $ Γ′ , Ξ , (`declare-const n σ scr)
+  checkRawScript Γ (`assertᵣ x scr) = do
     x ← (checkRawTerm (Vec.toList Γ) BOOL x)
     (Γ′ , Ξ , scr) ← (checkRawScript Γ scr)
-    return $ Γ′ , Ξ , (`assert x ∷ scr)
-  checkRawScript Γ (`check-satᵣ ∷ᵣ scr) = do
+    return $ Γ′ , Ξ , (`assert x scr)
+  checkRawScript Γ (`check-satᵣ scr) = do
     (Γ′ , Ξ , scr) ← checkRawScript Γ scr
-    return $ Γ′ , SAT ∷ Ξ , (`check-sat ∷ scr)
-  checkRawScript Γ (`get-modelᵣ ∷ᵣ scr) = do
+    return $ Γ′ , SAT ∷ Ξ , (`check-sat scr)
+  checkRawScript Γ (`get-modelᵣ scr) = do
     (Γ′ , Ξ , scr) ← checkRawScript Γ scr
-    return $ Γ′ , MODEL (Vec.toList Γ) ∷ Ξ , (`get-model ∷ scr)
+    return $ Γ′ , MODEL (Vec.toList Γ) ∷ Ξ , (`get-model scr)
 
 module _ where
 

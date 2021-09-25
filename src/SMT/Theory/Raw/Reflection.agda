@@ -171,11 +171,11 @@ reflectToRawScript = reflectToRawScript′ [] []
       case 0 ∈FV b of λ where
         true → do
           Γ′ , s ← extendContext dom $ reflectToRawScript′ (TERM a ∷ Γ) (true ∷ fv) b
-          return (Γ′ , `declare-constᵣ x (TERM a) ∷ᵣ s)
+          return (Γ′ , `declare-constᵣ x (TERM a) s)
         false → do
           t ← reflectToRawTerm Γ fv a
           Γ′ , s ← extendContext dom $ reflectToRawScript′ Γ (false ∷ fv) b
-          return (Γ′ , `assertᵣ t ∷ᵣ s)
+          return (Γ′ , `assertᵣ t s)
     reflectToRawScript′ Γ fv t = do
       t ← reflectToRawTerm Γ fv t
-      return (Γ , `assertᵣ (`appᵣ (quote ¬_) (t ∷ [])) ∷ᵣ []ᵣ)
+      return (Γ , `assertᵣ (`appᵣ (quote ¬_) (t ∷ [])) []ᵣ)

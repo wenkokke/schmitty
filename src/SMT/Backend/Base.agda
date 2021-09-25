@@ -74,9 +74,13 @@ module Solver {theory : Theory} (reflectable : Reflectable theory) where
       (counterExampleFmt (scriptVarNames scr) `vs []) instGoal
 
   buildProof′ : String → Script Γ Γ′ Ξ → Rfl.Term
-  buildProof′ name (`assert t ∷ []) = Rfl.def (proofComputation t) (Rfl.vArg (`because name Rfl.unknown) ∷ [])
-  buildProof′ name (_ ∷ scr)        = buildProof′ name scr
-  buildProof′ name []               = `because name Rfl.unknown
+  buildProof′ name (`assert t [])           = Rfl.def (proofComputation t) (Rfl.vArg (`because name Rfl.unknown) ∷ [])
+  buildProof′ name []                       = `because name Rfl.unknown
+  buildProof′ name (`set-logic _ scr)       = buildProof′ name scr
+  buildProof′ name (`declare-const _ _ scr) = buildProof′ name scr
+  buildProof′ name (`assert _ scr)          = buildProof′ name scr
+  buildProof′ name (`check-sat scr)         = buildProof′ name scr
+  buildProof′ name (`get-model scr)         = buildProof′ name scr
 
   buildProof : String → Script [] Γ [] → Rfl.Term → Rfl.Term
   buildProof name scr (Rfl.pi (Rfl.arg (Rfl.arg-info h _) a) (Rfl.abs x b)) =
@@ -90,7 +94,7 @@ module Solver {theory : Theory} (reflectable : Reflectable theory) where
     ctx ← Rfl.getContext
     let goal⁺ = foldl (λ b a → Rfl.pi a (Rfl.abs "" b)) goal ctx -- prepend context to the goal
     Γ , scr ← reflectToScript goal⁺
-    let scr′ = scr ◆ `get-model ∷ []
+    let scr′ = scr ◆ `get-model []
     qm ∷ [] ← solver scr′
     case qm of λ where
       (sat     , m) → typeErrorCounterExample goal scr′ m
