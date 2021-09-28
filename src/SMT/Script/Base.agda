@@ -295,44 +295,31 @@ quoteOutputs (r ∷ rs) =
     $ Rfl.vArg (quoteOutput r)
     ∷ Rfl.vArg (quoteOutputs rs) ∷ []
 
-----------------------
--- SMT-LIB Commands --
-----------------------
-
-Logic : Set
-Logic = String
-
--- |SMT-LIB commands.
---
---  NOTE: Scripts are lists of commands. Unfortunately, some commands,
---        such as `declare-const`, bind variables. Command has
---        two type-level arguments, `Γ` and `δΓ`, which represent the binding
---        context before executing the command, and the new variables bound
---        after executing the command. We use a similar trick to gather the
---        types of the outputs, using `Ξ` and `δΞ`.
---
-data Command (Γ : Ctxt) : (δΓ : Ctxt) (δΞ : OutputCtxt) → Set where
-  `set-logic     : (l : Logic) → Command Γ [] []
-  `declare-const : (n : String) (σ : Sort) → Command Γ (σ ∷ []) []
-  `assert        : Term Γ BOOL → Command Γ [] []
-  `check-sat     : Command Γ [] (SAT ∷ [])
-  `get-model     : Command Γ [] (MODEL Γ ∷ [])
-
-
 ---------------------
 -- SMT-LIB Scripts --
 ---------------------
 
+Logic : Set
+Logic = String
+
 -- |SMT-LIB scripts.
 data Script (Γ : Ctxt) : (Γ′ : Ctxt) (Ξ : OutputCtxt) → Set where
-  []  : Script Γ Γ []
-  _∷_ : Command Γ δΓ δΞ → Script (δΓ ++ Γ) Γ′ Ξ → Script Γ Γ′ (δΞ ++ Ξ)
+  []             : Script Γ Γ []
+  `set-logic     : (l : Logic) → Script Γ Γ′ Ξ → Script Γ Γ′ Ξ
+  `declare-const : (n : String) (σ : Sort) → Script (σ ∷ Γ) Γ′ Ξ → Script Γ Γ′ Ξ
+  `assert        : Term Γ BOOL → Script Γ Γ′ Ξ → Script Γ Γ′ Ξ
+  `check-sat     : Script Γ Γ′ Ξ → Script Γ Γ′ (SAT ∷ Ξ)
+  `get-model     : Script Γ Γ′ Ξ → Script Γ Γ′ (MODEL Γ ∷ Ξ)
 
 infixr 5 _◆_
 
 _◆_ : Script Γ Γ′ Ξ → Script Γ′ Γ″ Ξ′ → Script Γ Γ″ (Ξ ++ Ξ′)
-_◆_ {Ξ′ = Ξ′} [] scr′ = scr′
-_◆_ {Ξ′ = Ξ′} (_∷_ {δΞ = δΞ} {Ξ = Ξ} cmd scr) scr′ rewrite List.++-assoc δΞ Ξ Ξ′ = cmd ∷ (scr ◆ scr′)
+[]                     ◆ scr′ = scr′
+`set-logic l scr       ◆ scr′ = `set-logic l (scr ◆ scr′)
+`declare-const n σ scr ◆ scr′ = `declare-const n σ (scr ◆ scr′)
+`assert x scr          ◆ scr′ = `assert x (scr ◆ scr′)
+`check-sat scr         ◆ scr′ = `check-sat (scr ◆ scr′)
+`get-model scr         ◆ scr′ = `get-model (scr ◆ scr′)
 
 --------------------
 -- Useful aliases --
@@ -355,7 +342,7 @@ Defn Γ = ∃[ σ ] (Γ ∋ σ × Value σ)
 `declare-named-consts : (δΓ : Ctxt) → (name : String) → Script (δΓ ʳ++ Γ) Γ′ Ξ → Script Γ Γ′ Ξ
 `declare-named-consts {Γ} []       name scr = scr
 `declare-named-consts {Γ} (σ ∷ δΓ) name scr
-  rewrite List.ʳ++-++ (σ ∷ []) {δΓ} {Γ} = `declare-const name σ ∷ `declare-named-consts δΓ name scr
+  rewrite List.ʳ++-++ (σ ∷ []) {δΓ} {Γ} = `declare-const name σ (`declare-named-consts δΓ name scr)
 
 `declare-consts : (δΓ : Ctxt) → Script (δΓ ʳ++ Γ) Γ′ Ξ → Script Γ Γ′ Ξ
 `declare-consts δΓ scr = `declare-named-consts δΓ "_" scr
@@ -368,11 +355,11 @@ scriptVarNames s = scriptVarNames′ s []
   where
     scriptVarNames′ : Script Γ′ Γ Ξ → VarNames Γ′ → VarNames Γ
     scriptVarNames′ [] acc = acc
-    scriptVarNames′ (`set-logic l       ∷ s) acc = scriptVarNames′ s acc
-    scriptVarNames′ (`declare-const x σ ∷ s) acc = scriptVarNames′ s (x ∷ acc)
-    scriptVarNames′ (`assert x          ∷ s) acc = scriptVarNames′ s acc
-    scriptVarNames′ (`check-sat         ∷ s) acc = scriptVarNames′ s acc
-    scriptVarNames′ (`get-model         ∷ s) acc = scriptVarNames′ s acc
+    scriptVarNames′ (`set-logic l       s) acc = scriptVarNames′ s acc
+    scriptVarNames′ (`declare-const x σ s) acc = scriptVarNames′ s (x ∷ acc)
+    scriptVarNames′ (`assert x          s) acc = scriptVarNames′ s acc
+    scriptVarNames′ (`check-sat         s) acc = scriptVarNames′ s acc
+    scriptVarNames′ (`get-model         s) acc = scriptVarNames′ s acc
 
 ----------------------
 -- Parser utilities --

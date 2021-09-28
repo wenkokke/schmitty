@@ -8,6 +8,7 @@
 module Test_Scripts_Z3_Ints where
 
 open import Data.List using (List; _∷_; [])
+open import Function using (_$_)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import SMT.Theories.Ints as Ints
 open import SMT.Backend.Z3 Ints.reflectable
@@ -28,13 +29,13 @@ open import SMT.Backend.Z3 Ints.reflectable
 script₁ : Script [] (INT ∷ INT ∷ []) (SAT ∷ [])
 script₁
   = `declare-const "x" INT
-  ∷ `declare-const "y" INT
-  ∷ `assert (`app₂ eq
+  $ `declare-const "y" INT
+  $ `assert (`app₂ eq
             (`app₂ sub (# 0) (# 1))
             (`app₂ add (`app₂ add (# 0) (`app₁ neg (# 1))) (`lit (nat 1)))
             )
-  ∷ `check-sat
-  ∷ []
+  $ `check-sat
+  $ []
 
 _ : z3 script₁ ≡ unsat ∷ []
 _ = refl
@@ -43,9 +44,9 @@ _ = refl
 script₂ : Script [] (INT ∷ []) (SAT ∷ [])
 script₂
   = `declare-const "x" INT
-  ∷ `assert (`let "y" INT (# 0) (`app₂ eq (# 0) (# 1)))
-  ∷ `check-sat
-  ∷ []
+  $ `assert (`let "y" INT (# 0) (`app₂ eq (# 0) (# 1)))
+  $ `check-sat
+  $ []
 
 _ : z3 script₂ ≡ sat ∷ []
 _ = refl

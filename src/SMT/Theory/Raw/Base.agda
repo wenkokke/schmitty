@@ -87,7 +87,6 @@ open import SMT.Script.Base rawBaseTheory public
            ; `exists         to `existsᵣ
            ; `let            to `letᵣ
            ; Args            to RawArgs
-           ; Command         to RawCommand
            ; `set-logic      to `set-logicᵣ
            ; `declare-const  to `declare-constᵣ
            ; `assert         to `assertᵣ
@@ -95,7 +94,6 @@ open import SMT.Script.Base rawBaseTheory public
            ; `get-model      to `get-modelᵣ
            ; Script          to RawScript
            ; []              to []ᵣ
-           ; _∷_             to _∷ᵣ_
            )
 
 open import SMT.Script.Names rawBaseTheory using (x′es)

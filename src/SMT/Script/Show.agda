@@ -265,32 +265,29 @@ module _ where
     showArgsS []       = return []
     showArgsS (x ∷ xs) = do x ← showTermS x; xs ← showArgsS xs; return (x ∷ xs)
 
-  -- |Show a command as an S-expression, and build up an environment of output parsers.
-  showCommandS : Command Γ δΓ δΞ → NameState Γ (δΓ ++ Γ) (String × OutputParsers δΞ)
-  showCommandS (`set-logic l) = do
-    return $ mkSTerm ("set-logic" ∷ l ∷ []) , []
-  showCommandS (`declare-const n σ) = do
-    n′ ← freshNameS n σ
-    return $ mkSTerm ("declare-const" ∷ showName n′ ∷ showSort σ ∷ []) , []
-  showCommandS (`assert x) = do
-    x ← showTermS x
-    return $ mkSTerm ("assert" ∷ x ∷ []) , []
-  showCommandS `check-sat = do
-    return $ mkSTerm ("check-sat" ∷ []) , pSat ∷ []
-  showCommandS `get-model = do
-    (_ns , vps) ← get
-    return $ String.unlines ( mkSTerm ("check-sat" ∷ [])
-                            ∷ mkSTerm ("get-model" ∷ []) ∷ [] )
-           , mkModelParser (mkVarParser vps) ∷ []
-
   -- |Show a script as an S-expression, and build up an environment of output parsers.
   showScriptS : Script Γ Γ′ Ξ → NameState Γ Γ′ (List String × OutputParsers Ξ)
   showScriptS [] = do
     return $ [] , []
-  showScriptS (cmd ∷ scr) = do
-    (cmd , ops₁) ← showCommandS cmd
-    (scr , ops₂) ← showScriptS scr
-    return $ cmd ∷ scr , Env.append id ops₁ ops₂
+  showScriptS (`set-logic l scr) = do
+    (scr , ops) ← showScriptS scr
+    return $ mkSTerm ("set-logic" ∷ l ∷ []) ∷ scr , ops
+  showScriptS (`declare-const n σ scr) = do
+    n′ ← freshNameS n σ
+    (scr , ops) ← showScriptS scr
+    return $ mkSTerm ("declare-const" ∷ showName n′ ∷ showSort σ ∷ []) ∷ scr , ops
+  showScriptS (`assert x scr) = do
+    x ← showTermS x
+    (scr , ops) ← showScriptS scr
+    return $ mkSTerm ("assert" ∷ x ∷ []) ∷ scr , ops
+  showScriptS (`check-sat scr) = do
+    (scr , ops) ← showScriptS scr
+    return $ mkSTerm ("check-sat" ∷ []) ∷ scr , pSat ∷ ops
+  showScriptS (`get-model scr) = do
+    (_ns , vps) ← get
+    (scr , ops) ← showScriptS scr
+    return $ mkSTerm ("check-sat" ∷ []) ∷ mkSTerm ("get-model" ∷ []) ∷ scr
+           , mkModelParser (mkVarParser vps) ∷ ops
 
   -- |Show a script as an S-expression, and return an environment of output parsers.
   showScript : Script [] Γ (ξ ∷ Ξ) → String × ∀[ Parser (Outputs (ξ ∷ Ξ)) ]

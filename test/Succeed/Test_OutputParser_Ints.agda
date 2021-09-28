@@ -12,6 +12,7 @@ open import Data.List using (List; _∷_; [])
 open import Data.List.NonEmpty using (List⁺; _∷_)
 open import Data.List.Relation.Unary.Any using (here; there)
 open import Data.Product as Prod using (_,_)
+open import Function using (_$_)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import Text.Parser.String
 open import SMT.Theories.Ints as Ints
@@ -20,10 +21,10 @@ open import SMT.Script Ints.reflectable
 -- |Parser test.
 script : Script [] (INT ∷ INT ∷ []) (MODEL (INT ∷ INT ∷ []) ∷ [])
 script = `declare-const "x" INT
-       ∷ `declare-const "y" INT
-       ∷ `assert (`app₂ eq (# 0) (# 1))
-       ∷ `get-model
-       ∷ []
+       $ `declare-const "y" INT
+       $ `assert (`app₂ eq (# 0) (# 1))
+       $ `get-model
+       $ []
 
 
 pVar : ∀[ Parser (Var (INT ∷ INT ∷ [])) ]
