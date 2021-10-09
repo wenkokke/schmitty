@@ -17,6 +17,8 @@ open import Function using (case_of_; const; _$_; _∘_; flip)
 open import Reflection as Rfl using (return; _>>=_; _>>_)
 open import Reflection.Normalise using (normaliseClosed)
 open import SMT.Theory
+open import Text.Printf
+open import Text.Parser.Position as Position using (Position)
 
 
 postulate
@@ -25,12 +27,22 @@ postulate
 `because : (solver : String) (A : Rfl.Type) → Rfl.Term
 `because solver A = Rfl.def (quote because) (Rfl.vArg (Rfl.lit (Rfl.string solver)) ∷ Rfl.vArg A ∷ [])
 
+----------------------
+-- Error utilities --
+----------------------
 
-module Solver {theory : Theory} (reflectable : Reflectable theory) where
+-- |Display a smt error to the user.
+displayError : ∀ {a} {A : Set a} (output : String) (smterr : SMTError) (cmd : String) (input : String) → Rfl.TC A
+displayError output (parseError pos) cmd input = Rfl.typeError (Rfl.strErr msg ∷ [])
+  where msg = printf "%s: Failed to parse output:\n\n%s\nwhen running script:\n\n%s\n%s" (Position.show pos) output cmd input
+displayError output (interpError msg) cmd input = Rfl.typeError (Rfl.strErr msg ∷ [])
+
+module Solver (theory : Theory) {{reflectable : Reflectable theory}} where
 
   open Theory theory
   open Reflectable reflectable
-  open import SMT.Script reflectable
+
+  open import SMT.Script theory
 
   private
     variable

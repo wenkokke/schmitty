@@ -8,9 +8,8 @@
 
 open import SMT.Theory
 
-module SMT.Script {theory : Theory} (reflectable : Reflectable theory) where
+module SMT.Script (theory : Theory) where
 
-open Theory theory
-open import SMT.Script.Base baseTheory public
+open import SMT.Script.Base theory public
 open import SMT.Script.Show theory public
-open import SMT.Script.Reflection reflectable public
+open import SMT.Script.Reflection theory public

@@ -11,7 +11,7 @@ open import Data.List using (List; _∷_; [])
 open import Function using (_$_)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import SMT.Theories.Ints as Ints
-open import SMT.Backend.Z3 Ints.reflectable
+open import SMT.Backend.Z3 Ints.theory
 
 -- |Taken from <http://smtlib.cs.uiowa.edu/examples.shtml>
 --

@@ -22,10 +22,10 @@ import Reflection as Rfl
 open import Relation.Binary.PropositionalEquality as PropEq using (_≡_; _≢_; refl)
 open import Relation.Nullary using (Dec; yes; no)
 open import SMT.Theory
-open import SMT.Theories.Core as Core hiding (BOOL)
+open import SMT.Theories.Core as Core hiding (BOOL; theory)
 open import SMT.Theories.Core.Extensions
 open import SMT.Theories.Ints.Base as Ints
-open import SMT.Script.Base Ints.baseTheory
+open import SMT.Script.Base Ints.theory
 
 
 -----------
@@ -175,9 +175,10 @@ proofComputation _ = quote id
 -- Instances --
 ---------------
 
-reflectable : Reflectable theory
-Reflectable.sorts            reflectable = sorts
-Reflectable.checkSort        reflectable = checkSort
-Reflectable.checkLiteral     reflectable = checkLiteral
-Reflectable.checkIdentifier  reflectable = checkIdentifier
-Reflectable.proofComputation reflectable = proofComputation
+instance
+  reflectable : Reflectable theory
+  Reflectable.sorts            reflectable = sorts
+  Reflectable.checkSort        reflectable = checkSort
+  Reflectable.checkLiteral     reflectable = checkLiteral
+  Reflectable.checkIdentifier  reflectable = checkIdentifier
+  Reflectable.proofComputation reflectable = proofComputation

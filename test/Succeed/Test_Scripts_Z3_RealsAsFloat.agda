@@ -18,7 +18,7 @@ open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import Relation.Nullary.Decidable using (True)
 open import Text.Parser.String
 open import SMT.Theories.Reals as Reals
-open import SMT.Backend.Z3 Reals.reflectable
+open import SMT.Backend.Z3 Reals.theory
 
 script : Script [] (REAL ∷ REAL ∷ []) (MODEL (REAL ∷ REAL ∷ []) ∷ [])
 script = `declare-const "x" REAL

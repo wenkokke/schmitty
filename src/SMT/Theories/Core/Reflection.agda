@@ -20,7 +20,7 @@ import Reflection as Rfl
 open import Relation.Nullary using (¬_)
 open import SMT.Theory
 open import SMT.Theories.Core.Base as Core
-open import SMT.Script.Base Core.coreBaseTheory renaming ( Macro to CoreMacro )
+open import SMT.Script.Base Core.theory renaming ( Macro to CoreMacro )
 
 
 -----------
@@ -92,9 +92,10 @@ coreProofComputation _ = quote Function.id
 -- Instances --
 ---------------
 
-coreReflectable : Reflectable coreTheory
-Reflectable.sorts            coreReflectable = coreSorts
-Reflectable.checkSort        coreReflectable = checkCoreSort
-Reflectable.checkLiteral     coreReflectable = checkCoreLiteral
-Reflectable.checkIdentifier  coreReflectable = checkCoreIdentifier
-Reflectable.proofComputation coreReflectable = coreProofComputation
+instance
+  coreReflectable : Reflectable theory
+  Reflectable.sorts            coreReflectable = coreSorts
+  Reflectable.checkSort        coreReflectable = checkCoreSort
+  Reflectable.checkLiteral     coreReflectable = checkCoreLiteral
+  Reflectable.checkIdentifier  coreReflectable = checkCoreIdentifier
+  Reflectable.proofComputation coreReflectable = coreProofComputation

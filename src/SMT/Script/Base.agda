@@ -24,9 +24,9 @@
 
 open import SMT.Theory.Base
 
-module SMT.Script.Base (baseTheory : BaseTheory) where
+module SMT.Script.Base (theory : Theory) where
 
-open BaseTheory baseTheory
+open Theory theory
 
 open import Data.Fin as Fin using (Fin; zero; suc)
 open import Data.List as List using (List; _∷_; []; _++_; _ʳ++_)
@@ -51,9 +51,6 @@ open import Relation.Binary.Definitions using (DecidableEquality)
 open import Relation.Binary.PropositionalEquality as Eq using (_≡_; refl)
 open import Data.Environment as Env using (Env; _∷_; [])
 import Reflection as Rfl
-import Text.Parser.String
-open import Text.Printf
-open import Text.Parser.Position as Position using (Position)
 
 -------------------
 -- SMT-LIB Terms --
@@ -360,16 +357,3 @@ scriptVarNames s = scriptVarNames′ s []
     scriptVarNames′ (`assert x          s) acc = scriptVarNames′ s acc
     scriptVarNames′ (`check-sat         s) acc = scriptVarNames′ s acc
     scriptVarNames′ (`get-model         s) acc = scriptVarNames′ s acc
-
-----------------------
--- Parser utilities --
-----------------------
-
--- |Format a parser error to the user.
-parseErrorMsg : Position →  String
-parseErrorMsg pos = Position.show pos String.++ ": Failed to parse output"
-
--- |Display a parser error to the user.
-parseError : ∀ {a} {A : Set a} (output : String) (errMsg : Position) (cmd : String) (input : String) → Rfl.TC A
-parseError output errMsg cmd input = Rfl.typeError (Rfl.strErr msg ∷ [])
-  where msg = printf "%s:\n\n%s\nwhen running script:\n\n%s\n%s" (parseErrorMsg errMsg) output cmd input

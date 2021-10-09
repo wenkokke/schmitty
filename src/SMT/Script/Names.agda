@@ -9,9 +9,9 @@
 
 open import SMT.Theory.Base
 
-module SMT.Script.Names (baseTheory : BaseTheory) where
+module SMT.Script.Names (theory : Theory) where
 
-open BaseTheory baseTheory
+open Theory theory
 
 open import Category.Monad
 open import Category.Monad.State as StateCat using (RawIMonadState; IStateT)
@@ -36,7 +36,7 @@ open import Relation.Nullary using (Dec; yes; no)
 open import Relation.Nullary.Decidable using (True)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import Reflection using (con; vArg)
-open import SMT.Script.Base baseTheory
+open import SMT.Script.Base theory
 
 private
   variable

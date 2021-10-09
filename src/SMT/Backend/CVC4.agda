@@ -11,7 +11,9 @@
 
 open import SMT.Theory
 
-module SMT.Backend.CVC4 {theory : Theory} (reflectable : Reflectable theory) where
+module SMT.Backend.CVC4 (theory : Theory) {{solvable : Solvable theory}} where
+
+open Solvable solvable
 
 open import Data.List as List using (List; _∷_; [])
 open import Data.Maybe as Maybe using (Maybe; just; nothing)
@@ -22,10 +24,8 @@ open import Data.Unit as Unit using (⊤)
 open import Function using (case_of_; const; _$_; _∘_)
 open import Reflection as Rfl using (return; _>>=_; _>>_)
 open import Reflection.External
-open import SMT.Script reflectable public
-open import Text.Parser.String using (runParser)
 open import SMT.Backend.Base
-open Theory theory
+open import SMT.Script.Base theory public
 
 private
   variable
@@ -37,7 +37,7 @@ cvc4TC : Script [] Γ (ξ ∷ Ξ) → Rfl.TC (Outputs (ξ ∷ Ξ))
 cvc4TC {Γ} {ξ} {Ξ} scr = do
 
   -- Print the SMT-LIB script and build the output parser.
-  let (scr , parseOutputs) = showScript scr
+  let (scr , parseOutputs) = toSMTLIBWithOutputParser scr
 
   -- Construct the command specification.
   --
@@ -52,8 +52,8 @@ cvc4TC {Γ} {ξ} {Ξ} scr = do
 
   -- Run the CVC4 command and parse the output.
   result exitCode stdout stderr ← unsafeRunCmdTC cvc4Cmd
-  case runParser parseOutputs stdout of λ where
-    (inj₁ parserr) → parseError stdout parserr (showCmdSpec cvc4Cmd) scr
+  case parseOutputs stdout of λ where
+    (inj₁ smterr) → displayError stdout smterr (showCmdSpec cvc4Cmd) scr
     (inj₂ outputs) → return outputs
 
 macro
@@ -61,7 +61,7 @@ macro
   cvc4 scr hole = cvc4TC scr >>= Rfl.unify hole ∘ quoteOutputs
 
 macro
-  solveCVC4 : Rfl.Term → Rfl.TC ⊤
+  solveCVC4 : {{Reflectable theory}} → Rfl.Term → Rfl.TC ⊤
   solveCVC4 = solve "cvc4" cvc4TC
     where
-      open Solver reflectable using (solve)
+      open Solver theory using (solve)

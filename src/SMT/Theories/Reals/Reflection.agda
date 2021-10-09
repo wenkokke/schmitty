@@ -25,10 +25,10 @@ import Reflection as Rfl
 import Relation.Nullary.Decidable as Dec
 open import Relation.Binary.PropositionalEquality as Eq using (_≡_; refl; cong)
 open import SMT.Theory
-open import SMT.Theories.Core as Core hiding (BOOL)
+open import SMT.Theories.Core as Core hiding (BOOL; theory)
 open import SMT.Theories.Core.Extensions
 open import SMT.Theories.Reals.Base as Reals
-open import SMT.Script.Base Reals.baseTheory
+open import SMT.Script.Base Reals.theory
 import SMT.Utils.Float as Float
 
 

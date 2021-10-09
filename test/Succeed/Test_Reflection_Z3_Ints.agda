@@ -10,7 +10,7 @@ open import Data.Unit using () -- constructor instance
 open import Data.Product using (Σ; Σ-syntax; ∃; ∃-syntax; _,_; _×_)
 open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl)
 open import SMT.Theories.Ints as Ints
-open import SMT.Backend.Z3 Ints.reflectable
+open import SMT.Backend.Z3 Ints.theory
 
 import Data.Integer.Literals as Int using (number; negative)
 
