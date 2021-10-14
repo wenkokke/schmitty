@@ -3,7 +3,8 @@
 --------------------------------------------------------------------------------
 -- Schmitty the Solver
 --
--- TODO
+-- Defines the `Theory` instance for the theory of natural numbers, called
+-- "theory".
 --------------------------------------------------------------------------------
 
 module SMT.Theories.Nats.Base where

@@ -1,7 +1,10 @@
 -------------------------------------------------------------------------------
 -- Schmitty the Solver
 --
--- TODO
+-- Defines the `Printable` class, which  provides pretty-printers that print
+-- the sorts, literals, and identifiers to their corresponding SMT-LIB terms.
+-- To help define these functions, this module also exports `mkSTerm`, which
+-- prints a list of strings as an S-expression.
 --------------------------------------------------------------------------------
 
 module SMT.Theory.Class.Printable where

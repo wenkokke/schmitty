@@ -1,7 +1,8 @@
 -------------------------------------------------------------------------------
 -- Schmitty the Solver
 --
--- TODO
+-- Defines the `Parsable` class, which provides parsers that parse the sorts
+-- and values output as part of the SMT-LIB model.
 --------------------------------------------------------------------------------
 
 module SMT.Theory.Class.Parsable where

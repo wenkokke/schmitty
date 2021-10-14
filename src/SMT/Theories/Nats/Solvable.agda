@@ -3,7 +3,8 @@
 --------------------------------------------------------------------------------
 -- Schmitty the Solver
 --
--- TODO
+-- Defines the `Solvable` instance for the theory of natural numbers, called
+-- `solvable`.
 --------------------------------------------------------------------------------
 
 module SMT.Theories.Nats.Solvable where

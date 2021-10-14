@@ -3,7 +3,20 @@
 --------------------------------------------------------------------------------
 -- Schmitty the Solver
 --
--- TODO
+-- Defines the `Solvable` class, which is the top-level interface to an SMT
+-- solver. It provides "toSMTLIBWithOutputParser", which takes a SMT-LIB script
+-- embedded in Schmitty and turns it into an actually SMT-LIB script coupled
+-- with a correspoinding parser for the outputs.
+--
+-- There are two ways to make a theory solvable:
+--
+-- - For a theory natively supported by the SMT-LIB standard (which we call
+--   concrete theory), we can implement `Solvable` directly by calling
+--   "makeSolve" and providing a "Printable" and a "Parsable" instance.
+--
+-- - For a theory not natively supported by the SMT-LIB standard (which we call
+--   virtual theory), we can implement `Solvable` by translating it to an
+--   existing solvable theory using `Translation` and `makeVirtualTheory`.
 --------------------------------------------------------------------------------
 
 module SMT.Theory.Class.Solvable where
@@ -38,6 +51,10 @@ record Solvable (theory : Theory) : Set where
              → Script [] Γ Ξ → String × (String → SMTError ⊎ Outputs Ξ)
 
 
+---------------------
+-- Concrete Theory --
+---------------------
+
 makeSolvable : (theory : Theory) → {{Printable theory}} → {{Parsable theory}} → Solvable theory
 makeSolvable theory = record {
     toSMTLIBWithOutputParser = Prod.map₂ (λ p s → Sum.map₁ parseError (p s)) ∘ showScript
@@ -45,6 +62,10 @@ makeSolvable theory = record {
   where
     open SMT.Script.Show theory
 
+
+--------------------
+-- Virtual Theory --
+--------------------
 
 record SortTranslation (virtual : Theory) (concrete : Theory) : Set₁ where
   private

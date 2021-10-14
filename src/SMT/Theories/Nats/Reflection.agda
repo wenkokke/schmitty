@@ -3,7 +3,8 @@
 --------------------------------------------------------------------------------
 -- Schmitty the Solver
 --
--- TODO
+-- Defines the `Reflectable` instance for the theory of natural numbers, called
+-- `reflectable`.
 --------------------------------------------------------------------------------
 
 module SMT.Theories.Nats.Reflection where
