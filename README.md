@@ -9,7 +9,7 @@ open import Data.Product
 open import Function
 open import Relation.Binary.PropositionalEquality
 open import SMT.Theories.Ints as Ints
-open import SMT.Backend.Z3 Ints.reflectable
+open import SMT.Backend.Z3 Ints.theory
 ```
 If you wanna solve some problems, you’re in luck! Schmitty is an Agda library which gives you bindings to SMT solvers! I know, cool right?!
 ```agda
