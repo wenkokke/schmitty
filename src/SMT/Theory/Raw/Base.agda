@@ -30,6 +30,9 @@ open import Relation.Nullary using (Dec; yes; no)
 import Relation.Nullary.Decidable as Dec
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
 open import SMT.Theory.Base
+open import SMT.Theory.Class.Parsable
+open import SMT.Theory.Class.Printable
+open import SMT.Theory.Class.Solvable
 open import Text.Parser.String
 
 data RawSort : Set where
@@ -45,35 +48,34 @@ _≟-RawSort_ : (σ σ′ : RawSort) → Dec (σ ≡ σ′)
 TERM x ≟-RawSort ⋆       = no λ()
 TERM t ≟-RawSort TERM t′ = Dec.map (equivalence (cong TERM) TERM-injective) (t ≟-Term t′)
 
-rawBaseTheory : BaseTheory
-BaseTheory.Sort        rawBaseTheory = RawSort
-BaseTheory._≟-Sort_    rawBaseTheory = _≟-RawSort_
-BaseTheory.BOOL        rawBaseTheory = ⋆
-BaseTheory.Value       rawBaseTheory = λ _ → ⊥
-BaseTheory.Literal     rawBaseTheory = λ _ → Rfl.Literal
-BaseTheory.Identifier  rawBaseTheory = λ _ → Rfl.Name
-BaseTheory.quoteSort   rawBaseTheory = λ _ → Rfl.con (quote ⋆) []
-BaseTheory.quoteValue  rawBaseTheory = λ _ → ⊥-elim
-BaseTheory.interpValue rawBaseTheory = λ t → t
-
-rawPrintable : Printable rawBaseTheory
-Printable.showSort       rawPrintable = λ _ → "⋆"
-Printable.showLiteral    rawPrintable = Rfl.showLiteral
-Printable.showIdentifier rawPrintable = Rfl.showName
-
-rawParsable : Parsable rawBaseTheory
-Parsable.parseSort  rawParsable = ⋆ <$ lexeme "⋆"
-Parsable.parseValue rawParsable = λ _ → fail
-
 rawTheory : Theory
-Theory.baseTheory  rawTheory = rawBaseTheory
-Theory.printable   rawTheory = rawPrintable
-Theory.parsable    rawTheory = rawParsable
+Theory.Sort        rawTheory = RawSort
+Theory._≟-Sort_    rawTheory = _≟-RawSort_
+Theory.BOOL        rawTheory = ⋆
+Theory.Value       rawTheory = λ _ → ⊥
+Theory.Literal     rawTheory = λ _ → Rfl.Literal
+Theory.Identifier  rawTheory = λ _ → Rfl.Name
+Theory.quoteSort   rawTheory = λ _ → Rfl.con (quote ⋆) []
+Theory.quoteValue  rawTheory = λ _ → ⊥-elim
+Theory.interpValue rawTheory = λ t → t
+
+instance
+  rawPrintable : Printable rawTheory
+  Printable.showSort       rawPrintable = λ _ → "⋆"
+  Printable.showLiteral    rawPrintable = Rfl.showLiteral
+  Printable.showIdentifier rawPrintable = Rfl.showName
+
+  rawParsable : Parsable rawTheory
+  Parsable.parseSort  rawParsable = ⋆ <$ lexeme "⋆"
+  Parsable.parseValue rawParsable = λ _ → fail
+
+  rawSolvable : Solvable rawTheory
+  rawSolvable = makeSolvable rawTheory
 
 
 -- Export basic constructs from SMT.Script.Base, renamed to use 'Raw' whenever
 -- conflicts with other theories are possible.
-open import SMT.Script.Base rawBaseTheory public
+open import SMT.Script.Base rawTheory public
   using ()
   renaming ( OutputType      to RawOutputType
            ; OutputCtxt      to RawOutputCtxt
@@ -96,11 +98,10 @@ open import SMT.Script.Base rawBaseTheory public
            ; []              to []ᵣ
            )
 
-open import SMT.Script.Names rawBaseTheory using (x′es)
-open import SMT.Script.Show rawTheory using (showScriptS)
+open import SMT.Script.Names rawTheory using (x′es)
 
 showRawScript : {Γᵣ : RawCtxt} {Ξᵣ : RawOutputCtxt} → RawScript [] Γᵣ Ξᵣ → String
-showRawScript scrᵣ = String.unlines (proj₁ (proj₁ (showScriptS scrᵣ (x′es , []))))
+showRawScript scrᵣ = proj₁ (Solvable.toSMTLIBWithOutputParser rawSolvable scrᵣ)
 
 -- Define a raw variable, instead of re-exporting _∋_, since there is only a
 -- single sort, so exposing the sort at the type-level is pointless.

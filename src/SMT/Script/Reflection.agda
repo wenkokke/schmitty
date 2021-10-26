@@ -9,7 +9,7 @@
 
 open import SMT.Theory
 
-module SMT.Script.Reflection {theory : Theory} (reflectable : Reflectable theory) where
+module SMT.Script.Reflection (theory : Theory) {{reflectable : Reflectable theory}} where
 
 open Theory theory
 open Reflectable reflectable
@@ -34,8 +34,7 @@ import Reflection as Rfl
 open import Relation.Nullary using (Dec; yes; no)
 open import Relation.Nullary.Decidable using (True)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym)
-open import SMT.Script.Base baseTheory
-open import SMT.Script.Show theory
+open import SMT.Script.Base theory
 
 private
   variable

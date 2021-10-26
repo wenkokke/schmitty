@@ -12,16 +12,15 @@
 
 open import SMT.Theory.Base
 
-module SMT.Theory.Reflectable (theory : Theory) where
+module SMT.Theory.Class.Reflectable (theory : Theory) where
 
 open Theory theory
 
-import Level
 open import Data.List as List using (List)
 open import Data.Maybe as Maybe using (Maybe)
 open import Data.Product as Prod using (Σ-syntax)
 import Reflection as Rfl
-open import SMT.Script.Base baseTheory
+open import SMT.Script.Base theory
 
 
 record Reflectable : Set where

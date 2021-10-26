@@ -7,7 +7,7 @@ open import Data.Integer using (ℤ; _+_)
 open import Data.Empty using (⊥)
 open import Relation.Binary.PropositionalEquality using (_≡_)
 open import SMT.Theories.Ints as Ints
-open import SMT.Backend.Z3 Ints.reflectable
+open import SMT.Backend.Z3 Ints.theory
 
 import Data.Integer.Literals as Int using (number; negative)
 

@@ -123,27 +123,26 @@ showCoreIdentifier xor     = "xor"
 -- Instances --
 ---------------
 
-coreBaseTheory : BaseTheory
-BaseTheory.Sort         coreBaseTheory = CoreSort
-BaseTheory.BOOL         coreBaseTheory = BOOL
-BaseTheory._≟-Sort_     coreBaseTheory = _≟-CoreSort_
-BaseTheory.Value        coreBaseTheory = CoreValue
-BaseTheory.Literal      coreBaseTheory = CoreLiteral
-BaseTheory.Identifier   coreBaseTheory = CoreIdentifier
-BaseTheory.quoteSort    coreBaseTheory = quoteCoreSort
-BaseTheory.quoteValue   coreBaseTheory = quoteCoreValue
-BaseTheory.interpValue  coreBaseTheory = interpCoreValue
+theory : Theory
+Theory.Sort         theory = CoreSort
+Theory.BOOL         theory = BOOL
+Theory._≟-Sort_     theory = _≟-CoreSort_
+Theory.Value        theory = CoreValue
+Theory.Literal      theory = CoreLiteral
+Theory.Identifier   theory = CoreIdentifier
+Theory.quoteSort    theory = quoteCoreSort
+Theory.quoteValue   theory = quoteCoreValue
+Theory.interpValue  theory = interpCoreValue
 
-corePrintable : Printable coreBaseTheory
-Printable.showSort       corePrintable = showCoreSort
-Printable.showLiteral    corePrintable = showCoreLiteral
-Printable.showIdentifier corePrintable = showCoreIdentifier
+instance
+  corePrintable : Printable theory
+  Printable.showSort       corePrintable = showCoreSort
+  Printable.showLiteral    corePrintable = showCoreLiteral
+  Printable.showIdentifier corePrintable = showCoreIdentifier
 
-coreParsable : Parsable coreBaseTheory
-Parsable.parseSort   coreParsable = parseCoreSort
-Parsable.parseValue  coreParsable = parseCoreValue
+  coreParsable : Parsable theory
+  Parsable.parseSort   coreParsable = parseCoreSort
+  Parsable.parseValue  coreParsable = parseCoreValue
 
-coreTheory : Theory
-Theory.baseTheory  coreTheory = coreBaseTheory
-Theory.printable   coreTheory = corePrintable
-Theory.parsable    coreTheory = coreParsable
+  coreSolvable : Solvable theory
+  coreSolvable = makeSolvable theory

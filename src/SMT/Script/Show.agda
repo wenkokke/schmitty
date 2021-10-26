@@ -9,10 +9,14 @@
 --------------------------------------------------------------------------------
 
 open import SMT.Theory.Base
+open import SMT.Theory.Class.Parsable
+open import SMT.Theory.Class.Printable
 
-module SMT.Script.Show (theory : Theory) where
+module SMT.Script.Show (theory : Theory) {{printable : Printable theory}} {{parsable : Parsable theory}} where
 
 open Theory theory
+open Parsable parsable
+open Printable printable
 
 open import Category.Monad
 open import Codata.Musical.Stream as Stream using (Stream)
@@ -22,6 +26,7 @@ open import Data.Fin as Fin using (Fin; suc; zero)
 open import Data.List as List using (List; _∷_; []; [_]; _ʳ++_; _++_; length)
 open import Data.List.Relation.Unary.All as All using (All; _∷_; [])
 open import Data.List.Relation.Unary.Any as Any using (here; there)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
 open import Data.List.NonEmpty as List⁺ using (List⁺; _∷_)
 open import Data.Maybe as Maybe using (Maybe; just; nothing)
 import Data.Maybe.Categorical as MaybeCat
@@ -37,8 +42,9 @@ import Level
 import Reflection as Rfl
 open import Relation.Nullary using (yes; no)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
-open import SMT.Script.Base baseTheory
-open import SMT.Script.Names baseTheory
+open import SMT.Script.Base theory
+open import SMT.Script.Names theory
+open import Text.Parser.Position as Position using (Position)
 
 private
   variable
@@ -185,6 +191,9 @@ module _ where
   mkOutputParsers⁺ (op ∷ [])          = (_∷ []) <$> op
   mkOutputParsers⁺ (op ∷ ops@(_ ∷ _)) = flip _∷_ <$> mkOutputParsers⁺ ops <*> box op
 
+  mkOutputParsers : OutputParsers Ξ → String → Position ⊎ Outputs Ξ
+  mkOutputParsers []         s = inj₁ Position.start
+  mkOutputParsers (op ∷ ops) s = runParser (mkOutputParsers⁺ (op ∷ ops)) s
 
 
 -- * Pretty printer
@@ -290,8 +299,8 @@ module _ where
            , mkModelParser (mkVarParser vps) ∷ ops
 
   -- |Show a script as an S-expression, and return an environment of output parsers.
-  showScript : Script [] Γ (ξ ∷ Ξ) → String × ∀[ Parser (Outputs (ξ ∷ Ξ)) ]
-  showScript scr = Prod.map String.unlines mkOutputParsers⁺ (proj₁ (showScriptS scr (x′es , [])))
+  showScript : Script [] Γ Ξ → String × (String → Position ⊎ (Outputs Ξ))
+  showScript scr = Prod.map String.unlines mkOutputParsers (proj₁ (showScriptS scr (x′es , [])))
 
   -- |Get the variable parser for a script (for debugging purposes).
   getVarParser : Script [] Γ Ξ → ∀[ Parser (∃[ σ ] (Γ ∋ σ)) ]

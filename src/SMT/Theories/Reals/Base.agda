@@ -23,7 +23,7 @@ import Reflection as Rfl
 import Relation.Nullary.Decidable as Dec
 open import Relation.Binary.PropositionalEquality as PropEq using (_≡_; refl)
 open import SMT.Theory
-open import SMT.Theories.Core as Core hiding (BOOL)
+open import SMT.Theories.Core as Core hiding (BOOL; theory)
 open import SMT.Theories.Core.Extensions
 import SMT.Utils.Float as Float
 open import Text.Parser.String
@@ -215,27 +215,26 @@ private
 -- Instances --
 ---------------
 
-baseTheory : BaseTheory
-BaseTheory.Sort         baseTheory = Sort
-BaseTheory._≟-Sort_     baseTheory = _≟-Sort_
-BaseTheory.BOOL         baseTheory = BOOL
-BaseTheory.Value        baseTheory = Value
-BaseTheory.Literal      baseTheory = Literal
-BaseTheory.Identifier   baseTheory = Identifier
-BaseTheory.quoteSort    baseTheory = quoteSort
-BaseTheory.quoteValue   baseTheory = quoteValue
-BaseTheory.interpValue  baseTheory = interpCoreValue
-
-printable : Printable baseTheory
-Printable.showSort       printable = showSort
-Printable.showLiteral    printable = showLiteral
-Printable.showIdentifier printable = showIdentifier
-
-parsable : Parsable baseTheory
-Parsable.parseSort  parsable = parseSort
-Parsable.parseValue parsable = parseValue
-
 theory : Theory
-Theory.baseTheory  theory = baseTheory
-Theory.printable   theory = printable
-Theory.parsable    theory = parsable
+Theory.Sort         theory = Sort
+Theory._≟-Sort_     theory = _≟-Sort_
+Theory.BOOL         theory = BOOL
+Theory.Value        theory = Value
+Theory.Literal      theory = Literal
+Theory.Identifier   theory = Identifier
+Theory.quoteSort    theory = quoteSort
+Theory.quoteValue   theory = quoteValue
+Theory.interpValue  theory = interpCoreValue
+
+instance
+  printable : Printable theory
+  Printable.showSort       printable = showSort
+  Printable.showLiteral    printable = showLiteral
+  Printable.showIdentifier printable = showIdentifier
+
+  parsable : Parsable theory
+  Parsable.parseSort  parsable = parseSort
+  Parsable.parseValue parsable = parseValue
+
+  solvable : Solvable theory
+  solvable = makeSolvable theory

@@ -11,7 +11,7 @@ open import Data.List using (List; _∷_; [])
 open import Function using (_$_)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import SMT.Theories.Core as Core
-open import SMT.Backend.Z3 Core.coreReflectable
+open import SMT.Backend.Z3 Core.theory
 
 -- |Taken from <http://smtlib.cs.uiowa.edu/examples.shtml>
 --

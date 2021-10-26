@@ -16,7 +16,7 @@ open import Function using (_$_)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import Text.Parser.String
 open import SMT.Theories.Ints as Ints
-open import SMT.Script Ints.reflectable
+open import SMT.Script Ints.theory
 
 -- |Parser test.
 script : Script [] (INT ∷ INT ∷ []) (MODEL (INT ∷ INT ∷ []) ∷ [])

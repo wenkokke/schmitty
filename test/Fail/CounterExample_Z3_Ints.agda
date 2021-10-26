@@ -8,7 +8,7 @@ open import Data.List using (List; _∷_; [])
 open import Data.Unit using () -- constructor instance
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import SMT.Theories.Ints as Ints
-open import SMT.Backend.Z3 Ints.reflectable
+open import SMT.Backend.Z3 Ints.theory
 
 _ : (x y : ℤ) → x ≤ y → x ≡ y
 _ = solveZ3

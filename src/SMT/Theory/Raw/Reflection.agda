@@ -30,7 +30,7 @@ import Reflection.TypeChecking.Monad.Categorical as TC
 open import Reflection.DeBruijn using (η-expand; _∈FV_)
 open import Relation.Nullary using (¬_; Dec; yes; no)
 open import Relation.Nullary.Decidable using (isYes)
-open import SMT.Theory
+open import SMT.Theory.Base
 open import SMT.Theory.Raw.Base
 
 open import Agda.Builtin.FromNat
