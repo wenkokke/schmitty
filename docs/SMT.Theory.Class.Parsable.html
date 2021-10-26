@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<html><head><meta charset="utf-8"><title>SMT.Theory.Class.Parsable</title><link rel="stylesheet" href="Agda.css"></head><body><pre class="Agda"><a id="1" class="Comment">-------------------------------------------------------------------------------</a>
+<a id="81" class="Comment">-- Schmitty the Solver</a>
+<a id="104" class="Comment">--</a>
+<a id="107" class="Comment">-- Defines the `Parsable` class, which provides parsers that parse the sorts</a>
+<a id="184" class="Comment">-- and values output as part of the SMT-LIB model.</a>
+<a id="235" class="Comment">--------------------------------------------------------------------------------</a>
+
+<a id="317" class="Keyword">module</a> <a id="324" href="SMT.Theory.Class.Parsable.html" class="Module">SMT.Theory.Class.Parsable</a> <a id="350" class="Keyword">where</a>
+
+<a id="357" class="Keyword">open</a> <a id="362" class="Keyword">import</a> <a id="369" href="SMT.Theory.Base.html" class="Module">SMT.Theory.Base</a>
+<a id="385" class="Keyword">open</a> <a id="390" class="Keyword">import</a> <a id="397" href="Text.Parser.String.html" class="Module">Text.Parser.String</a> <a id="416" class="Keyword">using</a> <a id="422" class="Symbol">(</a><a id="423" href="Relation.Unary.html#3359" class="Function">IUniversal</a><a id="433" class="Symbol">;</a> <a id="435" href="Text.Parser.html#2710" class="Function">Parser</a><a id="441" class="Symbol">)</a>
+
+
+<a id="445" class="Keyword">record</a> <a id="Parsable"></a><a id="452" href="SMT.Theory.Class.Parsable.html#452" class="Record">Parsable</a> <a id="461" class="Symbol">(</a><a id="462" href="SMT.Theory.Class.Parsable.html#462" class="Bound">theory</a> <a id="469" class="Symbol">:</a> <a id="471" href="SMT.Theory.Base.html#1730" class="Record">Theory</a><a id="477" class="Symbol">)</a> <a id="479" class="Symbol">:</a> <a id="481" href="Agda.Primitive.html#326" class="Primitive">Set₁</a> <a id="486" class="Keyword">where</a>
+  <a id="494" class="Keyword">open</a> <a id="499" href="SMT.Theory.Base.html#1730" class="Module">Theory</a> <a id="506" href="SMT.Theory.Class.Parsable.html#462" class="Bound">theory</a>
+  <a id="515" class="Keyword">field</a>
+    <a id="Parsable.parseSort"></a><a id="525" href="SMT.Theory.Class.Parsable.html#525" class="Field">parseSort</a>  <a id="536" class="Symbol">:</a> <a id="538" href="Relation.Unary.html#3359" class="Function">∀[</a> <a id="541" href="Text.Parser.html#2710" class="Function">Parser</a> <a id="548" href="SMT.Theory.Base.html#1762" class="Function">Sort</a> <a id="553" href="Relation.Unary.html#3359" class="Function">]</a>
+    <a id="Parsable.parseValue"></a><a id="559" href="SMT.Theory.Class.Parsable.html#559" class="Field">parseValue</a> <a id="570" class="Symbol">:</a> <a id="572" class="Symbol">(</a><a id="573" href="SMT.Theory.Class.Parsable.html#573" class="Bound">σ</a> <a id="575" class="Symbol">:</a> <a id="577" href="SMT.Theory.Base.html#1762" class="Function">Sort</a><a id="581" class="Symbol">)</a> <a id="583" class="Symbol">→</a> <a id="585" href="Relation.Unary.html#3359" class="Function">∀[</a> <a id="588" href="Text.Parser.html#2710" class="Function">Parser</a> <a id="595" class="Symbol">(</a><a id="596" href="SMT.Theory.Base.html#2506" class="Function">Value</a> <a id="602" href="SMT.Theory.Class.Parsable.html#573" class="Bound">σ</a><a id="603" class="Symbol">)</a> <a id="605" href="Relation.Unary.html#3359" class="Function">]</a>
+</pre></body></html>

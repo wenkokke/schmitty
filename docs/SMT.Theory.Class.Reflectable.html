@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html><head><meta charset="utf-8"><title>SMT.Theory.Class.Reflectable</title><link rel="stylesheet" href="Agda.css"></head><body><pre class="Agda"><a id="1" class="Comment">--------------------------------------------------------------------------------</a>
+<a id="82" class="Comment">-- Schmitty the Solver</a>
+<a id="105" class="Comment">--</a>
+<a id="108" class="Comment">-- Defines the `Reflectable` class, which is used to provide integration with</a>
+<a id="186" class="Comment">-- Agda reflection. To implement the `Reflectable` class, you need to provide</a>
+<a id="264" class="Comment">-- conversions from the raw theory to the intended theory.</a>
+<a id="323" class="Comment">--</a>
+<a id="326" class="Comment">-- Optionally, you may implement the `proofComputation` function, which is used</a>
+<a id="406" class="Comment">-- to generate proof objects which compute on closed terms. For an example, see</a>
+<a id="486" class="Comment">-- `SMT.Theories.Ints.Reflectable`.</a>
+<a id="522" class="Comment">--------------------------------------------------------------------------------</a>
+
+<a id="604" class="Keyword">open</a> <a id="609" class="Keyword">import</a> <a id="616" href="SMT.Theory.Base.html" class="Module">SMT.Theory.Base</a>
+
+<a id="633" class="Keyword">module</a> <a id="640" href="SMT.Theory.Class.Reflectable.html" class="Module">SMT.Theory.Class.Reflectable</a> <a id="669" class="Symbol">(</a><a id="670" href="SMT.Theory.Class.Reflectable.html#670" class="Bound">theory</a> <a id="677" class="Symbol">:</a> <a id="679" href="SMT.Theory.Base.html#1730" class="Record">Theory</a><a id="685" class="Symbol">)</a> <a id="687" class="Keyword">where</a>
+
+<a id="694" class="Keyword">open</a> <a id="699" href="SMT.Theory.Base.html#1730" class="Module">Theory</a> <a id="706" href="SMT.Theory.Class.Reflectable.html#670" class="Bound">theory</a>
+
+<a id="714" class="Keyword">open</a> <a id="719" class="Keyword">import</a> <a id="726" href="Data.List.html" class="Module">Data.List</a> <a id="736" class="Symbol">as</a> <a id="739" class="Module">List</a> <a id="744" class="Keyword">using</a> <a id="750" class="Symbol">(</a><a id="751" href="Agda.Builtin.List.html#148" class="Datatype">List</a><a id="755" class="Symbol">)</a>
+<a id="757" class="Keyword">open</a> <a id="762" class="Keyword">import</a> <a id="769" href="Data.Maybe.html" class="Module">Data.Maybe</a> <a id="780" class="Symbol">as</a> <a id="783" class="Module">Maybe</a> <a id="789" class="Keyword">using</a> <a id="795" class="Symbol">(</a><a id="796" href="Agda.Builtin.Maybe.html#136" class="Datatype">Maybe</a><a id="801" class="Symbol">)</a>
+<a id="803" class="Keyword">open</a> <a id="808" class="Keyword">import</a> <a id="815" href="Data.Product.html" class="Module">Data.Product</a> <a id="828" class="Symbol">as</a> <a id="831" class="Module">Prod</a> <a id="836" class="Keyword">using</a> <a id="842" class="Symbol">(</a><a id="843" href="Data.Product.html#916" class="Function">Σ-syntax</a><a id="851" class="Symbol">)</a>
+<a id="853" class="Keyword">import</a> <a id="860" href="Reflection.html" class="Module">Reflection</a> <a id="871" class="Symbol">as</a> <a id="874" class="Module">Rfl</a>
+<a id="878" class="Keyword">open</a> <a id="883" class="Keyword">import</a> <a id="890" href="SMT.Script.Base.html" class="Module">SMT.Script.Base</a> <a id="906" href="SMT.Theory.Class.Reflectable.html#670" class="Bound">theory</a>
+
+
+<a id="915" class="Keyword">record</a> <a id="Reflectable"></a><a id="922" href="SMT.Theory.Class.Reflectable.html#922" class="Record">Reflectable</a> <a id="934" class="Symbol">:</a> <a id="936" href="Agda.Primitive.html#326" class="Primitive">Set</a> <a id="940" class="Keyword">where</a>
+  <a id="948" class="Keyword">field</a>
+    <a id="Reflectable.sorts"></a><a id="958" href="SMT.Theory.Class.Reflectable.html#958" class="Field">sorts</a>           <a id="974" class="Symbol">:</a> <a id="976" href="Agda.Builtin.List.html#148" class="Datatype">List</a> <a id="981" href="SMT.Theory.Base.html#1762" class="Field">Sort</a>
+    <a id="Reflectable.checkSort"></a><a id="990" href="SMT.Theory.Class.Reflectable.html#990" class="Field">checkSort</a>       <a id="1006" class="Symbol">:</a> <a id="1008" href="Agda.Builtin.Reflection.html#4688" class="Datatype">Rfl.Term</a> <a id="1017" class="Symbol">→</a> <a id="1019" href="Agda.Builtin.Maybe.html#136" class="Datatype">Maybe</a> <a id="1025" href="SMT.Theory.Base.html#1762" class="Field">Sort</a>
+    <a id="Reflectable.checkLiteral"></a><a id="1034" href="SMT.Theory.Class.Reflectable.html#1034" class="Field">checkLiteral</a>    <a id="1050" class="Symbol">:</a> <a id="1052" class="Symbol">(</a><a id="1053" href="SMT.Theory.Class.Reflectable.html#1053" class="Bound">σ</a> <a id="1055" class="Symbol">:</a> <a id="1057" href="SMT.Theory.Base.html#1762" class="Field">Sort</a><a id="1061" class="Symbol">)</a> <a id="1063" class="Symbol">→</a> <a id="1065" href="Agda.Builtin.Reflection.html#4092" class="Datatype">Rfl.Literal</a> <a id="1077" class="Symbol">→</a> <a id="1079" href="Agda.Builtin.Maybe.html#136" class="Datatype">Maybe</a> <a id="1085" class="Symbol">(</a><a id="1086" href="SMT.Theory.Base.html#1860" class="Field">Literal</a> <a id="1094" href="SMT.Theory.Class.Reflectable.html#1053" class="Bound">σ</a><a id="1095" class="Symbol">)</a>
+    <a id="Reflectable.checkIdentifier"></a><a id="1101" href="SMT.Theory.Class.Reflectable.html#1101" class="Field">checkIdentifier</a> <a id="1117" class="Symbol">:</a> <a id="1119" class="Symbol">(</a><a id="1120" href="SMT.Theory.Class.Reflectable.html#1120" class="Bound">σ</a> <a id="1122" class="Symbol">:</a> <a id="1124" href="SMT.Theory.Base.html#1762" class="Field">Sort</a><a id="1128" class="Symbol">)</a> <a id="1130" class="Symbol">→</a> <a id="1132" href="Agda.Builtin.Reflection.html#489" class="Postulate">Rfl.Name</a> <a id="1141" class="Symbol">→</a> <a id="1143" href="Agda.Builtin.Maybe.html#136" class="Datatype">Maybe</a> <a id="1149" class="Symbol">(</a><a id="1150" href="Data.Product.html#916" class="Function">Σ[</a> <a id="1153" href="SMT.Theory.Class.Reflectable.html#1153" class="Bound">Σ</a> <a id="1155" href="Data.Product.html#916" class="Function">∈</a> <a id="1157" href="SMT.Theory.Base.html#1159" class="Record">Signature</a> <a id="1167" href="SMT.Theory.Class.Reflectable.html#1120" class="Bound">σ</a> <a id="1169" href="Data.Product.html#916" class="Function">]</a> <a id="1171" href="SMT.Script.Base.html#3712" class="Function">Macro</a> <a id="1177" href="SMT.Theory.Class.Reflectable.html#1153" class="Bound">Σ</a><a id="1178" class="Symbol">)</a>
+
+    <a id="1185" class="Comment">-- |Return the name of a function `f : ∀ {..} → Goal → Goal` which will be called</a>
+    <a id="1271" class="Comment">--  with `because &quot;solver&quot; Goal` as the argument. Can be used to produce proof objects</a>
+    <a id="1362" class="Comment">--  that compute on closed terms.</a>
+    <a id="Reflectable.proofComputation"></a><a id="1400" href="SMT.Theory.Class.Reflectable.html#1400" class="Field">proofComputation</a> <a id="1417" class="Symbol">:</a> <a id="1419" class="Symbol">∀</a> <a id="1421" class="Symbol">{</a><a id="1422" href="SMT.Theory.Class.Reflectable.html#1422" class="Bound">Γ</a><a id="1423" class="Symbol">}</a> <a id="1425" class="Symbol">→</a> <a id="1427" href="SMT.Script.Base.html#3141" class="Datatype">Term</a> <a id="1432" href="SMT.Theory.Class.Reflectable.html#1422" class="Bound">Γ</a> <a id="1434" href="SMT.Theory.Base.html#1835" class="Field">BOOL</a> <a id="1439" class="Symbol">→</a> <a id="1441" href="Agda.Builtin.Reflection.html#489" class="Postulate">Rfl.Name</a>
+</pre></body></html>

@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html><head><meta charset="utf-8"><title>SMT.Theory.Class.Printable</title><link rel="stylesheet" href="Agda.css"></head><body><pre class="Agda"><a id="1" class="Comment">-------------------------------------------------------------------------------</a>
+<a id="81" class="Comment">-- Schmitty the Solver</a>
+<a id="104" class="Comment">--</a>
+<a id="107" class="Comment">-- Defines the `Printable` class, which  provides pretty-printers that print</a>
+<a id="184" class="Comment">-- the sorts, literals, and identifiers to their corresponding SMT-LIB terms.</a>
+<a id="262" class="Comment">-- To help define these functions, this module also exports `mkSTerm`, which</a>
+<a id="339" class="Comment">-- prints a list of strings as an S-expression.</a>
+<a id="387" class="Comment">--------------------------------------------------------------------------------</a>
+
+<a id="469" class="Keyword">module</a> <a id="476" href="SMT.Theory.Class.Printable.html" class="Module">SMT.Theory.Class.Printable</a> <a id="503" class="Keyword">where</a>
+
+<a id="510" class="Keyword">open</a> <a id="515" class="Keyword">import</a> <a id="522" href="Data.List.html" class="Module">Data.List</a> <a id="532" class="Keyword">using</a> <a id="538" class="Symbol">(</a><a id="539" href="Agda.Builtin.List.html#148" class="Datatype">List</a><a id="543" class="Symbol">)</a>
+<a id="545" class="Keyword">open</a> <a id="550" class="Keyword">import</a> <a id="557" href="Data.String.html" class="Module">Data.String</a> <a id="569" class="Symbol">as</a> <a id="572" class="Module">String</a> <a id="579" class="Keyword">using</a> <a id="585" class="Symbol">(</a><a id="586" href="Agda.Builtin.String.html#336" class="Postulate">String</a><a id="592" class="Symbol">)</a>
+<a id="594" class="Keyword">open</a> <a id="599" class="Keyword">import</a> <a id="606" href="Function.html" class="Module">Function</a> <a id="615" class="Keyword">using</a> <a id="621" class="Symbol">(</a><a id="622" href="Function.Base.html#1031" class="Function Operator">_∘_</a><a id="625" class="Symbol">)</a>
+<a id="627" class="Keyword">open</a> <a id="632" class="Keyword">import</a> <a id="639" href="SMT.Theory.Base.html" class="Module">SMT.Theory.Base</a>
+
+
+<a id="657" class="Keyword">record</a> <a id="Printable"></a><a id="664" href="SMT.Theory.Class.Printable.html#664" class="Record">Printable</a> <a id="674" class="Symbol">(</a><a id="675" href="SMT.Theory.Class.Printable.html#675" class="Bound">theory</a> <a id="682" class="Symbol">:</a> <a id="684" href="SMT.Theory.Base.html#1730" class="Record">Theory</a><a id="690" class="Symbol">)</a> <a id="692" class="Symbol">:</a> <a id="694" href="Agda.Primitive.html#326" class="Primitive">Set</a> <a id="698" class="Keyword">where</a>
+  <a id="706" class="Keyword">open</a> <a id="711" href="SMT.Theory.Base.html#1730" class="Module">Theory</a> <a id="718" href="SMT.Theory.Class.Printable.html#675" class="Bound">theory</a>
+  <a id="727" class="Keyword">field</a>
+    <a id="Printable.showSort"></a><a id="737" href="SMT.Theory.Class.Printable.html#737" class="Field">showSort</a>       <a id="752" class="Symbol">:</a> <a id="754" href="SMT.Theory.Base.html#1762" class="Function">Sort</a> <a id="759" class="Symbol">→</a> <a id="761" href="Agda.Builtin.String.html#336" class="Postulate">String</a>
+    <a id="Printable.showLiteral"></a><a id="772" href="SMT.Theory.Class.Printable.html#772" class="Field">showLiteral</a>    <a id="787" class="Symbol">:</a> <a id="789" class="Symbol">{</a><a id="790" href="SMT.Theory.Class.Printable.html#790" class="Bound">σ</a> <a id="792" class="Symbol">:</a> <a id="794" href="SMT.Theory.Base.html#1762" class="Function">Sort</a><a id="798" class="Symbol">}</a> <a id="800" class="Symbol">→</a> <a id="802" href="SMT.Theory.Base.html#1860" class="Function">Literal</a> <a id="810" href="SMT.Theory.Class.Printable.html#790" class="Bound">σ</a> <a id="812" class="Symbol">→</a> <a id="814" href="Agda.Builtin.String.html#336" class="Postulate">String</a>
+    <a id="Printable.showIdentifier"></a><a id="825" href="SMT.Theory.Class.Printable.html#825" class="Field">showIdentifier</a> <a id="840" class="Symbol">:</a> <a id="842" class="Symbol">{</a><a id="843" href="SMT.Theory.Class.Printable.html#843" class="Bound">σ</a> <a id="845" class="Symbol">:</a> <a id="847" href="SMT.Theory.Base.html#1762" class="Function">Sort</a><a id="851" class="Symbol">}</a> <a id="853" class="Symbol">{</a><a id="854" href="SMT.Theory.Class.Printable.html#854" class="Bound">Σ</a> <a id="856" class="Symbol">:</a> <a id="858" href="SMT.Theory.Base.html#1159" class="Record">Signature</a> <a id="868" href="SMT.Theory.Class.Printable.html#843" class="Bound">σ</a><a id="869" class="Symbol">}</a> <a id="871" class="Symbol">→</a> <a id="873" href="SMT.Theory.Base.html#1891" class="Function">Identifier</a> <a id="884" href="SMT.Theory.Class.Printable.html#854" class="Bound">Σ</a> <a id="886" class="Symbol">→</a> <a id="888" href="Agda.Builtin.String.html#336" class="Postulate">String</a>
+
+
+<a id="897" class="Comment">-----------------------</a>
+<a id="921" class="Comment">-- Printer utilities --</a>
+<a id="945" class="Comment">-----------------------</a>
+
+<a id="970" class="Comment">-- |Create an S-expression from a list of strings.</a>
+<a id="1021" class="Comment">--</a>
+<a id="1024" class="Comment">-- @</a>
+<a id="1029" class="Comment">--   mkSTerm (&quot;*&quot; ∷ &quot;4&quot; ∷ &quot;5&quot;) ≡ &quot;(* 4 5)&quot;</a>
+<a id="1072" class="Comment">-- @</a>
+<a id="1077" class="Comment">--</a>
+<a id="mkSTerm"></a><a id="1080" href="SMT.Theory.Class.Printable.html#1080" class="Function">mkSTerm</a> <a id="1088" class="Symbol">:</a> <a id="1090" href="Agda.Builtin.List.html#148" class="Datatype">List</a> <a id="1095" href="Agda.Builtin.String.html#336" class="Postulate">String</a> <a id="1102" class="Symbol">→</a> <a id="1104" href="Agda.Builtin.String.html#336" class="Postulate">String</a>
+<a id="1111" href="SMT.Theory.Class.Printable.html#1080" class="Function">mkSTerm</a> <a id="1119" class="Symbol">=</a> <a id="1121" href="Data.String.Base.html#2826" class="Function">String.parens</a> <a id="1135" href="Function.Base.html#1031" class="Function Operator">∘</a> <a id="1137" href="Data.String.Base.html#2709" class="Function">String.unwords</a>
+</pre></body></html>
