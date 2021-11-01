@@ -3,7 +3,10 @@
 module index where
 
 import SMT.Script
-import SMT.Theory.Reflectable
+import SMT.Theory.Class.Printable
+import SMT.Theory.Class.Solvable
+import SMT.Theory.Class.Reflectable
+import SMT.Theory.Class.Parsable
 import SMT.Theory.Base
 import SMT.Theory.Raw.Base
 import SMT.Theory.Raw.Reflection
@@ -13,6 +16,10 @@ import SMT.Theories.Core.Reflection
 import SMT.Theories.Reals.Base
 import SMT.Theories.Reals.Reflection
 import SMT.Theories.Reals
+import SMT.Theories.Nats
+import SMT.Theories.Nats.Solvable
+import SMT.Theories.Nats.Base
+import SMT.Theories.Nats.Reflection
 import SMT.Theories.Core
 import SMT.Theories.Ints
 import SMT.Theories.Ints.Base
