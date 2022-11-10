@@ -1,3 +1,0 @@
-#!/bin/sh
-
-fix-whitespace --check && make listings && git add index.agda docs
