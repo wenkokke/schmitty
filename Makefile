@@ -8,14 +8,6 @@ DOCS := $(addprefix ./docs/,$(addsuffix .html,$(MODULES)))
 
 default: listings
 
-########################
-# Initialise Git hooks #
-########################
-
-.PHONY: init
-init:
-	git config core.hooksPath .githooks
-
 
 #######################
 # Generate index.agda #
