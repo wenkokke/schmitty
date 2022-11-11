@@ -51,4 +51,6 @@ jobs:
             z3
 
       - name: Test Schmitty
-        run: make test-succeed test-fail
+        run: |
+          ./scripts/test-succeed.sh
+          ./scripts/test-fail.sh
