@@ -35,16 +35,20 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - uses: cda-tum/setup-z3@v1
+        with:
+          version: ${{ matrix.z3-version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - uses: wenkokke/setup-agda@latest
         with:
           agda-version: ${{ matrix.agda-version }}
           agda-stdlib-version: ${{ matrix.agda-stdlib-version }}
           agda-libraries: |
             https://github.com/gallais/agdarsec.git#${{ matrix.agdarsec-version }}
-
-      - uses: cda-tum/setup-z3@v1
-        with:
-          version: ${{ matrix.z3-version }}
+          agda-executables: |
+            z3
 
       - name: Test Schmitty
         run: make test-succeed test-fail
