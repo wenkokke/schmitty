@@ -1,0 +1,56 @@
+name: build
+
+on:
+  push:
+    branches:
+      - dev
+  pull_request:
+    types:
+      - opened
+      - synchronize
+
+defaults:
+  run: { shell: sh }
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os-and-name:
+          - [ubuntu-latest, Linux]
+          - [macos-latest, macOS]
+          - [windows-latest, Windows]
+        agda-version:
+          - "2.6.2.2"
+        agda-stdlib-version:
+          - "1.7.1"
+        agdarsec-version:
+          - "v0.5.0"
+        z3-version:
+          - "4.11.2"
+
+    name: ${{ matrix.os-and-name[1] }} / Agda ${{ matrix.agda-version }}
+    runs-on: ${{ matrix.os-and-name[0] }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: cda-tum/setup-z3@v1
+        with:
+          version: ${{ matrix.z3-version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: wenkokke/setup-agda@latest
+        with:
+          agda-version: ${{ matrix.agda-version }}
+          agda-stdlib-version: ${{ matrix.agda-stdlib-version }}
+          agda-libraries: |
+            https://github.com/gallais/agdarsec.git#${{ matrix.agdarsec-version }}
+          agda-executables: |
+            z3
+
+      - name: Test Schmitty
+        run: |
+          ./scripts/test-succeed.sh
+          ./scripts/test-fail.sh
