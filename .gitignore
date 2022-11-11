@@ -1,2 +1,4 @@
+# Agda
 *.agdai
-MAlonzo/**
+_build/
+MAlonzo/
