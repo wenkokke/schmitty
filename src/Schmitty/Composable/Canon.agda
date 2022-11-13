@@ -33,14 +33,16 @@ module _ where
 
   record Canon : Set₁ where
     constructor canon
-    field ty : Signature _
-          val : Algebra ty Set Set
+    field
+      ty : Signature _
+      val : Algebra ty Set Set
 
 module _ where
 
   record Values (Ix : Set ℓ → Set ℓ) (σ : Signature ℓ) : Set (Level.suc ℓ) where
     constructor mk
-    field out : ∀ {T} → Algebra σ (T × Pred (Ix T)) (Pred (Ix T))
+    field
+      out : ∀ {T} → Algebra σ (T × Pred (Ix T)) (Pred (Ix T))
 
   open Values public
 
@@ -52,8 +54,9 @@ module _ where
 
   record ICanon (Ix : Set → Set) : Set₁ where
     constructor icanon
-    field ity   : Signature _
-          ival  : Values Ix ity
+    field
+      ity   : Signature _
+      ival  : Values Ix ity
 
   liftCanon : ∀ {Ix} → Canon → ICanon Ix
   liftCanon (canon ty val) = icanon ty (liftVal val)
@@ -80,10 +83,15 @@ module _ where
   --   Agda types for those syntactic types)
   --
   record _⊑ᵖ_ {σ₁ σ₂} (V : Algebra σ₁ Set Set) (W : Algebra σ₂ Set Set) : Set₁ where
-    field ⦃ type-subᵖ ⦄ : σ₁ ≼ σ₂
-          canonicalᵖ    : ∀ {X} {R : X → Set} → ∀[  (alg V ∘ map-sig R)
-                                                 ⇔  (alg W ∘ map-sig R ∘ inj type-subᵖ)
-                                                 ]
+    field
+      ⦃ type-subᵖ ⦄ :
+        σ₁ ≼ σ₂
+
+      canonicalᵖ :
+        ∀ {X} {R : X → Set} →
+          ∀[ (alg V ∘ map-sig R) ⇔
+             (alg W ∘ map-sig R ∘ inj type-subᵖ)
+           ]
 
 module _ {Ix : Set → Set} where
 
@@ -96,12 +104,15 @@ module _ {Ix : Set → Set} where
   -- the types change slightly due to the generalization to indexed value types.
   --
   record _⊑_ {σ₁ σ₂} (V : Values Ix σ₁) (W : Values Ix σ₂) : Set₁ where
-    field ⦃ type-sub ⦄ : σ₁ ≼ σ₂
-          canonical    : ∀ {A} {t : ⟦ σ₁ ⟧ A} {R : A → Pred (Ix A)}
+    field
+      ⦃ type-sub ⦄ :
+        σ₁ ≼ σ₂
 
-                         → ∀[  alg (out V) (map-sig (λ x → x , R x)               t )
-                            ⇔  alg (out W) (map-sig (λ x → x , R x) (inj type-sub t))
-                            ]
+      canonical :
+        ∀ {A} {t : ⟦ σ₁ ⟧ A} {R : A → Pred (Ix A)} →
+          ∀[ alg (out V) (map-sig (λ x → x , R x) t ) ⇔
+             alg (out W) (map-sig (λ x → x , R x) (inj type-sub t))
+           ]
 
 
 
@@ -172,15 +183,21 @@ module _ where
   --   and `c` agree on what the associated values should be
   --
   record _∙_≣ᵖ_ (c₁ c₂ c : Canon) : Set₁ where
-    field type-unionᵖ : (X : Set) → Union (⟦ ty c₁ ⟧ X) (⟦ ty c₂ ⟧ X) (⟦ ty c ⟧ X)
+    field
+      type-unionᵖ :
+        (X : Set) → Union (⟦ ty c₁ ⟧ X) (⟦ ty c₂ ⟧ X) (⟦ ty c ⟧ X)
 
-          canonicalₗᵖ : ∀ {X} {R : X → Set} → ∀[  (alg (val c₁) ∘ map-sig R)
-                                               ⇔  (alg (val c ) ∘ map-sig R ∘ inj (∙-≼₁ type-unionᵖ))
-                                               ]
+      canonicalₗᵖ :
+        ∀ {X} {R : X → Set} →
+          ∀[ (alg (val c₁) ∘ map-sig R) ⇔
+            (alg (val c ) ∘ map-sig R ∘ inj (∙-≼₁ type-unionᵖ))
+          ]
 
-          canonicalᵣᵖ : ∀ {X} {R : X → Set} → ∀[  (alg (val c₂) ∘ map-sig R)
-                                               ⇔  (alg (val c ) ∘ map-sig R ∘ inj (∙-≼₂ type-unionᵖ))
-                                               ]
+      canonicalᵣᵖ :
+        ∀ {X} {R : X → Set} →
+          ∀[ (alg (val c₂) ∘ map-sig R) ⇔
+             (alg (val c ) ∘ map-sig R ∘ inj (∙-≼₂ type-unionᵖ))
+           ]
 
 
 {- Overlapping unions for indexed canons -}
@@ -197,20 +214,21 @@ module _ {Ix : Set → Set} where
   -- if indexed value types.
   --
   record _∙_≣_ (c₁ c₂ c : ICanon Ix) : Set₁ where
-    field type-union : (X : Set) → Union (⟦ ity c₁ ⟧ X) (⟦ ity c₂ ⟧ X) (⟦ ity c ⟧ X)
+    field
+      type-union :
+        (X : Set) → Union (⟦ ity c₁ ⟧ X) (⟦ ity c₂ ⟧ X) (⟦ ity c ⟧ X)
 
-          canonicalₗ : ∀ {A} {t : ⟦ ity c₁ ⟧ A} {R : A → Pred (Ix A)}
+      canonicalₗ :
+        ∀ {A} {t : ⟦ ity c₁ ⟧ A} {R : A → Pred (Ix A)} →
+          ∀[ alg (out (ival c₁)) (map-sig (λ x → x , R x) t ) ⇔
+             alg (out (ival c )) (map-sig (λ x → x , R x) (inj (∙-≼₁ type-union) t))
+           ]
 
-                       → ∀[  alg (out (ival c₁)) (map-sig (λ x → x , R x)                         t )
-                          ⇔  alg (out (ival c )) (map-sig (λ x → x , R x) (inj (∙-≼₁ type-union)  t))
-                          ]
-
-
-          canonicalᵣ : ∀ {A} {t : ⟦ ity c₂ ⟧ A} {R : A → Pred (Ix A)}
-
-                       → ∀[  alg (out (ival c₂)) (map-sig (λ x → x , R x)                         t )
-                          ⇔  alg (out (ival c )) (map-sig (λ x → x , R x) (inj (∙-≼₂ type-union)  t))
-                          ]
+      canonicalᵣ :
+        ∀ {A} {t : ⟦ ity c₂ ⟧ A} {R : A → Pred (Ix A)} →
+          ∀[ alg (out (ival c₂)) (map-sig (λ x → x , R x) t ) ⇔
+             alg (out (ival c )) (map-sig (λ x → x , R x) (inj (∙-≼₂ type-union) t))
+           ]
 
 {- Trivial unions on non-indexed canons -}
 module _ where

@@ -27,8 +27,9 @@ module _ where
   --    values as given by the value algebra in `c`, which we collapse into a
   --    concrete value type by using `cata`
   record Fragment (c : Canon) : Set₁ where
-    field expr   : ISignature _ (μ (ty c)) (μ (ty c))
-          interp : IAlgebra expr (cata (val c))
+    field
+      expr   : ISignature _ (μ (ty c)) (μ (ty c))
+      interp : IAlgebra expr (cata (val c))
 
 module _ where
 
@@ -38,8 +39,9 @@ module _ where
   -- A notion of fragments, generalized to indexed values
   --
   record IFragment {Ix} (c : ICanon Ix) : Set₁ where
-    field iexpr   : ISignature _ (μ (ity c)) (μ (ity c))
-          iinterp : ∀ {i} → IAlgebra iexpr λ t → para (out (ival c)) t i
+    field
+      iexpr   : ISignature _ (μ (ity c)) (μ (ity c))
+      iinterp : ∀ {i} → IAlgebra iexpr λ t → para (out (ival c)) t i
 
 module _ where
 
@@ -111,10 +113,11 @@ module _ where
   -- non-dependent separating conjunction
   record _✴_ (P Q : Canon → Set₁) (c : Canon) : Set₁ where
     constructor _∙⟨_⟩_
-    field {ca₁ ca₂} : Canon
-          px        : P ca₁
-          sep       : ca₁ ∙ ca₂ ≣ᵖ c
-          qx        : Q ca₂
+    field
+      {ca₁ ca₂} : Canon
+      px        : P ca₁
+      sep       : ca₁ ∙ ca₂ ≣ᵖ c
+      qx        : Q ca₂
 
   open Necessary
   open □

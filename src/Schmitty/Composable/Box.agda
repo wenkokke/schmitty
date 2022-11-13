@@ -9,9 +9,10 @@ open import Relation.Unary using (IUniversal; _⇒_)
 module _ where
 
   record Rel₂ {a} (ℓ : Level) (A : Set a) : Set (a Level.⊔ Level.suc ℓ) where
-    field R     : A → A → Set ℓ
-          refl  : ∀ {x}                     → R x x
-          trans : ∀ {x y z} → R x y → R y z → R x z
+    field
+      R     : A → A → Set ℓ
+      refl  : ∀ {x}                     → R x x
+      trans : ∀ {x y z} → R x y → R y z → R x z
 
 {- Kripke semantics of Box (necessity) modality. We define □ for all types
     that have an associated preorder (i.e., instance of `Rel₂`), which is used
@@ -21,7 +22,8 @@ module Necessary {i ℓ} {I : Set i} ⦃ _ : Rel₂ ℓ I ⦄ where
   open Rel₂ ⦃...⦄
 
   record □ (P : I → Set (i Level.⊔ ℓ)) (x : I) : Set (i Level.⊔ ℓ) where
-    field future : ∀[ R x ⇒ P ]
+    field
+      future : ∀[ R x ⇒ P ]
 
   open □
 

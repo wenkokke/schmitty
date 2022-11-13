@@ -71,7 +71,8 @@ module _ where
   map-sig f (s , Level.lift as) = s , Level.lift (Vec.map f as)
 
   record Algebra (σ : Signature ℓ) (A : Set a) (B : Set b) : Set (ℓ Level.⊔ a Level.⊔ b) where
-    field alg : ⟦ σ ⟧ A → B
+    field
+      alg : ⟦ σ ⟧ A → B
 
   open Algebra public
 
@@ -162,11 +163,12 @@ module _ where
 module _ where
 
   record _≼_ {ℓ} (σ₁ σ₂ : Signature ℓ) : Set (Level.suc ℓ) where
-    field inj  : ∀[ ⟦_⟧ {ℓ} {ℓ} σ₁ ⇒ ⟦ σ₂ ⟧ ]
-          proj : ∀[ ⟦_⟧ {ℓ} {ℓ} σ₂ ⇒ Maybe ∘ ⟦ σ₁ ⟧ ]
+    field
+      inj  : ∀[ ⟦_⟧ {ℓ} {ℓ} σ₁ ⇒ ⟦ σ₂ ⟧ ]
+      proj : ∀[ ⟦_⟧ {ℓ} {ℓ} σ₂ ⇒ Maybe ∘ ⟦ σ₁ ⟧ ]
 
-          proj-inj : ∀ {A} {x : ⟦ σ₁ ⟧ A}    → proj (inj x) ≡ just x
-          inj-proj : ∀ {A} {x : ⟦ σ₁ ⟧ A}{y} → proj y ≡ just x → inj x ≡ y
+      proj-inj : ∀ {A} {x : ⟦ σ₁ ⟧ A}    → proj (inj x) ≡ just x
+      inj-proj : ∀ {A} {x : ⟦ σ₁ ⟧ A}{y} → proj y ≡ just x → inj x ≡ y
 
 
 {- instances of _≼_ used for automated injections -}
@@ -217,11 +219,12 @@ module _ where
 module _ where
 
   record _I≼_ {ℓ} {I J : Set ℓ}(ζ₁ ζ₂ : ISignature ℓ I J) : Set (Level.suc ℓ) where
-    field Iinj  : ∀ {P} → ∀[ ⟦_⟧ᴵ {ℓ′ = ℓ} ζ₁ P ⇒ ⟦ ζ₂ ⟧ᴵ P ]
-          Iproj : ∀ {P} → ∀[ ⟦_⟧ᴵ {ℓ′ = ℓ} ζ₂ P ⇒ Maybe ∘ ⟦ ζ₁ ⟧ᴵ P ]
+    field
+      Iinj  : ∀ {P} → ∀[ ⟦_⟧ᴵ {ℓ′ = ℓ} ζ₁ P ⇒ ⟦ ζ₂ ⟧ᴵ P ]
+      Iproj : ∀ {P} → ∀[ ⟦_⟧ᴵ {ℓ′ = ℓ} ζ₂ P ⇒ Maybe ∘ ⟦ ζ₁ ⟧ᴵ P ]
 
-          Iproj-inj : ∀ {P} {i} {x : ⟦ ζ₁ ⟧ᴵ P i}     → Iproj (Iinj x) ≡ just x
-          Iinj-proj : ∀ {P} {i} {x : ⟦ ζ₁ ⟧ᴵ P i} {y} → Iproj y ≡ just x → Iinj x ≡ y
+      Iproj-inj : ∀ {P} {i} {x : ⟦ ζ₁ ⟧ᴵ P i}     → Iproj (Iinj x) ≡ just x
+      Iinj-proj : ∀ {P} {i} {x : ⟦ ζ₁ ⟧ᴵ P i} {y} → Iproj y ≡ just x → Iinj x ≡ y
 
 {- instances of _I≼_ used for automated injections -}
 module _ where
