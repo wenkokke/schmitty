@@ -1,30 +1,35 @@
 {-# OPTIONS --safe --without-K #-}
 
-module Schmitty.Language.Canon where
+module Schmitty.Composable.Canon where
 
-open import Data.Maybe
-open import Data.Product
-open import Data.Sum
-open import Data.Vec
-open import Data.These hiding (fold)
-
-open import Relation.Binary.PropositionalEquality
-open import Relation.Unary using (IUniversal ; _⇒_ ; _⊢_)
-
-open import Function                       using (_∘_ ; _$_ ; _↔_ ; Inverse)
-open import Function.Construct.Identity    using (id-↔)
+open import Level using (Level)
+open import Data.Maybe using (Maybe; nothing; just)
+open import Data.Product using (_×_; _,_; proj₁; proj₂)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Vec as Vec using (Vec; []; _∷_)
+open import Data.These using (These; this; that)
+open import Relation.Binary.PropositionalEquality as Eq using (_≡_)
+open import Relation.Unary using (IUniversal; _⇒_; _⊢_)
+open import Function using (_∘_ ; _$_ ; _↔_ ; Inverse)
+open import Function.Construct.Identity using (id-↔)
 open import Function.Construct.Composition using (_∘-↔_)
+open import Schmitty.Composable.Signature
+     using (Signature; Shape; Arity; map-sig; ⟦_⟧; μ; ⟨_⟩; _:+:_;
+            Algebra; alg; cata; map-cata; para; map-para; _⊕_;
+            _≼_; ≼-refl; ≼-trans; inject)
+open import Schmitty.Composable.Union using (Union; ∙-≼₁; ∙-≼₂; union-copy)
+open import Schmitty.Composable.Core using (Pred; Rel₂)
 
-open import Schmitty.Language.Signature
-open import Schmitty.Language.Union
-open import Schmitty.Language.Core
 
-import Level as L
+private
+  variable
+    ℓ ℓ′    : Level
+    σ σ₁ σ₂ : Signature ℓ
 
 {- Canonical forms -}
 module _ where
 
-  open import Relation.Unary.Closure.Base (_≼_ {ℓ = L.zero})
+  open import Relation.Unary.Closure.Base (_≼_ {ℓ = Level.zero})
 
   record Canon : Set₁ where
     constructor canon
@@ -33,8 +38,7 @@ module _ where
 
 module _ where
 
-  --
-  record Values (Ix : Set ℓ → Set ℓ) (σ : Signature ℓ) : Set (L.suc ℓ) where
+  record Values (Ix : Set ℓ → Set ℓ) (σ : Signature ℓ) : Set (Level.suc ℓ) where
     constructor mk
     field out : ∀ {T} → Algebra σ (T × Pred (Ix T)) (Pred (Ix T))
 
@@ -132,7 +136,10 @@ module _ where
 module _ {Ix : Set → Set} where
 
   open _⊑_
-  variable U V W : Values Ix σ
+
+  private
+    variable
+      U V W : Values Ix σ
 
   ⊑-refl : V ⊑ V
   type-sub   ⊑-refl = ≼-refl
@@ -205,8 +212,6 @@ module _ {Ix : Set → Set} where
                           ⇔  alg (out (ival c )) (map-sig (λ x → x , R x) (inj (∙-≼₂ type-union)  t))
                           ]
 
-  variable c₁ c₂ c₃ c : ICanon Ix
-
 {- Trivial unions on non-indexed canons -}
 module _ where
 
@@ -223,10 +228,10 @@ module _ where
   injb     union-sig-disjoint (s , as)      = inj₂ s , as
   from     union-sig-disjoint (inj₁ s , as) = this (s , as)
   from     union-sig-disjoint (inj₂ s , as) = that (s , as)
-  a-inv    union-sig-disjoint               = refl
-  b-inv    union-sig-disjoint               = refl
-  from-inv union-sig-disjoint {inj₁ _ , _}  = refl
-  from-inv union-sig-disjoint {inj₂ _ , _}  = refl
+  a-inv    union-sig-disjoint               = Eq.refl
+  b-inv    union-sig-disjoint               = Eq.refl
+  from-inv union-sig-disjoint {inj₁ _ , _}  = Eq.refl
+  from-inv union-sig-disjoint {inj₂ _ , _}  = Eq.refl
 
   ∙-disjointᵖ : ∀ {c₁ c₂} → c₁ ∙ c₂ ≣ᵖ canon _ (val c₁ ⊕ val c₂)
   type-unionᵖ ∙-disjointᵖ _ = union-sig-disjoint
@@ -234,10 +239,14 @@ module _ where
   canonicalᵣᵖ ∙-disjointᵖ   = id-↔ _
 
 {- Trivial unions on indexed canons -}
-module _ where
+module _ {Ix : Set → Set} where
 
   open Union
   open _∙_≣_
+
+  private
+    variable
+      c c₁ c₂ c₃ : ICanon Ix
 
   -- Every canon forms a union with itself --- i.e., the union where all types
   -- and values are overlapping
@@ -275,10 +284,14 @@ module _ where
   canonicalᵖ (∙-⊑ᵖ₂ sep) {R = R} = canonicalᵣᵖ sep {R = R}
 
 {- Some properties about the relation between indexed canon unions and indexed value subtyping -}
-module _ where
+module _ {Ix : Set → Set} where
 
   open _∙_≣_
   open _⊑_
+
+  private
+    variable
+      c c₁ c₂ c₃ : ICanon Ix
 
   -- If `c` is a union of the canons `c₁` and `c₂`, then the value type in `c₁`
   -- is a subtype of the values in `c`.
@@ -302,9 +315,9 @@ module _ where
   -- A lemma about the definition of `map-cata`, that proves that it behaves like
   -- `map` for Vectors
   map-cata-def : ∀ {V : Algebra σ Set Set} {n} (xs : Vec (μ σ) n)
-                 → map-cata V xs ≡ Data.Vec.map (cata V) xs
-  map-cata-def []      = refl
-  map-cata-def {V = V} (x ∷ v) = cong (_ ∷_) (map-cata-def {V = V} v)
+                 → map-cata V xs ≡ Vec.map (cata V) xs
+  map-cata-def []              = Eq.refl
+  map-cata-def {V = V} (x ∷ v) = Eq.cong (_ ∷_) (map-cata-def {V = V} v)
 
 
   -- Value upcast using _⊑ᵖ_
@@ -312,8 +325,8 @@ module _ where
        → ∀[  alg V ∘ (map-sig (cata W))
           ⇒  cata W ∘ inject
           ]
-  ↑ᵖ {W = W} x = subst (λ v → alg W (_ , L.lift v))
-                       (sym $ map-cata-def {V = W} _) (f canonicalᵖ x)
+  ↑ᵖ {W = W} x = Eq.subst (λ v → alg W (_ , Level.lift v))
+                          (Eq.sym $ map-cata-def {V = W} _) (f canonicalᵖ x)
 
   -- Value downcast using _⊑_
   --
@@ -326,7 +339,7 @@ module _ where
        → ∀[  cata W ∘ inject
           ⇒  alg V ∘ (map-sig (cata W))
           ]
-  ↓ᵖ {W = W} x = f⁻¹ canonicalᵖ (subst (λ v → alg W (_ , L.lift v))
+  ↓ᵖ {W = W} x = f⁻¹ canonicalᵖ (Eq.subst (λ v → alg W (_ , Level.lift v))
                                 (map-cata-def {V = W} _) x)
 
 {- Up- and downcast of indexed value types using indexed value subtyping -}
@@ -339,9 +352,9 @@ module _ {Ix : Set → Set} {V : Values Ix σ₁} {W : Values Ix σ₂}  where
   -- A lemma about the definition of `map-para`, that proves that it behaves like
   -- `map` for Vectors
   map-para-def : ∀ {V : Values Ix σ} {n} (xs : Vec (μ σ) n)
-                 → Data.Vec.zip xs (map-para (out V) xs) ≡ Data.Vec.map (λ v → v , para (out V) v) xs
-  map-para-def []      = refl
-  map-para-def {V = V} (x ∷ v) = cong (_ ∷_) (map-para-def {V = V} v)
+                 → Vec.zip xs (map-para (out V) xs) ≡ Vec.map (λ v → v , para (out V) v) xs
+  map-para-def []              = Eq.refl
+  map-para-def {V = V} (x ∷ v) = Eq.cong (_ ∷_) (map-para-def {V = V} v)
 
 
   -- Value upcast using _⊑_
@@ -349,8 +362,8 @@ module _ {Ix : Set → Set} {V : Values Ix σ₁} {W : Values Ix σ₂}  where
       → ∀ {t} → ∀[  alg (out V) (map-sig (λ x → x , para (out W) x) t)
                  ⇒  para (out W) (inject t)
                  ]
-  ↑ x = subst (λ v → alg (out W) (_ , L.lift v) _)
-              (sym $ map-para-def {V = W} _) (f canonical x)
+  ↑ x = Eq.subst (λ v → alg (out W) (_ , Level.lift v) _)
+                 (Eq.sym $ map-para-def {V = W} _) (f canonical x)
 
 
   -- Value downcast using _⊑_
@@ -364,5 +377,5 @@ module _ {Ix : Set → Set} {V : Values Ix σ₁} {W : Values Ix σ₂}  where
       → ∀ {t} → ∀[  para (out W) (inject t)
                  ⇒  alg (out V) (map-sig (λ x → x , para (out W) x) t)
                  ]
-  ↓ x = f⁻¹ canonical (subst (λ v → alg (out W) (_ , L.lift v) _)
-                             (map-para-def {V = W} _) x)
+  ↓ x = f⁻¹ canonical (Eq.subst (λ v → alg (out W) (_ , Level.lift v) _)
+                                (map-para-def {V = W} _) x)

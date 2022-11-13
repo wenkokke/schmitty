@@ -7,28 +7,23 @@
 
 {-# OPTIONS --without-K --safe #-}
 
-module Schmitty.Language.Union where
+module Schmitty.Composable.Union where
 
-open import Data.These
-open import Data.Product
-open import Data.Empty
-open import Data.Sum
-open import Data.Maybe
-open import Data.These
-
-open import Relation.Unary hiding (∅)
-open import Relation.Binary.PropositionalEquality renaming ([_] to P[_])
-
-open import Function
-open import Level
-
-open import Schmitty.Language.Signature
-
+open import Level using (Level)
+open import Data.Product using (_×_; _,_; proj₁; proj₂; curry)
+open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Sum using (_⊎_; inj₁; inj₂; [_,_])
+open import Data.Maybe using (Maybe; nothing; just)
+open import Data.These using (These; this; that; these)
+open import Relation.Unary using (Pred)
+open import Relation.Binary.PropositionalEquality as Eq using (_≡_)
+open import Function using (id; _$_; _∘_)
+open import Schmitty.Composable.Signature using (Signature; _≼_; ⟦_⟧)
 
 module _ where
 
   ∅ : ∀ {a ℓ} {A : Set a} → Pred A ℓ
-  ∅ = λ _ → Lift _ ⊥
+  ∅ = λ _ → Level.Lift _ ⊥
 
 module _ where
 
@@ -41,7 +36,7 @@ module _ where
   ⟪ P , Q , R ⟫ = Data.These.fold P Q (curry R)
 
   -- (potentially overlapping) unions on `Set`
-  record Union {ℓ} (A : Set ℓ) (B : Set ℓ) (C : Set ℓ) : Set (suc ℓ) where
+  record Union {ℓ} (A : Set ℓ) (B : Set ℓ) (C : Set ℓ) : Set (Level.suc ℓ) where
     field inja : A → C
           injb : B → C
           from : C → These A B
@@ -69,24 +64,24 @@ module _ {ℓ} {A B C : Set ℓ} (u : Union A B C) where
       these : ∀ a b → (i : from u c ≡ these a b) → (rx : R (a , b)) → From⟨_,_,_⟩ c
 
   -- The result of `from ∘ inja` can only ever be `this` or `these`
-  a-inv' : (a : A) → From⟨ (λ a' → a ≡ a') , (λ _ → Lift _ ⊥) , (λ (a' , _) → a ≡ a') ⟩ (inja u a)
-  a-inv' a with from u (inja u a) | inspect (from u) (inja u a) | a-inv u {a}
-  ... | this  a'   | P[ eq ] | eq′ = this a' eq (sym $ eq′)
-  ... | these a' b | P[ eq ] | eq′ = these a' b eq (sym $ eq′)
+  a-inv' : (a : A) → From⟨ (λ a' → a ≡ a') , (λ _ → Level.Lift _ ⊥) , (λ (a' , _) → a ≡ a') ⟩ (inja u a)
+  a-inv' a with from u (inja u a) | Eq.inspect (from u) (inja u a) | a-inv u {a}
+  ... | this  a'   | Eq.[ eq ] | eq′ = this a' eq (Eq.sym $ eq′)
+  ... | these a' b | Eq.[ eq ] | eq′ = these a' b eq (Eq.sym $ eq′)
 
   -- The result of `from ∘ injb` can only ever by `that` or `these`
-  b-inv' : (b : B) → From⟨ (λ _ → Lift _ ⊥) , (λ b' → b ≡ b') , (λ (_ , b') → b ≡ b') ⟩ (injb u b)
-  b-inv' b with from u (injb u b) | inspect (from u) (injb u b) | b-inv u {b}
-  ... | that    b' | P[ eq ] | eq′ = that b' eq (sym $ eq′)
-  ... | these a b' | P[ eq ] | eq′ = these a b' eq (sym $ eq′)
+  b-inv' : (b : B) → From⟨ (λ _ → Level.Lift _ ⊥) , (λ b' → b ≡ b') , (λ (_ , b') → b ≡ b') ⟩ (injb u b)
+  b-inv' b with from u (injb u b) | Eq.inspect (from u) (injb u b) | b-inv u {b}
+  ... | that    b' | Eq.[ eq ] | eq′ = that b' eq (Eq.sym $ eq′)
+  ... | these a b' | Eq.[ eq ] | eq′ = these a b' eq (Eq.sym $ eq′)
 
   -- Apply from to a value `c`, but include some equations that remember how the
   -- result of `from c` relates to `c`.
   from-inv' : (c : C) → From⟨ (λ a → c ≡ inja u a) , (λ b → c ≡ injb u b) , (λ (a , b) → c ≡ inja u a × c ≡ injb u b) ⟩ c
-  from-inv' c with from u c | inspect (from u) c | from-inv u {c}
-  ... | this  a   | P[ eq ] | eq′ = this a eq (sym $ eq′)
-  ... | that    b | P[ eq ] | eq′ = that b eq (sym $ eq′)
-  ... | these a b | P[ eq ] | eq′₁ , eq′₂ = these a b eq ((sym $ eq′₁) , (sym $ eq′₂))
+  from-inv' c with from u c | Eq.inspect (from u) c | from-inv u {c}
+  ... | this  a   | Eq.[ eq ] | eq′ = this a eq (Eq.sym $ eq′)
+  ... | that    b | Eq.[ eq ] | eq′ = that b eq (Eq.sym $ eq′)
+  ... | these a b | Eq.[ eq ] | eq′₁ , eq′₂ = these a b eq ((Eq.sym $ eq′₁) , (Eq.sym $ eq′₂))
 
 {- Trivial unions -}
 module _ where
@@ -97,10 +92,10 @@ module _ where
   Union.inja  union-copy   = id
   Union.injb  union-copy   = id
   Union.from  union-copy x = these x x
-  Union.a-inv union-copy   = refl
-  Union.b-inv union-copy   = refl
-  proj₁ (Union.from-inv union-copy) = refl
-  proj₂ (Union.from-inv union-copy) = refl
+  Union.a-inv union-copy   = Eq.refl
+  Union.b-inv union-copy   = Eq.refl
+  proj₁ (Union.from-inv union-copy) = Eq.refl
+  proj₂ (Union.from-inv union-copy) = Eq.refl
 
   -- Disjoint union is always a valid union of any two types --- i.e., the union
   -- where none of the values overlap
@@ -108,10 +103,10 @@ module _ where
   Union.inja union-disjoint  = inj₁
   Union.injb union-disjoint  = inj₂
   Union.from union-disjoint  = [ this , that ]
-  Union.a-inv union-disjoint = refl
-  Union.b-inv union-disjoint = refl
-  Union.from-inv union-disjoint {inj₁ x} = refl
-  Union.from-inv union-disjoint {inj₂ y} = refl
+  Union.a-inv union-disjoint = Eq.refl
+  Union.b-inv union-disjoint = Eq.refl
+  Union.from-inv union-disjoint {inj₁ x} = Eq.refl
+  Union.from-inv union-disjoint {inj₂ y} = Eq.refl
 
 {- Some properties about the relation between signature subtyping and `Union` -}
 module _ where
@@ -120,7 +115,7 @@ module _ where
   open Union
 
   just≡ : ∀ {a} {A : Set a} {x x′ : A} → just x ≡ just x′ → x ≡ x′
-  just≡ refl = refl
+  just≡ Eq.refl = Eq.refl
 
   nothing≠just : ∀ {a} {A : Set a} {x : A} → nothing ≡ just x → ⊥
   nothing≠just ()
@@ -131,12 +126,12 @@ module _ where
   inj  (∙-≼₁ u) = inja (u _)
   proj (∙-≼₁ u) = Data.These.fold just (λ _ → nothing) (λ x _ → just x) ∘ from (u _)
   proj-inj (∙-≼₁ u) {x = x} with a-inv' (u _) x
-  ... | this  a   i refl rewrite i = refl
-  ... | these a b i refl rewrite i = refl
+  ... | this  a   i Eq.refl rewrite i = Eq.refl
+  ... | these a b i Eq.refl rewrite i = Eq.refl
   inj-proj (∙-≼₁ u) {x = x} {y = y} eq with from-inv' (u _) y
-  ... | this  a   i refl        rewrite i = cong (inja (u _)) (just≡ (sym eq))
-  ... | that    b i refl        rewrite i = ⊥-elim (nothing≠just eq)
-  ... | these a b i (refl , rx) rewrite i = cong (inja (u _)) (just≡ (sym eq))
+  ... | this  a   i Eq.refl        rewrite i = Eq.cong (inja (u _)) (just≡ (Eq.sym eq))
+  ... | that    b i Eq.refl        rewrite i = ⊥-elim (nothing≠just eq)
+  ... | these a b i (Eq.refl , rx) rewrite i = Eq.cong (inja (u _)) (just≡ (Eq.sym eq))
 
   -- If there is a union between (the semantics of) signatures `σ₁`, `σ₂` and
   -- `σ`, then `σ₂` is a subsignature of `σ`.
@@ -144,9 +139,9 @@ module _ where
   inj  (∙-≼₂ u) = injb (u _)
   proj (∙-≼₂ u) = Data.These.fold (λ _ → nothing) just (λ _ y → just y) ∘ from (u _)
   proj-inj (∙-≼₂ u) {x = x} with b-inv' (u _) x
-  ... | that  b   i refl rewrite i = refl
-  ... | these a b i refl rewrite i = refl
+  ... | that  b   i Eq.refl rewrite i = Eq.refl
+  ... | these a b i Eq.refl rewrite i = Eq.refl
   inj-proj (∙-≼₂ u) {x = x} {y = y} eq with from-inv' (u _) y
-  ... | this  a   i refl         rewrite i = ⊥-elim (nothing≠just eq)
-  ... | that    b i refl         rewrite i = cong (injb (u _)) (just≡ (sym eq))
-  ... | these a b i (refl , snd) rewrite i = trans (cong (injb (u _)) (just≡ (sym eq))) (sym snd)
+  ... | this  a   i Eq.refl         rewrite i = ⊥-elim (nothing≠just eq)
+  ... | that    b i Eq.refl         rewrite i = Eq.cong (injb (u _)) (just≡ (Eq.sym eq))
+  ... | these a b i (Eq.refl , snd) rewrite i = Eq.trans (Eq.cong (injb (u _)) (just≡ (Eq.sym eq))) (Eq.sym snd)
