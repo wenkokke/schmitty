@@ -4,7 +4,7 @@ module Schmitty.Composable.Signature where
 
 open import Schmitty.Composable.Core using ()
 
-open import Level using (Level)
+open import Level using (Level; Lift; lift)
 open import Data.Nat using (ℕ)
 open import Data.Product using (Σ; _×_; _,_)
 open import Data.Vec as Vec using (Vec; []; _∷_)
@@ -48,7 +48,7 @@ module _ where
 
   -- Extension/semantics of signatures in `Set`
   ⟦_⟧ : Signature ℓ → Set ℓ′ → Set (ℓ Level.⊔ ℓ′)
-  ⟦_⟧ {ℓ} {ℓ′} σ X = Σ (Shape σ) λ s → Level.Lift (ℓ Level.⊔ ℓ′) (Vec X (Arity σ s))
+  ⟦_⟧ {ℓ} {ℓ′} σ X = Σ (Shape σ) λ s → Lift (ℓ Level.⊔ ℓ′) (Vec X (Arity σ s))
 
   -- Least fixpoint of signature-encoded functors
   data μ {ℓ} (σ : Signature ℓ) : Set ℓ where
@@ -68,7 +68,7 @@ module _ where
       σ σ₁ σ₂ : Signature ℓ
 
   map-sig : (A → B) → (⟦ σ ⟧ A → ⟦ σ ⟧ B)
-  map-sig f (s , Level.lift as) = s , Level.lift (Vec.map f as)
+  map-sig f (s , lift as) = s , lift (Vec.map f as)
 
   record Algebra (σ : Signature ℓ) (A : Set a) (B : Set b) : Set (ℓ Level.⊔ a Level.⊔ b) where
     field
@@ -82,7 +82,7 @@ module _ where
     map-cata f (a ∷ as) = cata f a ∷ map-cata f as
 
     cata : Algebra σ A A → μ σ → A
-    cata f ⟨ s , Level.lift as ⟩ = alg f (s , Level.lift (map-cata f as))
+    cata f ⟨ s , lift as ⟩ = alg f (s , lift (map-cata f as))
 
   mutual
     map-para : {A : Set a} → Algebra σ (μ σ × A) A → Vec (μ σ) n → Vec A n
@@ -90,7 +90,7 @@ module _ where
     map-para f (x ∷ xs) = para f x ∷ map-para f xs
 
     para : {A : Set ℓ} {σ : Signature ℓ′} → Algebra σ (μ σ × A ) A → μ σ → A
-    para f ⟨ c , Level.lift xs ⟩ = alg f (c , Level.lift (Vec.zip xs (map-para f xs)))
+    para f ⟨ c , lift xs ⟩ = alg f (c , lift (Vec.zip xs (map-para f xs)))
 
   -- Algebra sums
   _⊕_ : Algebra σ₁ A B → Algebra σ₂ A B → Algebra (σ₁ :+: σ₂) A B
@@ -113,7 +113,7 @@ module _ where
   -- Extension/semantics of indexed signatures as functors on indexed sets
   ⟦_⟧ᴵ : ISignature ℓ I O → (O → Set ℓ′) → I → Set (ℓ Level.⊔ ℓ′)
   ⟦_⟧ᴵ {ℓ = ℓ} {ℓ′ = ℓ′} ζ X i =
-    Σ (Shapeᴵ ζ i) λ s → Level.Lift (ℓ Level.⊔ ℓ′) (All X (Indices ζ s))
+    Σ (Shapeᴵ ζ i) λ s → Lift (ℓ Level.⊔ ℓ′) (All X (Indices ζ s))
 
   -- Least fixpoint of signature-encoded functors on indexed sets
   data μᴵ (ζ : ISignature ℓ I I) : I → Set ℓ where
@@ -133,7 +133,7 @@ module _ where
       ζ ζ₁ ζ₂ : ISignature ℓ I J
 
   map-sigᴵ :  ∀[ P ⇒ Q ] → ∀[ ⟦ ζ ⟧ᴵ P ⇒ ⟦ ζ ⟧ᴵ Q ]
-  map-sigᴵ f (s , as) = s , Level.lift (All.map f (Level.lower as))
+  map-sigᴵ f (s , as) = s , lift (All.map f (Level.lower as))
 
   record IAlgebra (ζ : ISignature ℓ I I) (P : I → Set ℓ) : Set ℓ where
     field ialg : ∀[ ⟦ ζ ⟧ᴵ P ⇒ P ]
@@ -146,7 +146,7 @@ module _ where
     map-foldᴵ f (a ∷ as) = foldᴵ f a ∷ map-foldᴵ f as
 
     foldᴵ : IAlgebra ζ P → ∀[ μᴵ ζ ⇒ P ]
-    foldᴵ f I⟨ s , as ⟩ = ialg f (s , Level.lift (map-foldᴵ f (Level.lower as)))
+    foldᴵ f I⟨ s , as ⟩ = ialg f (s , lift (map-foldᴵ f (Level.lower as)))
 
   -- Indexed algebra sums
   _:⊕:_ : IAlgebra ζ₁ P → IAlgebra ζ₂ P → IAlgebra (ζ₁ :++: ζ₂) P

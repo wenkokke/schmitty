@@ -4,15 +4,7 @@ module Schmitty.Composable.Box where
 
 open import Level using (Level)
 open import Relation.Unary using (IUniversal; _⇒_)
-
-{- A notion of types with preorders -}
-module _ where
-
-  record Rel₂ {a} (ℓ : Level) (A : Set a) : Set (a Level.⊔ Level.suc ℓ) where
-    field
-      R     : A → A → Set ℓ
-      refl  : ∀ {x}                     → R x x
-      trans : ∀ {x y z} → R x y → R y z → R x z
+open import Schmitty.Composable.Core using (Rel₂)
 
 {- Kripke semantics of Box (necessity) modality. We define □ for all types
     that have an associated preorder (i.e., instance of `Rel₂`), which is used

@@ -9,7 +9,7 @@
 
 module Schmitty.Composable.Union where
 
-open import Level using (Level)
+open import Level using (Level; Lift; lift)
 open import Data.Product using (_×_; _,_; proj₁; proj₂; curry)
 open import Data.Empty using (⊥; ⊥-elim)
 open import Data.Sum using (_⊎_; inj₁; inj₂; [_,_])
@@ -23,7 +23,7 @@ open import Schmitty.Composable.Signature using (Signature; _≼_; ⟦_⟧)
 module _ where
 
   ∅ : ∀ {a ℓ} {A : Set a} → Pred A ℓ
-  ∅ = λ _ → Level.Lift _ ⊥
+  ∅ = λ _ → Lift _ ⊥
 
 module _ where
 
@@ -64,13 +64,13 @@ module _ {ℓ} {A B C : Set ℓ} (u : Union A B C) where
       these : ∀ a b → (i : from u c ≡ these a b) → (rx : R (a , b)) → From⟨_,_,_⟩ c
 
   -- The result of `from ∘ inja` can only ever be `this` or `these`
-  a-inv' : (a : A) → From⟨ (λ a' → a ≡ a') , (λ _ → Level.Lift _ ⊥) , (λ (a' , _) → a ≡ a') ⟩ (inja u a)
+  a-inv' : (a : A) → From⟨ (λ a' → a ≡ a') , (λ _ → Lift _ ⊥) , (λ (a' , _) → a ≡ a') ⟩ (inja u a)
   a-inv' a with from u (inja u a) | Eq.inspect (from u) (inja u a) | a-inv u {a}
   ... | this  a'   | Eq.[ eq ] | eq′ = this a' eq (Eq.sym $ eq′)
   ... | these a' b | Eq.[ eq ] | eq′ = these a' b eq (Eq.sym $ eq′)
 
   -- The result of `from ∘ injb` can only ever by `that` or `these`
-  b-inv' : (b : B) → From⟨ (λ _ → Level.Lift _ ⊥) , (λ b' → b ≡ b') , (λ (_ , b') → b ≡ b') ⟩ (injb u b)
+  b-inv' : (b : B) → From⟨ (λ _ → Lift _ ⊥) , (λ b' → b ≡ b') , (λ (_ , b') → b ≡ b') ⟩ (injb u b)
   b-inv' b with from u (injb u b) | Eq.inspect (from u) (injb u b) | b-inv u {b}
   ... | that    b' | Eq.[ eq ] | eq′ = that b' eq (Eq.sym $ eq′)
   ... | these a b' | Eq.[ eq ] | eq′ = these a b' eq (Eq.sym $ eq′)

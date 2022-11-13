@@ -2,7 +2,7 @@
 
 module Schmitty.Composable.Canon where
 
-open import Level using (Level)
+open import Level using (Level; Lift; lift)
 open import Data.Maybe using (Maybe; nothing; just)
 open import Data.Product using (_×_; _,_; proj₁; proj₂)
 open import Data.Sum using (_⊎_; inj₁; inj₂)
@@ -343,7 +343,7 @@ module _ where
        → ∀[  alg V ∘ (map-sig (cata W))
           ⇒  cata W ∘ inject
           ]
-  ↑ᵖ {W = W} x = Eq.subst (λ v → alg W (_ , Level.lift v))
+  ↑ᵖ {W = W} x = Eq.subst (λ v → alg W (_ , lift v))
                           (Eq.sym $ map-cata-def {V = W} _) (f canonicalᵖ x)
 
   -- Value downcast using _⊑_
@@ -357,7 +357,7 @@ module _ where
        → ∀[  cata W ∘ inject
           ⇒  alg V ∘ (map-sig (cata W))
           ]
-  ↓ᵖ {W = W} x = f⁻¹ canonicalᵖ (Eq.subst (λ v → alg W (_ , Level.lift v))
+  ↓ᵖ {W = W} x = f⁻¹ canonicalᵖ (Eq.subst (λ v → alg W (_ , lift v))
                                 (map-cata-def {V = W} _) x)
 
 {- Up- and downcast of indexed value types using indexed value subtyping -}
@@ -380,7 +380,7 @@ module _ {Ix : Set → Set} {V : Values Ix σ₁} {W : Values Ix σ₂}  where
       → ∀ {t} → ∀[  alg (out V) (map-sig (λ x → x , para (out W) x) t)
                  ⇒  para (out W) (inject t)
                  ]
-  ↑ x = Eq.subst (λ v → alg (out W) (_ , Level.lift v) _)
+  ↑ x = Eq.subst (λ v → alg (out W) (_ , lift v) _)
                  (Eq.sym $ map-para-def {V = W} _) (f canonical x)
 
 
@@ -395,5 +395,5 @@ module _ {Ix : Set → Set} {V : Values Ix σ₁} {W : Values Ix σ₂}  where
       → ∀ {t} → ∀[  para (out W) (inject t)
                  ⇒  alg (out V) (map-sig (λ x → x , para (out W) x) t)
                  ]
-  ↓ x = f⁻¹ canonical (Eq.subst (λ v → alg (out W) (_ , Level.lift v) _)
+  ↓ x = f⁻¹ canonical (Eq.subst (λ v → alg (out W) (_ , lift v) _)
                                 (map-para-def {V = W} _) x)

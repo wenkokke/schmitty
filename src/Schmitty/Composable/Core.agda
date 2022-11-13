@@ -5,7 +5,6 @@ module Schmitty.Composable.Core where
 open import Level using (Level)
 open import Data.Nat using (ℕ)
 open import Data.List using (List)
-open import Schmitty.Composable.Box public using (Rel₂)
 open import Data.List.Relation.Unary.All using (All)
 open import Data.List.Relation.Binary.Sublist.Propositional using (_⊆_; ⊆-refl; ⊆-trans)
 
@@ -17,6 +16,15 @@ Pred : (A : Set ℓ) → Set (Level.suc ℓ)
 Pred {ℓ} A = A → Set ℓ
 
 Ctx = List
+
+{- A notion of types with preorders -}
+module _ where
+
+  record Rel₂ {a} (ℓ : Level) (A : Set a) : Set (a Level.⊔ Level.suc ℓ) where
+    field
+      R     : A → A → Set ℓ
+      refl  : ∀ {x}                     → R x x
+      trans : ∀ {x y z} → R x y → R y z → R x z
 
 module _ (T : Set) where
 
