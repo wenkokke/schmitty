@@ -15,6 +15,7 @@ private
 Pred : (A : Set ℓ) → Set (Level.suc ℓ)
 Pred {ℓ} A = A → Set ℓ
 
+Ctx : (A : Set ℓ) → Set ℓ
 Ctx = List
 
 {- A notion of types with preorders -}

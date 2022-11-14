@@ -24,6 +24,7 @@ open import Schmitty.Composable.Core using (Pred; Rel₂)
 private
   variable
     ℓ ℓ′    : Level
+    a b     : Level
     σ σ₁ σ₂ : Signature ℓ
 
 {- Canonical forms -}
@@ -31,11 +32,14 @@ module _ where
 
   open import Relation.Unary.Closure.Base (_≼_ {ℓ = Level.zero})
 
-  record Canon : Set₁ where
+  record Canon : Set (Level.suc (ℓ Level.⊔ a Level.⊔ b)) where
     constructor canon
     field
-      ty : Signature _
-      val : Algebra ty Set Set
+      ty  : Signature ℓ
+      val : Algebra ty (Set a) (Set b)
+
+  Canon₁ : Set₁
+  Canon₁ = Canon {Level.zero} {Level.zero} {Level.zero}
 
 module _ where
 
@@ -136,7 +140,7 @@ module _ where
 
 
   -- Register `Canon` for usage with `□` using `_⊑ᵖ_`
-  instance canon-rel : Rel₂ _ Canon
+  instance canon-rel : Rel₂ _ Canon₁
   Rel₂.R     canon-rel c₁ c₂ = val c₁ ⊑ᵖ val c₂
   Rel₂.refl  canon-rel       = ⊑ᵖ-refl
   Rel₂.trans canon-rel       = ⊑ᵖ-trans
@@ -182,7 +186,7 @@ module _ where
   -- * For all syntactic types defined by both `c₂` and `c`, the values in `c₂`
   --   and `c` agree on what the associated values should be
   --
-  record _∙_≣ᵖ_ (c₁ c₂ c : Canon) : Set₁ where
+  record _∙_≣ᵖ_ (c₁ c₂ c : Canon₁) : Set₁ where
     field
       type-unionᵖ :
         (X : Set) → Union (⟦ ty c₁ ⟧ X) (⟦ ty c₂ ⟧ X) (⟦ ty c ⟧ X)
@@ -397,3 +401,5 @@ module _ {Ix : Set → Set} {V : Values Ix σ₁} {W : Values Ix σ₂}  where
                  ]
   ↓ x = f⁻¹ canonical (Eq.subst (λ v → alg (out W) (_ , lift v) _)
                                 (map-para-def {V = W} _) x)
+
+-- -}
