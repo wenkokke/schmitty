@@ -9,7 +9,7 @@
 
 module SMT.Theory.Raw.Reflection where
 
-open import Category.Monad
+open import Effect.Monad
 open import Data.Bool as Bool using (Bool; true; false)
 open import Data.Fin as Fin using (Fin; suc; zero)
 open import Data.Integer as Int using (ℤ; +_; -[1+_])
@@ -26,8 +26,8 @@ open import Function
 open import Level using (Level)
 open import Relation.Binary.PropositionalEquality as PropEq using (_≡_; refl)
 open import Reflection as Rfl hiding (return; _>>=_)
-import Reflection.TypeChecking.Monad.Categorical as TC
-open import Reflection.DeBruijn using (η-expand; _∈FV_)
+import Reflection.TCM.Effectful as TC
+open import Reflection.AST.DeBruijn using (η-expand; _∈FV_)
 open import Relation.Nullary using (¬_; Dec; yes; no)
 open import Relation.Nullary.Decidable using (isYes)
 open import SMT.Theory.Base
@@ -39,7 +39,7 @@ open import Agda.Builtin.FromNeg
 instance _ = NatLits.number
 
 private
-  open module TCMonad {ℓ} = Category.Monad.RawMonad {ℓ} TC.monad renaming (_⊛_ to _<*>_)
+  open module TCMonad {ℓ} = Effect.Monad.RawMonad {ℓ} TC.monad renaming (_⊛_ to _<*>_)
 
 private
   variable
@@ -118,10 +118,10 @@ mutual
   reflectToRawTerm′ fuel Γ fv (pi dom@(arg _ a) (abs x b)) = do
     case 0 ∈FV b of λ where
       true  →
-        `forallᵣ x (TERM a) <$> extendContext dom (reflectToRawTerm′ fuel (TERM a ∷ Γ) (true ∷ fv) b)
+        `forallᵣ x (TERM a) <$> extendContext "x" dom (reflectToRawTerm′ fuel (TERM a ∷ Γ) (true ∷ fv) b)
       false → do
         a ← reflectToRawTerm′ fuel Γ fv a
-        b ← extendContext dom (reflectToRawTerm′ fuel Γ (false ∷ fv) b)
+        b ← extendContext "x" dom (reflectToRawTerm′ fuel Γ (false ∷ fv) b)
         return (`appᵣ {Σ = record {ArgSorts = ⋆ ∷ ⋆ ∷ []}} (quote Morphism) (a ∷ b ∷ []))
   reflectToRawTerm′ fuel Γ fv (meta x _) = blockOnMeta x
   reflectToRawTerm′ fuel Γ fv t = typeErrorFmt "reflectToRawTerm′ failed"
@@ -130,7 +130,7 @@ mutual
   reflectExist fuel Γ fv a b = do
     lam _ (abs x b) ← return $ η-expand visible b
       where _ → typeErrorFmt "reflectedToRawTerm′ failed to η-expand existential predicate"
-    `existsᵣ x (TERM a) <$> extendContext (vArg a) (reflectToRawTerm′ fuel (TERM a ∷ Γ) (true ∷ fv) b)
+    `existsᵣ x (TERM a) <$> extendContext "x" (vArg a) (reflectToRawTerm′ fuel (TERM a ∷ Γ) (true ∷ fv) b)
 
   reflectToRawArgs : ∀ (fuel : ℕ) Γ (fv : AllowedVars) (ts : List (Arg Term)) → TC (RawArgs Γ (ArgSorts (argTypes ts)))
   reflectToRawArgs fuel Γ fv [] = return []
@@ -170,11 +170,11 @@ reflectToRawScript = reflectToRawScript′ [] []
     reflectToRawScript′ Γ fv (pi dom@(arg _ a) (abs x b)) =
       case 0 ∈FV b of λ where
         true → do
-          Γ′ , s ← extendContext dom $ reflectToRawScript′ (TERM a ∷ Γ) (true ∷ fv) b
+          Γ′ , s ← extendContext "x" dom $ reflectToRawScript′ (TERM a ∷ Γ) (true ∷ fv) b
           return (Γ′ , `declare-constᵣ x (TERM a) s)
         false → do
           t ← reflectToRawTerm Γ fv a
-          Γ′ , s ← extendContext dom $ reflectToRawScript′ Γ (false ∷ fv) b
+          Γ′ , s ← extendContext "x" dom $ reflectToRawScript′ Γ (false ∷ fv) b
           return (Γ′ , `assertᵣ t s)
     reflectToRawScript′ Γ fv t = do
       t ← reflectToRawTerm Γ fv t

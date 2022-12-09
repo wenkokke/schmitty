@@ -14,21 +14,21 @@ module SMT.Script.Reflection (theory : Theory) {{reflectable : Reflectable theor
 open Theory theory
 open Reflectable reflectable
 
-open import Category.Monad
+open import Effect.Monad
 open import Data.Environment as Env using (Env; _∷_; [])
 open import Data.Fin as Fin using (Fin; suc; zero)
 open import Data.List as List using (List; _∷_; []; _++_; length)
 open import Data.List.Relation.Unary.All using (All; _∷_; [])
 open import Data.List.Relation.Unary.Any as Any using (here; there)
 open import Data.Maybe as Maybe using (Maybe; just; nothing)
-import Data.Maybe.Categorical as MaybeCat
+import Data.Maybe.Effectful as MaybeCat
 open import Data.Nat as Nat using (ℕ; suc; zero)
 open import Data.Product as Prod using (∃; ∃-syntax; -,_; _×_; _,_; proj₁; proj₂)
 open import Data.String as String using (String)
 open import Data.Unit as Unit using (⊤)
 open import Data.Vec as Vec using (Vec; _∷_; [])
 open import Function using (_$_; case_of_; _∘_; const; flip; id)
-import Function.Identity.Categorical as Identity
+import Function.Identity.Effectful as Identity
 import Level
 import Reflection as Rfl
 open import Relation.Nullary using (Dec; yes; no)
@@ -146,10 +146,10 @@ module _ where
 module _ where
 
   open import SMT.Theory.Raw.Reflection
-  import Reflection.TypeChecking.Monad.Categorical as TC
+  import Reflection.TCM.Effectful as TC
 
   private
-    open module TCMonad {ℓ} = Category.Monad.RawMonad {ℓ} TC.monad renaming (_⊛_ to _<*>_)
+    open module TCMonad {ℓ} = Effect.Monad.RawMonad {ℓ} TC.monad renaming (_⊛_ to _<*>_)
 
   reflectToScript : Rfl.Term → Rfl.TC (∃[ Γ ] Script [] Γ [])
   reflectToScript t = do

@@ -23,9 +23,8 @@ open import Data.List as List using (List; []; _∷_)
 open import Data.Product as Prod using (_×_; _,_; proj₁; proj₂)
 open import Data.String as String using (String)
 open import Function using (id)
-open import Function.Equivalence using (equivalence)
 import Reflection as Rfl
-open import Reflection.Term using () renaming (_≟_ to _≟-Term_)
+open import Reflection.AST.Term using () renaming (_≟_ to _≟-Term_)
 open import Relation.Nullary using (Dec; yes; no)
 import Relation.Nullary.Decidable as Dec
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
@@ -46,7 +45,7 @@ _≟-RawSort_ : (σ σ′ : RawSort) → Dec (σ ≡ σ′)
 ⋆      ≟-RawSort ⋆       = yes refl
 ⋆      ≟-RawSort TERM _  = no λ()
 TERM x ≟-RawSort ⋆       = no λ()
-TERM t ≟-RawSort TERM t′ = Dec.map (equivalence (cong TERM) TERM-injective) (t ≟-Term t′)
+TERM t ≟-RawSort TERM t′ = Dec.map (Function.mk⇔ (cong TERM) TERM-injective) (t ≟-Term t′)
 
 rawTheory : Theory
 Theory.Sort        rawTheory = RawSort

@@ -18,7 +18,7 @@ open Theory theory
 open Parsable parsable
 open Printable printable
 
-open import Category.Monad
+open import Effect.Monad
 open import Codata.Musical.Stream as Stream using (Stream)
 open import Data.Char as Char using (Char)
 open import Data.Environment as Env using (Env; _∷_; [])
@@ -29,7 +29,7 @@ open import Data.List.Relation.Unary.Any as Any using (here; there)
 open import Data.Sum using (_⊎_; inj₁; inj₂)
 open import Data.List.NonEmpty as List⁺ using (List⁺; _∷_)
 open import Data.Maybe as Maybe using (Maybe; just; nothing)
-import Data.Maybe.Categorical as MaybeCat
+import Data.Maybe.Effectful as MaybeCat
 open import Data.Nat as Nat using (ℕ; suc; zero)
 open import Data.Nat.Show renaming (show to showℕ)
 open import Data.Product as Prod using (∃; ∃-syntax; -,_; _×_; _,_; proj₁; proj₂)
@@ -37,7 +37,7 @@ open import Data.String as String using (String)
 open import Data.Unit as Unit using (⊤)
 open import Data.Vec as Vec using (Vec; _∷_; [])
 open import Function using (_$_; case_of_; _∘_; const; flip; id)
-import Function.Identity.Categorical as Identity
+import Function.Identity.Effectful as Identity
 import Level
 import Reflection as Rfl
 open import Relation.Nullary using (yes; no)
@@ -200,7 +200,7 @@ module _ where
 
 module _ where
 
-  open import Category.Monad.State as StateCat using (RawIMonadState; IStateT)
+  open import Effect.Monad.State as StateCat using (RawIMonadState; IStateT)
   open import Text.Parser.String using (IUniversal; Parser; _<$_; withSpaces; exacts)
 
   NameState : (Γ Γ′ : Ctxt) → Set → Set

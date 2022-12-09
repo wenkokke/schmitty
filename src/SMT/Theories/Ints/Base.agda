@@ -15,7 +15,7 @@ open import Data.Nat.Base as Nat using (ℕ)
 open import Data.Nat.Show renaming (show to showℕ)
 open import Data.List as List using (List; _∷_; [])
 open import Data.String as String using (String)
-open import Function.Equivalence using (equivalence)
+open import Function using (mk⇔)
 import Reflection as Rfl
 open import Relation.Nullary using (Dec; yes; no)
 import Relation.Nullary.Decidable as Dec
@@ -52,7 +52,7 @@ CORE-injective : CORE φ ≡ CORE φ′ → φ ≡ φ′
 CORE-injective refl = refl
 
 _≟-Sort_ : (σ σ′ : Sort) → Dec (σ ≡ σ′)
-CORE φ ≟-Sort CORE φ′ = Dec.map (equivalence (PropEq.cong CORE) CORE-injective) (φ ≟-CoreSort φ′)
+CORE φ ≟-Sort CORE φ′ = Dec.map (mk⇔ (PropEq.cong CORE) CORE-injective) (φ ≟-CoreSort φ′)
 CORE φ ≟-Sort INT     = no (λ ())
 INT    ≟-Sort CORE φ  = no (λ ())
 INT    ≟-Sort INT     = yes refl

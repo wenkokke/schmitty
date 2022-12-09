@@ -116,8 +116,8 @@ translation = record
 
     module _ where
       open import Level
-      open import Data.Sum.Categorical.Left InterpError Level.zero using (monad)
-      open import Category.Monad
+      open import Data.Sum.Effectful.Left InterpError Level.zero using (monad)
+      open import Effect.Monad
 
       open RawMonad monad
 

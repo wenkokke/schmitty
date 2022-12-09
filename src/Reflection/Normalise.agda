@@ -12,11 +12,11 @@ open import Data.Unit
 open import Function
 
 open import Reflection
-open import Reflection.TypeChecking.Monad.Categorical using (applicative)
+open import Reflection.TCM.Effectful using (applicative)
 
-open import Reflection.Universe
-open import Reflection.Annotated
-open import Reflection.Annotated.Free
+open import Reflection.AST.Universe
+open import Reflection.AnnotatedAST
+open import Reflection.AnnotatedAST.Free
 
 private
   Ann : ∀ {k} → ⟦ k ⟧ → Set

@@ -5,6 +5,7 @@
 -- and values output as part of the SMT-LIB model.
 --------------------------------------------------------------------------------
 
+{-# OPTIONS --guardedness #-}
 module SMT.Theory.Class.Parsable where
 
 open import SMT.Theory.Base

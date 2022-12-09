@@ -10,7 +10,7 @@ module SMT.Backend.Base where
 
 open import Data.List as List using (List; _∷_; []; foldl)
 open import Data.List.Relation.Unary.All as All using (All; _∷_; [])
-open import Data.Product using (_×_; _,_; proj₁; proj₂)
+open import Data.Product using (_×_; _,_; proj₁; proj₂; uncurry)
 open import Data.String as String using (String)
 open import Data.Unit using (⊤)
 open import Function using (case_of_; const; _$_; _∘_; flip)
@@ -104,7 +104,7 @@ module Solver (theory : Theory) {{reflectable : Reflectable theory}} where
   solve name solver hole = do
     goal ← Rfl.inferType hole
     ctx ← Rfl.getContext
-    let goal⁺ = foldl (λ b a → Rfl.pi a (Rfl.abs "" b)) goal ctx -- prepend context to the goal
+    let goal⁺ = foldl (λ b (x , a) → Rfl.pi a (Rfl.abs x b)) goal ctx -- prepend context to the goal
     Γ , scr ← reflectToScript goal⁺
     let scr′ = scr ◆ `get-model []
     qm ∷ [] ← solver scr′

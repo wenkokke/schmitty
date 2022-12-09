@@ -1,13 +1,13 @@
 module SMT.Utils.Float where
 
-open import Category.Monad
+open import Effect.Monad
 open import Data.Bool as Bool using (Bool; false; true; T; not; _∧_; if_then_else_)
 open import Data.Char as Char using (Char)
 open import Data.Float as Float using (Float; isNaN; _≤ᵇ_; _<ᵇ_)
 open import Data.Integer as Int using (ℤ; _◃_; +_; -[1+_])
 open import Data.List as List using (List; []; _∷_; _∷ʳ′_; initLast; _∷ʳ_; _++_; splitAt; replicate)
 open import Data.Maybe as Maybe using (Maybe; nothing; just)
-import Data.Maybe.Categorical as MaybeCat
+import Data.Maybe.Effectful as MaybeCat
 open import Data.Nat as Nat using (ℕ; suc; zero; _*_; _+_; _∸_)
 open import Data.Product as Prod using (_×_; _,_)
 import Data.Sign as Sign

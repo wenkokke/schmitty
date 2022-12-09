@@ -13,8 +13,8 @@ module SMT.Script.Names (theory : Theory) where
 
 open Theory theory
 
-open import Category.Monad
-open import Category.Monad.State as StateCat using (RawIMonadState; IStateT)
+open import Effect.Monad
+open import Effect.Monad.State as StateCat using (RawIMonadState; IStateT)
 open import Codata.Musical.Stream as Stream using (Stream)
 open import Data.Char as Char using (Char)
 open import Data.Environment as Env using (Env; _∷_; [])
@@ -30,7 +30,7 @@ open import Data.String as String using (String)
 open import Data.Unit as Unit using (⊤)
 open import Data.Vec as Vec using (Vec)
 open import Function using (const; id; _∘_; _$_)
-import Function.Identity.Categorical as Identity
+import Function.Identity.Effectful as Identity
 open import Text.Parser.String as P hiding (_>>=_)
 open import Relation.Nullary using (Dec; yes; no)
 open import Relation.Nullary.Decidable using (True)
