@@ -10,6 +10,7 @@ module SMT.Backend.Base where
 
 open import Data.List as List using (List; _∷_; []; foldl)
 open import Data.List.Relation.Unary.All as All using (All; _∷_; [])
+open import Data.Maybe.Base using (nothing; just)
 open import Data.Product using (_×_; _,_; proj₁; proj₂)
 open import Data.String as String using (String)
 open import Data.Unit using (⊤)
@@ -51,25 +52,30 @@ module Solver (theory : Theory) {{reflectable : Reflectable theory}} where
 
     -- Instantiate the arguments to a Π-type with the values in a Model.
     --
-    -- NOTE: We assume all declare-consts are up front, which is what we return
-    --       from reflectToRawScript. Possibly, the output of quoteInterpValues
-    --       needs to be reversed.
-    --
-    piApply : Rfl.Term → List Rfl.Term → Rfl.Term
-    piApply goal vs = piApply′ goal vs
-      where
-        piApply′ : Rfl.Term → List Rfl.Term → Rfl.Term
-        piApply′ t [] = t
-        piApply′ (Rfl.pi (Rfl.arg _ a) (Rfl.abs x b)) (v ∷ args) =
-          Rfl.def (quote Function._$′_)
-                  $ Rfl.hArg Rfl.unknown
-                  ∷ Rfl.hArg a
-                  ∷ Rfl.hArg Rfl.unknown
-                  ∷ Rfl.hArg Rfl.unknown
-                  ∷ Rfl.vArg (Rfl.lam Rfl.visible (Rfl.abs x (piApply b args)))
-                  ∷ Rfl.vArg v
-                  ∷ []
-        piApply′ t _ = t -- impossible?
+    -- `fv`: indicates which `pi` binders in the goal correspond to an component
+    -- of the model (`nothing` if they do, `just` otherwise).
+    -- `args`: components of the model as Agda terms
+    piApply : Rfl.Term → (fv : AllowedVars) → (args : List Rfl.Term) → Rfl.Term
+    piApply goal [] [] = goal
+    piApply (Rfl.pi (Rfl.arg _ a) (Rfl.abs x goal)) (just _ ∷ fv) args =
+      Rfl.def (quote Function._$′_)
+              $ Rfl.hArg Rfl.unknown
+              ∷ Rfl.hArg a
+              ∷ Rfl.hArg Rfl.unknown
+              ∷ Rfl.hArg Rfl.unknown
+              ∷ Rfl.vArg (Rfl.lam Rfl.visible (Rfl.abs x (piApply goal fv args)))
+              ∷ Rfl.vArg Rfl.unknown
+              ∷ []
+    piApply (Rfl.pi (Rfl.arg _ a) (Rfl.abs x goal)) (nothing ∷ fv) (v ∷ args) =
+      Rfl.def (quote Function._$′_)
+              $ Rfl.hArg Rfl.unknown
+              ∷ Rfl.hArg a
+              ∷ Rfl.hArg Rfl.unknown
+              ∷ Rfl.hArg Rfl.unknown
+              ∷ Rfl.vArg (Rfl.lam Rfl.visible (Rfl.abs x (piApply goal fv args)))
+              ∷ Rfl.vArg v
+              ∷ []
+    piApply t fv args = t  -- Should not happen
 
     counterExampleFmt : VarNames Γ → ValueInterps Γ → List Rfl.ErrorPart → List Rfl.ErrorPart
     counterExampleFmt []       []      acc = acc
@@ -77,13 +83,14 @@ module Solver (theory : Theory) {{reflectable : Reflectable theory}} where
       counterExampleFmt xs m $
         Rfl.strErr "  " ∷ Rfl.strErr x ∷ Rfl.strErr " = " ∷ Rfl.termErr v ∷ Rfl.strErr "\n" ∷ acc
 
-  typeErrorCounterExample : Rfl.Term → Script [] Γ Ξ → Model Γ → Rfl.TC ⊤
-  typeErrorCounterExample goal scr vs = do
+  typeErrorCounterExample : AllowedVars → Rfl.Term → Script [] Γ Ξ → Model Γ → Rfl.TC ⊤
+  typeErrorCounterExample fv goal scr vs = do
     let `vs = quoteInterpValues vs
-    instGoal₀ ← Rfl.reduce (piApply goal (List.reverse ∘ List.map proj₂ ∘ All.toList $ `vs))
+    instGoal₀ ← Rfl.reduce (piApply goal (List.reverse fv) (List.reverse ∘ List.map proj₂ ∘ All.toList $ `vs))
     instGoal ← normaliseClosed instGoal₀
-    Rfl.typeErrorFmt "Found counter-example:\n%erefuting %t"
+    Rfl.typeErrorFmt "Found counter-example:\n%erefuting %t\n%s"
       (counterExampleFmt (scriptVarNames scr) `vs []) instGoal
+      (warn-if-ignored fv)
 
   buildProof′ : String → Script Γ Γ′ Ξ → Rfl.Term
   buildProof′ name (`assert t [])           = Rfl.def (proofComputation t) (Rfl.vArg (`because name Rfl.unknown) ∷ [])
@@ -104,11 +111,11 @@ module Solver (theory : Theory) {{reflectable : Reflectable theory}} where
   solve name solver hole = do
     goal ← Rfl.inferType hole
     ctx ← Rfl.getContext
-    let goal⁺ = foldl (λ b a → Rfl.pi a (Rfl.abs "" b)) goal ctx -- prepend context to the goal
-    Γ , scr ← reflectToScript goal⁺
+    let goal⁺ = foldl (λ{ b a → Rfl.pi a (Rfl.abs "x" b) }) goal ctx -- prepend context to the goal
+    Γ , fv , scr ← reflectToScript goal⁺
     let scr′ = scr ◆ `get-model []
     qm ∷ [] ← solver scr′
     case qm of λ where
-      (sat     , m) → typeErrorCounterExample goal scr′ m
+      (sat     , m) → typeErrorCounterExample fv goal⁺ scr′ m
       (unsat   , _) → Rfl.unify hole (buildProof name scr goal)
-      (unknown , _) → Rfl.typeErrorFmt "Solver returned 'unknown'"
+      (unknown , _) → Rfl.typeErrorFmt "Solver returned 'unknown'\n%s" (warn-if-ignored fv)
