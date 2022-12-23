@@ -1,0 +1,8 @@
+Found counter-example:
+  x = + 1
+refuting + 1 ≡ + 0
+Some assumptions could not be encoded; they may invalidate counterexamples:
+_ : Agda.Builtin.List.List {Agda.Primitive.lzero} Agda.Builtin.Int.Int --- Unrecognized identifier Agda.Builtin.List.List
+
+when checking that the expression unquote solveZ3 has type
+(x : ℤ) → List ℤ → x ≡ + 0

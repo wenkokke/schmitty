@@ -1,0 +1,9 @@
+Found counter-example:
+  x = + 0
+  x = + 1
+  x = + 0
+  z = + 1
+refuting + 0 ≡ + 1
+
+when checking that the expression unquote solveZ3 has type
+x ≤ y → (z : ℤ) → z ≤ y → x ≡ y

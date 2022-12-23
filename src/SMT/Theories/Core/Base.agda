@@ -81,7 +81,7 @@ quoteCoreValue : (φ : CoreSort) → CoreValue φ → Rfl.Term
 quoteCoreValue BOOL = quoteSetRep
 
 interpCoreValue : Rfl.Term → Rfl.Term
-interpCoreValue `EMPTY = Rfl.con (quote ⊥) []
+interpCoreValue `EMPTY = quoteTerm ⊥
 interpCoreValue `UNIT  = Rfl.con (quote ⊤) []
 interpCoreValue t      = t
 
